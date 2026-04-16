@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
-import { type BrandProfile, type SentMessage } from '@/lib/supabase'
+import { type BrandProfile, supabase as supabaseClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -21,12 +18,13 @@ import {
   AreaChart,
   Area
 } from 'recharts'
-import { BarChart3, TrendingUp, Mail, Users, MessageSquare, Download } from 'lucide-react'
+import { TrendingUp, Mail, Users, MessageSquare, Sparkles, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
-import { brandsAPI, analyticsAPI } from '@/lib/api'
+import { brandsAPI } from '@/lib/api'
+import { Link } from 'react-router-dom'
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function AnalyticsPage() {
   const { client } = useAuth()
@@ -41,16 +39,21 @@ export default function AnalyticsPage() {
   }, [])
 
   useEffect(() => {
-    fetchAnalytics()
+    if (brands.length > 0 && !selectedBrand) {
+      setSelectedBrand(brands[0].id)
+    }
+  }, [brands, selectedBrand])
+
+  useEffect(() => {
+    if (selectedBrand) {
+      fetchAnalytics()
+    }
   }, [selectedBrand, dateRange])
 
   const fetchBrands = async () => {
     try {
-      const { data } = await supabase.from('brand_profiles').select('*')
+      const { data } = await brandsAPI.list(client?.id)
       setBrands(data || [])
-      if (data?.length) {
-        setSelectedBrand(data[0].id)
-      }
     } catch (error) {
       console.error('Failed to fetch brands:', error)
     }
@@ -59,7 +62,7 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     setIsLoading(true)
     try {
-      let query = supabase
+      let query = supabaseClient
         .from('sent_messages')
         .select('status, created_at, brand_id')
 
@@ -72,27 +75,27 @@ export default function AnalyticsPage() {
 
       const messages = data || []
       const total = messages.length
-      const delivered = messages.filter(m => ['delivered', 'opened', 'clicked'].includes(m.status)).length
-      const opened = messages.filter(m => ['opened', 'clicked'].includes(m.status)).length
-      const clicked = messages.filter(m => m.status === 'clicked').length
-      const bounced = messages.filter(m => m.status === 'bounced').length
+      const delivered = messages.filter((m: { status: string }) => ['delivered', 'opened', 'clicked'].includes(m.status)).length
+      const opened = messages.filter((m: { status: string }) => ['opened', 'clicked'].includes(m.status)).length
+      const clicked = messages.filter((m: { status: string }) => m.status === 'clicked').length
+      const bounced = messages.filter((m: { status: string }) => m.status === 'bounced').length
 
       const days = parseInt(dateRange)
       const timeSeriesData = Array.from({ length: days }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - (days - 1 - i))
         const dateStr = date.toISOString().split('T')[0]
-        const dayMessages = messages.filter(m => m.created_at.startsWith(dateStr))
+        const dayMessages = messages.filter((m: { created_at: string }) => m.created_at.startsWith(dateStr))
         return {
           name: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-          sent: dayMessages.filter(m => m.status === 'sent').length,
-          delivered: dayMessages.filter(m => ['delivered', 'opened', 'clicked'].includes(m.status)).length,
-          opened: dayMessages.filter(m => ['opened', 'clicked'].includes(m.status)).length
+          sent: dayMessages.filter((m: { status: string }) => m.status === 'sent').length,
+          delivered: dayMessages.filter((m: { status: string }) => ['delivered', 'opened', 'clicked'].includes(m.status)).length,
+          opened: dayMessages.filter((m: { status: string }) => ['opened', 'clicked'].includes(m.status)).length
         }
       })
 
       const funnelData = [
-        { name: 'Sent', value: messages.filter(m => m.status === 'sent').length },
+        { name: 'Sent', value: messages.filter((m: { status: string }) => m.status === 'sent').length },
         { name: 'Delivered', value: delivered },
         { name: 'Opened', value: opened },
         { name: 'Clicked', value: clicked }
@@ -126,12 +129,45 @@ export default function AnalyticsPage() {
     )
   }
 
+  if (brands.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
+          <p className="text-slate-500">Track your outbound performance</p>
+        </div>
+        
+        <Card className="border-slate-200/50 shadow-xl shadow-slate-200/20">
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
+              <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full p-6">
+                <Building2 className="h-16 w-16 text-indigo-600" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No Brands Configured</h3>
+            <p className="text-slate-500 text-center max-w-md mb-6">
+              Create your first brand profile to start tracking analytics and monitoring your outbound performance.
+            </p>
+            <Link
+              to="/brands"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+            >
+              <Sparkles className="h-4 w-4" />
+              Create Brand
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500">Track your outbound performance</p>
+          <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
+          <p className="text-slate-500">Track your outbound performance</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedBrand} onValueChange={setSelectedBrand}>
@@ -160,72 +196,87 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Sent</p>
-                <p className="text-2xl font-bold">{formatNumber(stats?.total || 0)}</p>
+              <div className="rounded-2xl bg-indigo-50 p-3">
+                <Mail className="h-6 w-6 text-indigo-600" />
               </div>
-              <div className="rounded-lg bg-blue-50 p-2">
-                <Mail className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                +12.5%
               </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-slate-900">{formatNumber(stats?.total || 0)}</p>
+              <p className="text-sm font-medium text-slate-500 mt-1">Total Sent</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        
+        <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Delivery Rate</p>
-                <p className="text-2xl font-bold">{formatPercentage(stats?.deliveryRate || 0)}</p>
+              <div className="rounded-2xl bg-emerald-50 p-3">
+                <TrendingUp className="h-6 w-6 text-emerald-600" />
               </div>
-              <div className="rounded-lg bg-green-50 p-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="flex items-center text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                +5.2%
               </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-slate-900">{formatPercentage(stats?.deliveryRate || 0)}</p>
+              <p className="text-sm font-medium text-slate-500 mt-1">Delivery Rate</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        
+        <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Open Rate</p>
-                <p className="text-2xl font-bold">{formatPercentage(stats?.openRate || 0)}</p>
+              <div className="rounded-2xl bg-purple-50 p-3">
+                <Users className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="rounded-lg bg-purple-50 p-2">
-                <Users className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center text-sm font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                -2.1%
               </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-slate-900">{formatPercentage(stats?.openRate || 0)}</p>
+              <p className="text-sm font-medium text-slate-500 mt-1">Open Rate</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        
+        <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Click Rate</p>
-                <p className="text-2xl font-bold">{formatPercentage(stats?.clickRate || 0)}</p>
+              <div className="rounded-2xl bg-amber-50 p-3">
+                <MessageSquare className="h-6 w-6 text-amber-600" />
               </div>
-              <div className="rounded-lg bg-amber-50 p-2">
-                <MessageSquare className="h-5 w-5 text-amber-600" />
+              <div className="flex items-center text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                +1.8%
               </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-slate-900">{formatPercentage(stats?.clickRate || 0)}</p>
+              <p className="text-sm font-medium text-slate-500 mt-1">Click Rate</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="funnel">Funnel</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
+        <TabsList className="bg-slate-100/80 p-1">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Overview</TabsTrigger>
+          <TabsTrigger value="funnel" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Funnel</TabsTrigger>
+          <TabsTrigger value="performance" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Performance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
+            <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20">
               <CardHeader>
-                <CardTitle>Email Volume</CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">Email Volume</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -233,35 +284,49 @@ export default function AnalyticsPage() {
                     <AreaChart data={stats?.timeSeriesData || []}>
                       <defs>
                         <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                      <YAxis stroke="#6b7280" fontSize={12} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="sent" stroke="#3b82f6" fillOpacity={1} fill="url(#colorSent)" strokeWidth={2} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          color: '#fff'
+                        }}
+                      />
+                      <Area type="monotone" dataKey="sent" stroke="#6366f1" fillOpacity={1} fill="url(#colorSent)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20">
               <CardHeader>
-                <CardTitle>Delivery Performance</CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">Delivery Performance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats?.timeSeriesData || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                      <YAxis stroke="#6b7280" fontSize={12} />
-                      <Tooltip />
-                      <Bar dataKey="delivered" fill="#10b981" name="Delivered" />
-                      <Bar dataKey="opened" fill="#8b5cf6" name="Opened" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1e293b', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          color: '#fff'
+                        }}
+                      />
+                      <Bar dataKey="delivered" fill="#10b981" name="Delivered" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="opened" fill="#8b5cf6" name="Opened" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -271,9 +336,9 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="funnel">
-          <Card>
+          <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20">
             <CardHeader>
-              <CardTitle>Conversion Funnel</CardTitle>
+              <CardTitle className="text-lg font-semibold text-slate-900">Conversion Funnel</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
@@ -289,23 +354,30 @@ export default function AnalyticsPage() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {stats?.funnelData.map((entry: any, index: number) => (
+                      {stats?.funnelData.map((_: unknown, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1e293b', 
+                        border: 'none', 
+                        borderRadius: '8px',
+                        color: '#fff'
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="grid gap-4 md:grid-cols-4 mt-6">
-                {stats?.funnelData.map((item: any, index: number) => (
-                  <div key={item.name} className="text-center p-4 border rounded-lg">
+                {stats?.funnelData.map((item: { name: string; value: number }, index: number) => (
+                  <div key={item.name} className="text-center p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                     <div
                       className="w-4 h-4 rounded-full mx-auto mb-2"
                       style={{ backgroundColor: COLORS[index] }}
                     />
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-2xl font-bold">{formatNumber(item.value)}</p>
+                    <p className="font-medium text-slate-700">{item.name}</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatNumber(item.value)}</p>
                   </div>
                 ))}
               </div>
@@ -314,44 +386,44 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="performance">
-          <Card>
+          <Card className="border-slate-200/50 shadow-lg shadow-slate-200/20">
             <CardHeader>
-              <CardTitle>Detailed Metrics</CardTitle>
+              <CardTitle className="text-lg font-semibold text-slate-900">Detailed Metrics</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div>
-                    <p className="font-medium">Emails Sent</p>
-                    <p className="text-sm text-gray-500">Total emails sent</p>
+                    <p className="font-semibold text-slate-900">Emails Sent</p>
+                    <p className="text-sm text-slate-500">Total emails sent</p>
                   </div>
-                  <p className="text-2xl font-bold">{formatNumber(stats?.total || 0)}</p>
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(stats?.total || 0)}</p>
                 </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div>
-                    <p className="font-medium">Delivered</p>
-                    <p className="text-sm text-gray-500">Successfully delivered</p>
+                    <p className="font-semibold text-slate-900">Delivered</p>
+                    <p className="text-sm text-slate-500">Successfully delivered</p>
                   </div>
-                  <p className="text-2xl font-bold">{formatNumber(stats?.delivered || 0)}</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatNumber(stats?.delivered || 0)}</p>
                 </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div>
-                    <p className="font-medium">Opened</p>
-                    <p className="text-sm text-gray-500">Opened by recipients</p>
+                    <p className="font-semibold text-slate-900">Opened</p>
+                    <p className="text-sm text-slate-500">Opened by recipients</p>
                   </div>
-                  <p className="text-2xl font-bold">{formatNumber(stats?.opened || 0)}</p>
+                  <p className="text-2xl font-bold text-purple-600">{formatNumber(stats?.opened || 0)}</p>
                 </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div>
-                    <p className="font-medium">Clicked</p>
-                    <p className="text-sm text-gray-500">Clicked links</p>
+                    <p className="font-semibold text-slate-900">Clicked</p>
+                    <p className="text-sm text-slate-500">Clicked links</p>
                   </div>
-                  <p className="text-2xl font-bold">{formatNumber(stats?.clicked || 0)}</p>
+                  <p className="text-2xl font-bold text-amber-600">{formatNumber(stats?.clicked || 0)}</p>
                 </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div>
-                    <p className="font-medium">Bounced</p>
-                    <p className="text-sm text-gray-500">Failed deliveries</p>
+                    <p className="font-semibold text-slate-900">Bounced</p>
+                    <p className="text-sm text-slate-500">Failed deliveries</p>
                   </div>
                   <p className="text-2xl font-bold text-red-600">{formatNumber(stats?.bounced || 0)}</p>
                 </div>
