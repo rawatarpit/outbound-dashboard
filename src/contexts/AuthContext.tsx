@@ -73,12 +73,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(parsedUser)
         fetchClientAndMember(parsedUser.id, parsedUser.clientId, storedToken)
       } catch {
-        localStorage.removeItem('outbound_token')
-        localStorage.removeItem('outbound_user')
+        clearSession()
       }
     }
     setIsLoading(false)
   }, [])
+
+  const clearSession = () => {
+    localStorage.removeItem('outbound_token')
+    localStorage.removeItem('outbound_user')
+    setToken(null)
+    setUser(null)
+    setClient(null)
+    setMember(null)
+  }
 
   const signIn = async (email: string, password: string) => {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/login`, {

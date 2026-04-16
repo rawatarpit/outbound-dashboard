@@ -29,6 +29,10 @@ async function fetchAPI(
 ) {
   const token = getStoredToken()
   
+  if (!token) {
+    return { data: [], error: { message: 'No token' }, count: '0' }
+  }
+  
   let url = `${SUPABASE_URL}/rest/v1/${table}`
   
   if (options.params) {
@@ -61,6 +65,12 @@ async function fetchAPI(
   
   if (!response.ok) {
     console.error(`API Error [${table}]:`, data)
+    
+    if (data?.code === 'PGRST303' || data?.message?.includes('JWT expired')) {
+      localStorage.removeItem('outbound_token')
+      localStorage.removeItem('outbound_user')
+      window.location.href = '/login'
+    }
   }
   
   return {

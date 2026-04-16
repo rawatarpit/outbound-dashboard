@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -8,7 +8,8 @@ import { Rocket } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,11 +19,17 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       await signIn(email, password)
+      navigate('/')
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (user) {
+    navigate('/')
+    return null
   }
 
   return (
