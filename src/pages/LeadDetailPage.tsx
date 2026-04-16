@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase, type Lead, type BrandProfile, type Company, type SentMessage, LEAD_STATUSES } from '@/lib/supabase'
+import { type Lead, type BrandProfile, type Company, type SentMessage, LEAD_STATUSES } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
+import { leadsAPI, brandsAPI, companiesAPI, messagesAPI } from '@/lib/api'
 
 const STATUS_COLORS: Record<string, string> = {
   new: 'bg-blue-100 text-blue-800',
@@ -59,42 +60,23 @@ export default function LeadDetailPage() {
 
   const fetchLeadData = async () => {
     try {
-      const { data: leadData, error: leadError } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('id', id)
-        .single()
-
+      const { data: leadData, error: leadError } = await leadsAPI.get(id!)
       if (leadError) throw leadError
       setLead(leadData)
       setEditedLead(leadData)
 
       if (leadData.brand_id) {
-        const { data: brandData } = await supabase
-          .from('brand_profiles')
-          .select('*')
-          .eq('id', leadData.brand_id)
-          .single()
+        const { data: brandData } = await brandsAPI.get(leadData.brand_id)
         setBrand(brandData)
       }
 
       if (leadData.company_id) {
-        const { data: companyData } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', leadData.company_id)
-          .single()
+        const { data: companyData } = await companiesAPI.get(leadData.company_id)
         setCompany(companyData)
       }
 
-      const { data: messagesData } = await supabase
-        .from('sent_messages')
-        .select('*')
-        .eq('lead_id', id)
-        .order('created_at', { ascending: false })
-        .limit(20)
-
-      setMessages(messagesData || [])
+      const { data: messagesData } = await messagesAPI.list({ leadId: id })
+      setMessages(messagesData)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch lead')
       navigate('/leads')
@@ -107,11 +89,7 @@ export default function LeadDetailPage() {
     if (!lead) return
 
     try {
-      const { error } = await supabase
-        .from('leads')
-        .update(editedLead)
-        .eq('id', lead.id)
-
+      const { error } = await leadsAPI.update(lead.id, editedLead)
       if (error) throw error
       toast.success('Lead updated')
       setLead({ ...lead, ...editedLead })
@@ -125,11 +103,7 @@ export default function LeadDetailPage() {
     if (!lead) return
 
     try {
-      const { error } = await supabase
-        .from('leads')
-        .update({ status: newStatus })
-        .eq('id', lead.id)
-
+      const { error } = await leadsAPI.update(lead.id, { status: newStatus })
       if (error) throw error
       toast.success('Status updated')
       setLead({ ...lead, status: newStatus })

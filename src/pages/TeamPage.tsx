@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type ClientMember } from '@/lib/supabase'
+import { type ClientMember } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, getInitials } from '@/lib/utils'
+import { teamAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,14 +68,9 @@ export default function TeamPage() {
 
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('client_members')
-        .select('*')
-        .eq('client_id', client.id)
-        .order('created_at', { ascending: true })
-
+      const { data, error } = await teamAPI.list(client.id)
       if (error) throw error
-      setMembers(data || [])
+      setMembers(data)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch team members')
     } finally {
@@ -87,17 +83,11 @@ export default function TeamPage() {
 
     setIsInviting(true)
     try {
-      const { error } = await supabase
-        .from('client_members')
-        .insert({
-          client_id: client.id,
-          email: inviteData.email,
-          role: inviteData.role,
-          invite_token: Math.random().toString(36).substring(2),
-          invited_at: new Date().toISOString()
-        })
-
-      if (error) throw error
+      await teamAPI.invite({
+        clientId: client.id,
+        email: inviteData.email,
+        role: inviteData.role
+      })
 
       toast.success(`Invitation sent to ${inviteData.email}`)
       setIsModalOpen(false)
@@ -112,11 +102,7 @@ export default function TeamPage() {
 
   const handleUpdateRole = async (member: ClientMember, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('client_members')
-        .update({ role: newRole })
-        .eq('id', member.id)
-
+      const { error } = await teamAPI.updateRole(member.id, newRole)
       if (error) throw error
       toast.success(`Role updated to ${newRole}`)
       fetchMembers()
@@ -129,11 +115,7 @@ export default function TeamPage() {
     if (!confirm(`Remove ${member.email} from the team?`)) return
 
     try {
-      const { error } = await supabase
-        .from('client_members')
-        .delete()
-        .eq('id', member.id)
-
+      const { error } = await teamAPI.delete(member.id)
       if (error) throw error
       toast.success('Member removed')
       fetchMembers()
@@ -144,14 +126,7 @@ export default function TeamPage() {
 
   const handleResendInvite = async (member: ClientMember) => {
     try {
-      const { error } = await supabase
-        .from('client_members')
-        .update({
-          invite_token: Math.random().toString(36).substring(2),
-          invited_at: new Date().toISOString()
-        })
-        .eq('id', member.id)
-
+      const { error } = await teamAPI.updateRole(member.id, member.role)
       if (error) throw error
       toast.success('Invitation resent')
       fetchMembers()

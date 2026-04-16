@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type ClientSettings, LLM_PROVIDERS } from '@/lib/supabase'
+import { type ClientSettings, LLM_PROVIDERS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 import { Settings, Mail, Bot, Server, Save } from 'lucide-react'
+import { settingsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
@@ -32,15 +33,9 @@ export default function SettingsPage() {
     if (!client?.id) return
 
     try {
-      const { data, error } = await supabase
-        .from('client_settings')
-        .select('*')
-        .eq('client_id', client.id)
-        .single()
+      const { data, error } = await settingsAPI.get(client.id)
 
-      if (error && error.code !== 'PGRST116') {
-        throw error
-      }
+      if (error) throw error
 
       if (data) {
         setSettings(data)
@@ -69,24 +64,10 @@ export default function SettingsPage() {
     try {
       const payload = {
         ...formData,
-        client_id: client.id,
         llm_temperature: formData.llm_temperature ?? 0.7
       }
 
-      if (settings?.id) {
-        const { error } = await supabase
-          .from('client_settings')
-          .update(payload)
-          .eq('id', settings.id)
-
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('client_settings')
-          .insert([payload])
-
-        if (error) throw error
-      }
+      await settingsAPI.upsert(client.id, payload)
 
       toast.success('Settings saved successfully')
       fetchSettings()

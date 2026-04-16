@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -7,6 +6,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Switch } from '@/components/ui/Switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { DISCOVERY_SOURCE_TYPES } from '@/lib/supabase'
+import { discoverySourcesAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface DiscoverySourceFormProps {
@@ -58,18 +58,11 @@ export default function DiscoverySourceForm({ brandId, source, onSuccess, onCanc
       }
 
       if (source?.id) {
-        const { error } = await supabase
-          .from('brand_discovery_sources')
-          .update(payload)
-          .eq('id', source.id)
-
+        const { error } = await discoverySourcesAPI.update(source.id, payload)
         if (error) throw error
         toast.success('Source updated successfully')
       } else {
-        const { error } = await supabase
-          .from('brand_discovery_sources')
-          .insert([payload])
-
+        const { error } = await discoverySourcesAPI.create(payload)
         if (error) throw error
         toast.success('Source created successfully')
       }

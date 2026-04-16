@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react'
-import { supabase, type BrandProfile } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react'
+import { leadsAPI, importBatchesAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface LeadImportFormProps {
@@ -30,7 +31,7 @@ export default function LeadImportForm({ brands, onSuccess, onCancel }: LeadImpo
   const [parsedLeads, setParsedLeads] = useState<ParsedLead[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [selectedBrandId, setSelectedBrandId] = useState(brands[0]?.id || '')
-  fileRef: useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -178,18 +179,14 @@ export default function LeadImportForm({ brands, onSuccess, onCancel }: LeadImpo
         status: 'new'
       }))
 
-      const { data, error } = await supabase
-        .from('leads')
-        .insert(leadsToInsert)
-        .select('id')
-
+      const { data, error } = await leadsAPI.createMany(leadsToInsert)
       if (error) throw error
 
-      await supabase.from('lead_import_batches').insert([{
+      await importBatchesAPI.create({
         source: 'csv',
         product: brands.find(b => b.id === selectedBrandId)?.product || 'Unknown',
         imported_count: data?.length || 0
-      }])
+      })
 
       toast.success(`Successfully imported ${data?.length || 0} leads`)
       onSuccess()

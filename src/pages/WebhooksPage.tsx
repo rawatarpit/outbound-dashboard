@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type ClientWebhook, WEBHOOK_EVENTS } from '@/lib/supabase'
+import { type ClientWebhook, WEBHOOK_EVENTS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
+import { webhooksAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,14 +51,9 @@ export default function WebhooksPage() {
 
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('client_webhooks')
-        .select('*')
-        .eq('client_id', client.id)
-        .order('created_at', { ascending: false })
-
+      const { data, error } = await webhooksAPI.list(client.id)
       if (error) throw error
-      setWebhooks(data || [])
+      setWebhooks(data)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch webhooks')
     } finally {
@@ -67,11 +63,7 @@ export default function WebhooksPage() {
 
   const handleToggleActive = async (webhook: ClientWebhook) => {
     try {
-      const { error } = await supabase
-        .from('client_webhooks')
-        .update({ is_active: !webhook.is_active })
-        .eq('id', webhook.id)
-
+      const { error } = await webhooksAPI.update(webhook.id, { is_active: !webhook.is_active })
       if (error) throw error
       toast.success(`Webhook ${webhook.is_active ? 'disabled' : 'enabled'}`)
       fetchWebhooks()
@@ -84,11 +76,7 @@ export default function WebhooksPage() {
     if (!confirm(`Delete webhook ${webhook.name}?`)) return
 
     try {
-      const { error } = await supabase
-        .from('client_webhooks')
-        .delete()
-        .eq('id', webhook.id)
-
+      const { error } = await webhooksAPI.delete(webhook.id)
       if (error) throw error
       toast.success('Webhook deleted')
       fetchWebhooks()
@@ -109,13 +97,10 @@ export default function WebhooksPage() {
         })
       })
 
-      await supabase
-        .from('client_webhooks')
-        .update({
-          last_triggered_at: new Date().toISOString(),
-          last_status_code: response.status
-        })
-        .eq('id', webhook.id)
+      await webhooksAPI.update(webhook.id, {
+        last_triggered_at: new Date().toISOString(),
+        last_status_code: response.status
+      })
 
       toast.success(`Test request sent (Status: ${response.status})`)
       fetchWebhooks()
@@ -307,18 +292,11 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
       }
 
       if (webhook?.id) {
-        const { error } = await supabase
-          .from('client_webhooks')
-          .update(payload)
-          .eq('id', webhook.id)
-
+        const { error } = await webhooksAPI.update(webhook.id, payload)
         if (error) throw error
         toast.success('Webhook updated')
       } else {
-        const { error } = await supabase
-          .from('client_webhooks')
-          .insert([payload])
-
+        const { error } = await webhooksAPI.create(payload)
         if (error) throw error
         toast.success('Webhook created')
       }

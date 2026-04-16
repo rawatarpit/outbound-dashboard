@@ -1,9 +1,23 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+export function createAuthenticatedClient(token: string): SupabaseClient {
+  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  })
+}
+
+export function getStoredToken(): string | null {
+  return localStorage.getItem('outbound_token')
+}
 
 export type Database = {
   public: {
@@ -351,6 +365,18 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['discovery_metrics']['Row'], 'id' | 'executed_at'>
         Update: Partial<Database['public']['Tables']['discovery_metrics']['Insert']>
       }
+      lead_import_batches: {
+        Row: {
+          id: string
+          source: string
+          product: string
+          imported_count: number
+          created_at: string
+          client_id: string | null
+        }
+        Insert: Omit<Database['public']['Tables']['lead_import_batches']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['lead_import_batches']['Insert']>
+      }
     }
   }
 }
@@ -367,6 +393,7 @@ export type ClientApiKey = Database['public']['Tables']['client_api_keys']['Row'
 export type BrandDiscoverySource = Database['public']['Tables']['brand_discovery_sources']['Row']
 export type ActivityLog = Database['public']['Tables']['activity_logs']['Row']
 export type DiscoveryMetric = Database['public']['Tables']['discovery_metrics']['Row']
+export type LeadImportBatch = Database['public']['Tables']['lead_import_batches']['Row']
 
 export const LEAD_STATUSES = [
   'new',

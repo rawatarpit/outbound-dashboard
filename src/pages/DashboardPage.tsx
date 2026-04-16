@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type BrandProfile, type Lead, type Company, type ActivityLog } from '@/lib/supabase'
+import { type BrandProfile, type Lead, type Company, type ActivityLog } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -15,6 +15,7 @@ import {
   ArrowDownRight
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
+import { brandsAPI, leadsAPI, companiesAPI, messagesAPI, activityAPI } from '@/lib/api'
 
 interface DashboardStats {
   totalLeads: number
@@ -47,44 +48,44 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [brandsRes, leadsRes, companiesRes, messagesRes, activityRes, pipelineRes] = await Promise.all([
-        supabase.from('brand_profiles').select('*', { count: 'exact' }),
-        supabase.from('leads').select('*', { count: 'exact' }),
-        supabase.from('companies').select('*', { count: 'exact' }),
-        supabase.from('sent_messages').select('status, created_at'),
-        supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(10),
-        supabase.from('companies').select('status')
+      const [brandsRes, leadsRes, companiesRes, messagesRes, activityRes] = await Promise.all([
+        brandsAPI.list(),
+        leadsAPI.list(),
+        companiesAPI.list(),
+        messagesAPI.list(),
+        activityAPI.list(10)
       ])
 
       const today = new Date()
+      today.setHours(0, 0, 0, 0)
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-      const sentToday = messagesRes.data?.filter(m => {
+      const sentToday = messagesRes.data.filter(m => {
         const sentDate = new Date(m.created_at)
         return m.status === 'sent' && sentDate >= today
-      }).length || 0
+      }).length
 
-      const sentWeek = messagesRes.data?.filter(m => {
+      const sentWeek = messagesRes.data.filter(m => {
         const sentDate = new Date(m.created_at)
         return m.status === 'sent' && sentDate >= weekAgo
-      }).length || 0
+      }).length
 
-      const totalSent = messagesRes.data?.filter(m => m.status === 'sent').length || 1
-      const totalReplied = messagesRes.data?.filter(m => m.status === 'opened').length || 0
+      const totalSent = messagesRes.data.filter(m => m.status === 'sent').length || 1
+      const totalReplied = messagesRes.data.filter(m => m.status === 'opened').length || 0
 
       setStats({
-        totalLeads: leadsRes.count || 0,
-        totalCompanies: companiesRes.count || 0,
+        totalLeads: leadsRes.total,
+        totalCompanies: companiesRes.data.length,
         emailsSentToday: sentToday,
         emailsSentWeek: sentWeek,
         replyRate: totalReplied / totalSent,
         conversionRate: 0.05,
-        activeBrands: brandsRes.data?.filter(b => b.is_active).length || 0,
-        recentActivity: activityRes.data || []
+        activeBrands: brandsRes.data.filter(b => b.is_active).length,
+        recentActivity: activityRes.data
       })
 
       const pipelineCounts: Record<string, number> = {}
-      companiesRes.data?.forEach(c => {
+      companiesRes.data.forEach(c => {
         pipelineCounts[c.status] = (pipelineCounts[c.status] || 0) + 1
       })
       setPipelineData(Object.entries(pipelineCounts).map(([status, count]) => ({ status, count })))

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase, type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
+import { type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber } from '@/lib/utils'
+import { leadsAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,8 +79,8 @@ export default function LeadsPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await supabase.from('brand_profiles').select('id, brand_name')
-      setBrands(data || [])
+      const { data } = await brandsAPI.list()
+      setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)
     }
@@ -88,29 +89,17 @@ export default function LeadsPage() {
   const fetchLeads = async () => {
     setIsLoading(true)
     try {
-      let query = supabase
-        .from('leads')
-        .select('*', { count: 'exact' })
-        .range((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE - 1)
-        .order('created_at', { ascending: false })
-
-      if (statusFilter) {
-        query = query.eq('status', statusFilter)
-      }
-
-      if (brandFilter) {
-        query = query.eq('brand_id', brandFilter)
-      }
-
-      if (searchQuery) {
-        query = query.or(`email.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
-      }
-
-      const { data, error, count } = await query
+      const { data, total, error } = await leadsAPI.list({
+        brandId: brandFilter || undefined,
+        status: statusFilter || undefined,
+        search: searchQuery || undefined,
+        page: currentPage,
+        perPage: PAGE_SIZE
+      })
 
       if (error) throw error
-      setLeads(data || [])
-      setTotalCount(count || 0)
+      setLeads(data)
+      setTotalCount(total)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch leads')
     } finally {
@@ -127,7 +116,7 @@ export default function LeadsPage() {
     if (!confirm(`Delete lead ${lead.full_name || lead.email}?`)) return
 
     try {
-      const { error } = await supabase.from('leads').delete().eq('id', lead.id)
+      const { error } = await leadsAPI.delete(lead.id)
       if (error) throw error
       toast.success('Lead deleted')
       fetchLeads()

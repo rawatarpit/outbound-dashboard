@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase, type Company, type BrandProfile, COMPANY_STATUSES, PIPELINE_STAGES } from '@/lib/supabase'
+import { type Company, type BrandProfile, COMPANY_STATUSES, PIPELINE_STAGES } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -16,6 +16,7 @@ import {
 import { Plus, ExternalLink, DollarSign, Building2, MoreHorizontal, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, cn } from '@/lib/utils'
+import { companiesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,8 +55,8 @@ export default function PipelinePage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await supabase.from('brand_profiles').select('*')
-      setBrands(data || [])
+      const { data } = await brandsAPI.list()
+      setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)
     }
@@ -64,19 +65,10 @@ export default function PipelinePage() {
   const fetchCompanies = async () => {
     setIsLoading(true)
     try {
-      let query = supabase
-        .from('companies')
-        .select('*, brand_profiles(id, brand_name)')
-        .order('updated_at', { ascending: false })
-
-      if (brandFilter) {
-        query = query.eq('brand_id', brandFilter)
-      }
-
-      const { data, error } = await query
+      const { data, error } = await companiesAPI.list({ brandId: brandFilter || undefined })
       if (error) throw error
 
-      const companiesWithBrand = (data || []).map(c => ({
+      const companiesWithBrand = data.map(c => ({
         ...c,
         brand: brands.find(b => b.id === c.brand_id)
       }))
@@ -90,11 +82,7 @@ export default function PipelinePage() {
 
   const handleStatusChange = async (company: Company, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('companies')
-        .update({ status: newStatus, state_updated_at: new Date().toISOString() })
-        .eq('id', company.id)
-
+      const { error } = await companiesAPI.update(company.id, { status: newStatus, state_updated_at: new Date().toISOString() })
       if (error) throw error
       toast.success(`Status updated to ${newStatus.replace('_', ' ')}`)
       fetchCompanies()
@@ -107,7 +95,7 @@ export default function PipelinePage() {
     if (!confirm(`Delete ${company.name}?`)) return
 
     try {
-      const { error } = await supabase.from('companies').delete().eq('id', company.id)
+      const { error } = await companiesAPI.delete(company.id)
       if (error) throw error
       toast.success('Company deleted')
       fetchCompanies()

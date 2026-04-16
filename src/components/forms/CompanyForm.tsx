@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { supabase, type BrandProfile } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { companiesAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface CompanyFormProps {
@@ -59,18 +60,11 @@ export default function CompanyForm({ brands, company, onSuccess, onCancel }: Co
       }
 
       if (company?.id) {
-        const { error } = await supabase
-          .from('companies')
-          .update(payload)
-          .eq('id', company.id)
-
+        const { error } = await companiesAPI.update(company.id, payload)
         if (error) throw error
         toast.success('Company updated')
       } else {
-        const { error } = await supabase
-          .from('companies')
-          .insert([payload])
-
+        const { error } = await companiesAPI.create(payload)
         if (error) throw error
         toast.success('Company created')
       }

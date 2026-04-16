@@ -1,11 +1,19 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase, type Client, type ClientMember } from '@/lib/supabase'
+import type { Client, ClientMember } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
+interface AuthUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  clientId: string
+  clientName: string
+}
+
 interface AuthContextType {
-  user: User | null
-  session: Session | null
+  user: AuthUser | null
+  token: string | null
   client: Client | null
   member: ClientMember | null
   isLoading: boolean
@@ -17,97 +25,129 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [client, setClient] = useState<Client | null>(null)
   const [member, setMember] = useState<ClientMember | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchClientAndMember = async (userId: string) => {
+  const fetchClientAndMember = async (clientId: string, storedToken: string) => {
     try {
-      const { data: memberData, error: memberError } = await supabase
-        .from('client_members')
-        .select('*, clients(*)')
-        .eq('user_id', userId)
-        .single()
+      const headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${storedToken}`,
+        'Content-Type': 'application/json',
+      }
 
-      if (memberError) throw memberError
+      const [memberRes, clientRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/client_members?user_id=eq.${user?.id}&client_id=eq.${clientId}&limit=1`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/clients?id=eq.${clientId}`, { headers })
+      ])
 
-      setMember(memberData)
-      setClient(memberData.clients || null)
+      const memberData = await memberRes.json()
+      if (memberData?.[0]) {
+        setMember(memberData[0])
+      }
+
+      const clientData = await clientRes.json()
+      if (clientData?.[0]) {
+        setClient(clientData[0])
+      }
     } catch (error) {
       console.error('Error fetching client:', error)
     }
   }
 
-  const refreshClient = async () => {
-    if (user) {
-      await fetchClientAndMember(user.id)
-    }
-  }
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchClientAndMember(session.user.id)
-      }
-      setIsLoading(false)
-    })
+    const storedToken = localStorage.getItem('outbound_token')
+    const storedUser = localStorage.getItem('outbound_user')
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await fetchClientAndMember(session.user.id)
-        } else {
-          setClient(null)
-          setMember(null)
-        }
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser)
+        setToken(storedToken)
+        setUser(parsedUser)
+        fetchClientAndMember(parsedUser.clientId, storedToken)
+      } catch {
+        localStorage.removeItem('outbound_token')
+        localStorage.removeItem('outbound_user')
       }
-    )
-
-    return () => subscription.unsubscribe()
+    }
+    setIsLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Login failed')
+    }
+
+    const { token: newToken, user: newUser } = data
+
+    localStorage.setItem('outbound_token', newToken)
+    localStorage.setItem('outbound_user', JSON.stringify(newUser))
+
+    setToken(newToken)
+    setUser(newUser)
+    
+    await fetchClientAndMember(newUser.clientId, newToken)
+    
     toast.success('Signed in successfully')
   }
 
   const signUp = async (email: string, password: string, name: string, companyName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          company_name: companyName
-        }
-      }
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ email, password, name, company: companyName }),
     })
-    if (error) throw error
-    if (data.user) {
-      toast.success('Account created! Please check your email to verify.')
+
+    const data = await response.json()
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Signup failed')
     }
+
+    toast.success('Account created! Please sign in.')
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    localStorage.removeItem('outbound_token')
+    localStorage.removeItem('outbound_user')
+    setToken(null)
+    setUser(null)
     setClient(null)
     setMember(null)
     toast.success('Signed out successfully')
   }
 
+  const refreshClient = async () => {
+    if (token && user?.clientId) {
+      await fetchClientAndMember(user.clientId, token)
+    }
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
-      session,
+      token,
       client,
       member,
       isLoading,

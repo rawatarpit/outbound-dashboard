@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type ClientApiKey } from '@/lib/supabase'
+import { type ClientApiKey } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, copyToClipboard } from '@/lib/utils'
+import { apiKeysAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,14 +43,9 @@ export default function ApiKeysPage() {
 
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('client_api_keys')
-        .select('*')
-        .eq('client_id', client.id)
-        .order('created_at', { ascending: false })
-
+      const { data, error } = await apiKeysAPI.list(client.id)
       if (error) throw error
-      setApiKeys(data || [])
+      setApiKeys(data)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch API keys')
     } finally {
@@ -61,48 +57,31 @@ export default function ApiKeysPage() {
     if (!client?.id) return
 
     try {
-      const keyValue = 'oe_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-      const keyHash = await hashKey(keyValue)
-
-      const { data, error } = await supabase
-        .from('client_api_keys')
-        .insert({
-          client_id: client.id,
-          name: formData.name,
-          key_hash: keyHash,
-          rate_limit_per_minute: formData.rate_limit_per_minute,
-          rate_limit_per_day: formData.rate_limit_per_day
-        })
-        .select()
-        .single()
+      const { data, error } = await apiKeysAPI.create({
+        client_id: client.id,
+        name: formData.name,
+        rate_limit_per_minute: formData.rate_limit_per_minute,
+        rate_limit_per_day: formData.rate_limit_per_day
+      })
 
       if (error) throw error
 
-      setNewKey({ name: formData.name, key: keyValue })
-      toast.success('API key created - copy it now, you won\'t see it again!')
+      const rawKey = data[0]?._rawKey
+      if (rawKey) {
+        setNewKey({ name: formData.name, key: rawKey })
+        toast.success('API key created - copy it now, you won\'t see it again!')
+      }
       fetchApiKeys()
     } catch (error: any) {
       toast.error(error.message || 'Failed to create API key')
     }
   }
 
-  const hashKey = async (key: string): Promise<string> => {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(key)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-  }
-
   const handleDeleteKey = async (key: ClientApiKey) => {
     if (!confirm(`Delete API key "${key.name}"? This action cannot be undone.`)) return
 
     try {
-      const { error } = await supabase
-        .from('client_api_keys')
-        .delete()
-        .eq('id', key.id)
-
+      const { error } = await apiKeysAPI.delete(key.id)
       if (error) throw error
       toast.success('API key deleted')
       fetchApiKeys()

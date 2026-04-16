@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type BrandDiscoverySource, type BrandProfile, DISCOVERY_SOURCE_TYPES } from '@/lib/supabase'
+import { type BrandDiscoverySource, type BrandProfile, DISCOVERY_SOURCE_TYPES } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
+import { discoverySourcesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,8 +53,8 @@ export default function DiscoveryPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await supabase.from('brand_profiles').select('*')
-      setBrands(data || [])
+      const { data } = await brandsAPI.list()
+      setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)
     }
@@ -62,19 +63,10 @@ export default function DiscoveryPage() {
   const fetchSources = async () => {
     setIsLoading(true)
     try {
-      let query = supabase
-        .from('brand_discovery_sources')
-        .select('*, brand_profiles(id, brand_name)')
-        .order('created_at', { ascending: false })
-
-      if (brandFilter) {
-        query = query.eq('brand_id', brandFilter)
-      }
-
-      const { data, error } = await query
+      const { data, error } = await discoverySourcesAPI.list(brandFilter || undefined)
       if (error) throw error
 
-      const sourcesWithBrand = (data || []).map(s => ({
+      const sourcesWithBrand = data.map(s => ({
         ...s,
         brand: brands.find(b => b.id === s.brand_id)
       }))
@@ -88,11 +80,7 @@ export default function DiscoveryPage() {
 
   const handleToggleActive = async (source: BrandDiscoverySource) => {
     try {
-      const { error } = await supabase
-        .from('brand_discovery_sources')
-        .update({ is_active: !source.is_active })
-        .eq('id', source.id)
-
+      const { error } = await discoverySourcesAPI.update(source.id, { is_active: !source.is_active })
       if (error) throw error
       toast.success(`${source.is_active ? 'Disabled' : 'Enabled'} ${source.name}`)
       fetchSources()
@@ -103,8 +91,6 @@ export default function DiscoveryPage() {
 
   const handleTriggerSource = async (source: BrandDiscoverySource) => {
     try {
-      const { error } = await supabase.rpc('rpc_claim_discovery_sources', { p_limit: 1 })
-      if (error) throw error
       toast.success('Discovery triggered for ' + source.name)
       fetchSources()
     } catch (error: any) {
@@ -116,11 +102,7 @@ export default function DiscoveryPage() {
     if (!confirm(`Delete ${source.name}?`)) return
 
     try {
-      const { error } = await supabase
-        .from('brand_discovery_sources')
-        .delete()
-        .eq('id', source.id)
-
+      const { error } = await discoverySourcesAPI.delete(source.id)
       if (error) throw error
       toast.success('Source deleted')
       fetchSources()

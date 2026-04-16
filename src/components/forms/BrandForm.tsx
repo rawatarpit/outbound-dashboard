@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { supabase, type BrandProfile } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Switch } from '@/components/ui/Switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { brandsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface BrandFormProps {
@@ -109,18 +110,11 @@ export default function BrandForm({ brand, onSuccess, onCancel }: BrandFormProps
       }
 
       if (brand?.id) {
-        const { error } = await supabase
-          .from('brand_profiles')
-          .update(payload)
-          .eq('id', brand.id)
-
+        const { error } = await brandsAPI.update(brand.id, payload)
         if (error) throw error
         toast.success('Brand updated successfully')
       } else {
-        const { error } = await supabase
-          .from('brand_profiles')
-          .insert([payload])
-
+        const { error } = await brandsAPI.create(payload)
         if (error) throw error
         toast.success('Brand created successfully')
       }

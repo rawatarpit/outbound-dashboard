@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase, type BrandProfile } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -9,6 +9,7 @@ import Modal from '@/components/Modal'
 import BrandForm from '@/components/forms/BrandForm'
 import { Plus, Building2, Mail, Search, ExternalLink, MoreHorizontal, Play, Pause } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,13 +29,9 @@ export default function BrandsPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data, error } = await supabase
-        .from('brand_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-
+      const { data, error } = await brandsAPI.list()
       if (error) throw error
-      setBrands(data || [])
+      setBrands(data)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch brands')
     } finally {
@@ -54,11 +51,7 @@ export default function BrandsPage() {
 
   const handleToggleDiscovery = async (brand: BrandProfile, enabled: boolean) => {
     try {
-      const { error } = await supabase
-        .from('brand_profiles')
-        .update({ discovery_enabled: enabled })
-        .eq('id', brand.id)
-
+      const { error } = await brandsAPI.update(brand.id, { discovery_enabled: enabled })
       if (error) throw error
       toast.success(`Discovery ${enabled ? 'enabled' : 'disabled'} for ${brand.brand_name}`)
       fetchBrands()
@@ -69,11 +62,7 @@ export default function BrandsPage() {
 
   const handleToggleOutbound = async (brand: BrandProfile, enabled: boolean) => {
     try {
-      const { error } = await supabase
-        .from('brand_profiles')
-        .update({ outbound_enabled: enabled, send_enabled: enabled })
-        .eq('id', brand.id)
-
+      const { error } = await brandsAPI.update(brand.id, { outbound_enabled: enabled, send_enabled: enabled })
       if (error) throw error
       toast.success(`Outbound ${enabled ? 'enabled' : 'disabled'} for ${brand.brand_name}`)
       fetchBrands()
@@ -84,11 +73,7 @@ export default function BrandsPage() {
 
   const handleTogglePause = async (brand: BrandProfile) => {
     try {
-      const { error } = await supabase
-        .from('brand_profiles')
-        .update({ is_paused: !brand.is_paused })
-        .eq('id', brand.id)
-
+      const { error } = await brandsAPI.update(brand.id, { is_paused: !brand.is_paused })
       if (error) throw error
       toast.success(`${brand.is_paused ? 'Resumed' : 'Paused'} ${brand.brand_name}`)
       fetchBrands()
@@ -101,11 +86,7 @@ export default function BrandsPage() {
     if (!confirm(`Are you sure you want to delete ${brand.brand_name}?`)) return
 
     try {
-      const { error } = await supabase
-        .from('brand_profiles')
-        .delete()
-        .eq('id', brand.id)
-
+      const { error } = await brandsAPI.delete(brand.id)
       if (error) throw error
       toast.success('Brand deleted successfully')
       fetchBrands()
@@ -116,11 +97,7 @@ export default function BrandsPage() {
 
   const handleTriggerDiscovery = async (brand: BrandProfile) => {
     try {
-      const { error } = await supabase
-        .from('brand_profiles')
-        .update({ manual_discovery_requested: true })
-        .eq('id', brand.id)
-
+      const { error } = await brandsAPI.update(brand.id, { manual_discovery_requested: true })
       if (error) throw error
       toast.success('Discovery triggered for ' + brand.brand_name)
     } catch (error: any) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, type BrandProfile, type SentMessage } from '@/lib/supabase'
+import { type BrandProfile, type SentMessage } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -24,6 +24,7 @@ import {
 import { BarChart3, TrendingUp, Mail, Users, MessageSquare, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
+import { brandsAPI, analyticsAPI } from '@/lib/api'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
