@@ -36,22 +36,27 @@ import {
 } from '@/components/ui/DropdownMenu'
 
 export default function WebhooksPage() {
-  const { client } = useAuth()
+  const { user, client } = useAuth()
+  const clientId = user?.clientId || client?.id
   const [webhooks, setWebhooks] = useState<ClientWebhook[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingWebhook, setEditingWebhook] = useState<ClientWebhook | null>(null)
 
   useEffect(() => {
-    fetchWebhooks()
-  }, [client])
+    if (clientId) {
+      fetchWebhooks()
+    } else {
+      setIsLoading(false)
+    }
+  }, [clientId])
 
   const fetchWebhooks = async () => {
-    if (!client?.id) return
+    if (!clientId) return
 
     setIsLoading(true)
     try {
-      const { data, error } = await webhooksAPI.list(client.id)
+      const { data, error } = await webhooksAPI.list(clientId)
       if (error) throw error
       setWebhooks(data)
     } catch (error: any) {
@@ -242,7 +247,8 @@ interface WebhookModalProps {
 }
 
 function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps) {
-  const { client } = useAuth()
+  const { user, client } = useAuth()
+  const clientId = user?.clientId || client?.id
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: webhook?.name || '',
@@ -277,12 +283,12 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!client?.id) return
+    if (!clientId) return
 
     setIsLoading(true)
     try {
       const payload = {
-        client_id: client.id,
+        client_id: clientId,
         name: formData.name,
         url: formData.url,
         secret: formData.secret || null,

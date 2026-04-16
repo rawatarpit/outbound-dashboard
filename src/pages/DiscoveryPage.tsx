@@ -159,7 +159,6 @@ export default function DiscoveryPage() {
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Brands</SelectItem>
               {brands.map(brand => (
                 <SelectItem key={brand.id} value={brand.id}>
                   {brand.brand_name}

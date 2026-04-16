@@ -159,7 +159,6 @@ export default function LeadsPage() {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
                   {LEAD_STATUSES.map(status => (
                     <SelectItem key={status} value={status}>
                       {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -172,7 +171,6 @@ export default function LeadsPage() {
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Brands</SelectItem>
                   {brands.map(brand => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.brand_name}

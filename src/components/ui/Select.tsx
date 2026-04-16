@@ -8,11 +8,23 @@ const Select = React.forwardRef<
     value?: string
     onValueChange?: (value: string) => void
   }
->(({ value, onValueChange, children, ...props }, ref) => (
-  <SelectPrimitive.Root value={value} onValueChange={onValueChange} {...props}>
-    {children}
-  </SelectPrimitive.Root>
-))
+>(({ value, onValueChange, children, ...props }, ref) => {
+  const handleValueChange = (newValue: string) => {
+    if (newValue !== '') {
+      onValueChange?.(newValue)
+    }
+  }
+  
+  return (
+    <SelectPrimitive.Root 
+      value={value || undefined} 
+      onValueChange={handleValueChange} 
+      {...props}
+    >
+      {children}
+    </SelectPrimitive.Root>
+  )
+})
 Select.displayName = 'Select'
 
 const SelectGroup = SelectPrimitive.Group

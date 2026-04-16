@@ -28,22 +28,27 @@ import {
 } from '@/components/ui/DropdownMenu'
 
 export default function ApiKeysPage() {
-  const { client } = useAuth()
+  const { user, client } = useAuth()
+  const clientId = user?.clientId || client?.id
   const [apiKeys, setApiKeys] = useState<ClientApiKey[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newKey, setNewKey] = useState<{ name: string; key: string } | null>(null)
 
   useEffect(() => {
-    fetchApiKeys()
-  }, [client])
+    if (clientId) {
+      fetchApiKeys()
+    } else {
+      setIsLoading(false)
+    }
+  }, [clientId])
 
   const fetchApiKeys = async () => {
-    if (!client?.id) return
+    if (!clientId) return
 
     setIsLoading(true)
     try {
-      const { data, error } = await apiKeysAPI.list(client.id)
+      const { data, error } = await apiKeysAPI.list(clientId)
       if (error) throw error
       setApiKeys(data)
     } catch (error: any) {
@@ -54,11 +59,11 @@ export default function ApiKeysPage() {
   }
 
   const handleCreateKey = async (formData: { name: string; rate_limit_per_minute: number; rate_limit_per_day: number }) => {
-    if (!client?.id) return
+    if (!clientId) return
 
     try {
       const { data, error } = await apiKeysAPI.create({
-        client_id: client.id,
+        client_id: clientId,
         name: formData.name,
         rate_limit_per_minute: formData.rate_limit_per_minute,
         rate_limit_per_day: formData.rate_limit_per_day

@@ -19,21 +19,26 @@ import { settingsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
-  const { client, refreshClient } = useAuth()
+  const { client, user } = useAuth()
+  const clientId = user?.clientId || client?.id
   const [settings, setSettings] = useState<ClientSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<Partial<ClientSettings>>({})
 
   useEffect(() => {
-    fetchSettings()
-  }, [client])
+    if (clientId) {
+      fetchSettings()
+    } else {
+      setIsLoading(false)
+    }
+  }, [clientId])
 
   const fetchSettings = async () => {
-    if (!client?.id) return
+    if (!clientId) return
 
     try {
-      const { data, error } = await settingsAPI.get(client.id)
+      const { data, error } = await settingsAPI.get(clientId)
 
       if (error) throw error
 
@@ -58,7 +63,7 @@ export default function SettingsPage() {
   }
 
   const handleSave = async () => {
-    if (!client?.id) return
+    if (!clientId) return
     setIsSaving(true)
 
     try {
@@ -67,7 +72,7 @@ export default function SettingsPage() {
         llm_temperature: formData.llm_temperature ?? 0.7
       }
 
-      await settingsAPI.upsert(client.id, payload)
+      await settingsAPI.upsert(clientId, payload)
 
       toast.success('Settings saved successfully')
       fetchSettings()

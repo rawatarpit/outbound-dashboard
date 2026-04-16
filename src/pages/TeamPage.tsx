@@ -49,7 +49,8 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export default function TeamPage() {
-  const { client, member: currentMember, refreshClient } = useAuth()
+  const { user, client, member: currentMember } = useAuth()
+  const clientId = user?.clientId || client?.id
   const [members, setMembers] = useState<ClientMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -60,15 +61,19 @@ export default function TeamPage() {
   })
 
   useEffect(() => {
-    fetchMembers()
-  }, [client])
+    if (clientId) {
+      fetchMembers()
+    } else {
+      setIsLoading(false)
+    }
+  }, [clientId])
 
   const fetchMembers = async () => {
-    if (!client?.id) return
+    if (!clientId) return
 
     setIsLoading(true)
     try {
-      const { data, error } = await teamAPI.list(client.id)
+      const { data, error } = await teamAPI.list(clientId)
       if (error) throw error
       setMembers(data)
     } catch (error: any) {
@@ -79,12 +84,12 @@ export default function TeamPage() {
   }
 
   const handleInvite = async () => {
-    if (!client?.id || !inviteData.email) return
+    if (!clientId || !inviteData.email) return
 
     setIsInviting(true)
     try {
       await teamAPI.invite({
-        clientId: client.id,
+        clientId: clientId,
         email: inviteData.email,
         role: inviteData.role
       })
