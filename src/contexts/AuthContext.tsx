@@ -97,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Login failed')
     }
 
+    console.log('Login response:', data)
+
     const { token: newToken, user: newUser } = data
 
     localStorage.setItem('outbound_token', newToken)
@@ -105,7 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken)
     setUser(newUser)
     
-    await fetchClientAndMember(newUser.id, newUser.clientId, newToken)
+    if (newUser.clientId) {
+      await fetchClientAndMember(newUser.id, newUser.clientId, newToken)
+    }
     
     toast.success('Signed in successfully')
   }
