@@ -59,6 +59,10 @@ async function fetchAPI(
   
   const data = await response.json()
   
+  if (!response.ok) {
+    console.error(`API Error [${table}]:`, data)
+  }
+  
   return {
     data: Array.isArray(data) ? data : data ? [data] : [],
     error: response.ok ? null : data,
@@ -117,10 +121,10 @@ async function deleteAPI(table: string, id: string) {
 }
 
 export const brandsAPI = {
-  list: async (): Promise<{ data: BrandProfile[], error: any }> => {
-    return fetchAPI('brand_profiles', {
-      params: { 'order': 'created_at.desc' }
-    })
+  list: async (clientId?: string): Promise<{ data: BrandProfile[], error: any }> => {
+    const params: Record<string, string> = { 'order': 'created_at.desc' }
+    if (clientId) params['client_id'] = `eq.${clientId}`
+    return fetchAPI('brand_profiles', { params })
   },
   
   get: async (id: string): Promise<{ data: BrandProfile | null, error: any }> => {
@@ -145,6 +149,7 @@ export const brandsAPI = {
 export const leadsAPI = {
   list: async (options: {
     brandId?: string
+    clientId?: string
     status?: string
     search?: string
     page?: number
@@ -152,6 +157,7 @@ export const leadsAPI = {
   } = {}): Promise<{ data: Lead[], total: number, error: any }> => {
     const params: Record<string, string> = { 'order': 'created_at.desc' }
     
+    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
     if (options.status) params['status'] = `eq.${options.status}`
     if (options.search) params['or'] = `(email.ilike.%${options.search}%,full_name.ilike.%${options.search}%)`
@@ -187,8 +193,9 @@ export const leadsAPI = {
 }
 
 export const companiesAPI = {
-  list: async (options: { brandId?: string } = {}): Promise<{ data: Company[], error: any }> => {
+  list: async (options: { brandId?: string; clientId?: string } = {}): Promise<{ data: Company[], error: any }> => {
     const params: Record<string, string> = { 'order': 'updated_at.desc' }
+    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
     return fetchAPI('companies', { params })
   },
@@ -212,8 +219,9 @@ export const companiesAPI = {
 }
 
 export const messagesAPI = {
-  list: async (options: { brandId?: string; leadId?: string } = {}): Promise<{ data: SentMessage[], error: any }> => {
+  list: async (options: { brandId?: string; clientId?: string; leadId?: string } = {}): Promise<{ data: SentMessage[], error: any }> => {
     const params: Record<string, string> = { 'order': 'created_at.desc' }
+    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
     if (options.leadId) params['lead_id'] = `eq.${options.leadId}`
     return fetchAPI('sent_messages', { params })
@@ -332,16 +340,19 @@ async function hashKey(key: string): Promise<string> {
 }
 
 export const analyticsAPI = {
-  getMessages: async (brandId?: string): Promise<{ data: SentMessage[], error: any }> => {
+  getMessages: async (clientId?: string, brandId?: string): Promise<{ data: SentMessage[], error: any }> => {
     const params: Record<string, string> = {}
+    if (clientId) params['client_id'] = `eq.${clientId}`
     if (brandId) params['brand_id'] = `eq.${brandId}`
     return fetchAPI('sent_messages', { params })
   }
 }
 
 export const activityAPI = {
-  list: async (limit = 10): Promise<{ data: ActivityLog[], error: any }> => {
-    return fetchAPI('activity_logs', { params: { 'order': 'created_at.desc', 'limit': limit.toString() } })
+  list: async (clientId?: string, limit = 10): Promise<{ data: ActivityLog[], error: any }> => {
+    const params: Record<string, string> = { 'order': 'created_at.desc', 'limit': limit.toString() }
+    if (clientId) params['client_id'] = `eq.${clientId}`
+    return fetchAPI('activity_logs', { params })
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type Company, type BrandProfile, COMPANY_STATUSES, PIPELINE_STAGES } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -41,6 +42,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function PipelinePage() {
+  const { client } = useAuth()
   const [companies, setCompanies] = useState<CompanyWithBrand[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -55,7 +57,7 @@ export default function PipelinePage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await brandsAPI.list()
+      const { data } = await brandsAPI.list(client?.id)
       setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)
@@ -65,7 +67,7 @@ export default function PipelinePage() {
   const fetchCompanies = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await companiesAPI.list({ brandId: brandFilter || undefined })
+      const { data, error } = await companiesAPI.list({ clientId: client?.id, brandId: brandFilter || undefined })
       if (error) throw error
 
       const companiesWithBrand = data.map(c => ({

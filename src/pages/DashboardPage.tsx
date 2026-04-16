@@ -48,12 +48,13 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      const clientId = client?.id
       const [brandsRes, leadsRes, companiesRes, messagesRes, activityRes] = await Promise.all([
-        brandsAPI.list(),
-        leadsAPI.list(),
-        companiesAPI.list(),
-        messagesAPI.list(),
-        activityAPI.list(10)
+        brandsAPI.list(clientId),
+        leadsAPI.list({ clientId }),
+        companiesAPI.list({ clientId }),
+        messagesAPI.list({ clientId }),
+        activityAPI.list(clientId, 10)
       ])
 
       const today = new Date()

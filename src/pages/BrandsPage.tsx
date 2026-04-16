@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type BrandProfile } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -18,6 +19,7 @@ import {
 } from '@/components/ui/DropdownMenu'
 
 export default function BrandsPage() {
+  const { client } = useAuth()
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -29,7 +31,7 @@ export default function BrandsPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data, error } = await brandsAPI.list()
+      const { data, error } = await brandsAPI.list(client?.id)
       if (error) throw error
       setBrands(data)
     } catch (error: any) {

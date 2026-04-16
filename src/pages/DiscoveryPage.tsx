@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { type BrandDiscoverySource, type BrandProfile, DISCOVERY_SOURCE_TYPES } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/Select'
 
 export default function DiscoveryPage() {
+  const { client } = useAuth()
   const [sources, setSources] = useState<(BrandDiscoverySource & { brand?: BrandProfile })[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -53,7 +55,7 @@ export default function DiscoveryPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await brandsAPI.list()
+      const { data } = await brandsAPI.list(client?.id)
       setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)

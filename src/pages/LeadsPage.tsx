@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -59,6 +60,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function LeadsPage() {
+  const { client } = useAuth()
   const [leads, setLeads] = useState<Lead[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -79,7 +81,7 @@ export default function LeadsPage() {
 
   const fetchBrands = async () => {
     try {
-      const { data } = await brandsAPI.list()
+      const { data } = await brandsAPI.list(client?.id)
       setBrands(data)
     } catch (error) {
       console.error('Failed to fetch brands:', error)
@@ -90,6 +92,7 @@ export default function LeadsPage() {
     setIsLoading(true)
     try {
       const { data, total, error } = await leadsAPI.list({
+        clientId: client?.id,
         brandId: brandFilter || undefined,
         status: statusFilter || undefined,
         search: searchQuery || undefined,
