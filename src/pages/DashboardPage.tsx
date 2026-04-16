@@ -3,7 +3,7 @@ import { type BrandProfile, type Lead, type Company, type ActivityLog } from '@/
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { formatNumber, formatRelativeTime, formatPercentage } from '@/lib/utils'
+import { formatNumber, formatRelativeTime, formatPercentage, cn } from '@/lib/utils'
 import {
   Users,
   Building2,
@@ -288,8 +288,4 @@ export default function DashboardPage() {
       </Card>
     </div>
   )
-}
-
-function cn(...classes: (string | boolean | undefined)[]): string {
-  return classes.filter(Boolean).join(' ')
 }

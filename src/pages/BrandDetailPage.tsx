@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import BrandForm from '@/components/forms/BrandForm'
 import DiscoverySourceForm from '@/components/forms/DiscoverySourceForm'
 import {
@@ -426,7 +426,7 @@ export default function BrandDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <Modal
+      <Drawer
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Edit Brand"
@@ -440,9 +440,9 @@ export default function BrandDetailPage() {
           }}
           onCancel={() => setIsEditModalOpen(false)}
         />
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}
         title="Add Discovery Source"
@@ -456,7 +456,7 @@ export default function BrandDetailPage() {
           }}
           onCancel={() => setIsSourceModalOpen(false)}
         />
-      </Modal>
+      </Drawer>
     </div>
   )
 }

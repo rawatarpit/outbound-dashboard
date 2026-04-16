@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Badge } from '@/components/ui/Badge'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import {
   Plus,
   Key,
@@ -271,7 +271,7 @@ function CreateApiKeyModal({ isOpen, onClose, onSuccess }: CreateApiKeyModalProp
   }
 
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title="Create API Key"
@@ -323,6 +323,6 @@ function CreateApiKeyModal({ isOpen, onClose, onSuccess }: CreateApiKeyModalProp
           </Button>
         </div>
       </form>
-    </Modal>
+    </Drawer>
   )
 }

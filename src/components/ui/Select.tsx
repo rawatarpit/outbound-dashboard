@@ -2,7 +2,19 @@ import * as React from 'react'
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { cn } from '@/lib/utils'
 
-const Select = SelectPrimitive.Root
+const Select = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root> & {
+    value?: string
+    onValueChange?: (value: string) => void
+  }
+>(({ value, onValueChange, children, ...props }, ref) => (
+  <SelectPrimitive.Root value={value} onValueChange={onValueChange} {...props}>
+    {children}
+  </SelectPrimitive.Root>
+))
+Select.displayName = 'Select'
+
 const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 

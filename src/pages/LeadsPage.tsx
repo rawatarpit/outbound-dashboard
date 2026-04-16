@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import LeadImportForm from '@/components/forms/LeadImportForm'
 import {
   Table,
@@ -35,7 +35,7 @@ import {
   MoreHorizontal
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { formatRelativeTime, formatNumber } from '@/lib/utils'
+import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
 import { leadsAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
@@ -65,8 +65,8 @@ export default function LeadsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const [brandFilter, setBrandFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
+  const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
   useEffect(() => {
@@ -311,7 +311,7 @@ export default function LeadsPage() {
         </CardContent>
       </Card>
 
-      <Modal
+      <Drawer
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         title="Import Leads"
@@ -326,11 +326,7 @@ export default function LeadsPage() {
           }}
           onCancel={() => setIsImportModalOpen(false)}
         />
-      </Modal>
+      </Drawer>
     </div>
   )
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
 }

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import BrandForm from '@/components/forms/BrandForm'
 import { Plus, Building2, Mail, Search, ExternalLink, MoreHorizontal, Play, Pause } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -252,7 +252,7 @@ export default function BrandsPage() {
         </div>
       )}
 
-      <Modal
+      <Drawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingBrand ? 'Edit Brand' : 'Create Brand'}
@@ -267,7 +267,7 @@ export default function BrandsPage() {
           }}
           onCancel={() => setIsModalOpen(false)}
         />
-      </Modal>
+      </Drawer>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { type BrandDiscoverySource, type BrandProfile, DISCOVERY_SOURCE_TYPES } 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import DiscoverySourceForm from '@/components/forms/DiscoverySourceForm'
 import {
   Search,
@@ -19,7 +19,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, cn } from '@/lib/utils'
 import { discoverySourcesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ export default function DiscoveryPage() {
   const [sources, setSources] = useState<(BrandDiscoverySource & { brand?: BrandProfile })[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [brandFilter, setBrandFilter] = useState<string>('')
+  const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSource, setEditingSource] = useState<BrandDiscoverySource | null>(null)
 
@@ -284,7 +284,7 @@ export default function DiscoveryPage() {
       )}
 
       {brands.length > 0 && (
-        <Modal
+        <Drawer
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={editingSource ? 'Edit Source' : 'Add Discovery Source'}
@@ -301,12 +301,8 @@ export default function DiscoveryPage() {
               onCancel={() => setIsModalOpen(false)}
             />
           )}
-        </Modal>
+        </Drawer>
       )}
     </div>
   )
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
 }

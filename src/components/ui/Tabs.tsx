@@ -1,21 +1,30 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-const TabsContext = React.createContext<{ value: string; onChange: (value: string) => void } | null>(null)
-
 interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
-  value: string
-  onValueChange: (value: string) => void
+  value?: string
+  onValueChange?: (value: string) => void
+  defaultValue?: string
 }
 
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  ({ className, value, onValueChange, ...props }, ref) => (
-    <TabsContext.Provider value={{ value, onChange: onValueChange }}>
-      <div ref={ref} className={cn('w-full', className)} {...props} />
-    </TabsContext.Provider>
-  )
+  ({ className, value: controlledValue, onValueChange, defaultValue = 'overview', ...props }, ref) => {
+    const [internalValue, setInternalValue] = React.useState(defaultValue)
+    const value = controlledValue ?? internalValue
+    const onChange = onValueChange ?? setInternalValue
+
+    return (
+      <div ref={ref} className={cn('w-full', className)} {...props}>
+        <TabsContext.Provider value={{ value, onChange }}>
+          {props.children}
+        </TabsContext.Provider>
+      </div>
+    )
+  }
 )
 Tabs.displayName = 'Tabs'
+
+const TabsContext = React.createContext<{ value: string; onChange: (value: string) => void } | null>(null)
 
 const TabsList = React.forwardRef<
   HTMLDivElement,

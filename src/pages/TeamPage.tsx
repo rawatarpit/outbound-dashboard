@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Badge } from '@/components/ui/Badge'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import {
   Select,
   SelectContent,
@@ -265,7 +265,7 @@ export default function TeamPage() {
         </CardContent>
       </Card>
 
-      <Modal
+      <Drawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Invite Team Member"
@@ -314,7 +314,7 @@ export default function TeamPage() {
             </Button>
           </div>
         </div>
-      </Modal>
+      </Drawer>
     </div>
   )
 }

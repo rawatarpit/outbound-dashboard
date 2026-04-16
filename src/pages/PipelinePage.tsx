@@ -4,7 +4,7 @@ import { type Company, type BrandProfile, COMPANY_STATUSES, PIPELINE_STAGES } fr
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import CompanyForm from '@/components/forms/CompanyForm'
 import {
   Select,
@@ -44,7 +44,7 @@ export default function PipelinePage() {
   const [companies, setCompanies] = useState<CompanyWithBrand[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [brandFilter, setBrandFilter] = useState<string>('')
+  const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
 
@@ -317,7 +317,7 @@ export default function PipelinePage() {
         </Card>
       )}
 
-      <Modal
+      <Drawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Add Company"
@@ -332,7 +332,7 @@ export default function PipelinePage() {
           }}
           onCancel={() => setIsModalOpen(false)}
         />
-      </Modal>
+      </Drawer>
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
-import Modal from '@/components/Modal'
+import Drawer from '@/components/Drawer'
 import {
   Select,
   SelectContent,
@@ -319,7 +319,7 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
   }
 
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title={webhook ? 'Edit Webhook' : 'Add Webhook'}
@@ -415,6 +415,6 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
           </Button>
         </div>
       </form>
-    </Modal>
+    </Drawer>
   )
 }
