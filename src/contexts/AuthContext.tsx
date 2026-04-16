@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<ClientMember | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchClientAndMember = async (clientId: string, storedToken: string) => {
+  const fetchClientAndMember = async (userId: string, clientId: string, storedToken: string) => {
     try {
       const headers = {
         'apikey': SUPABASE_ANON_KEY,
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const [memberRes, clientRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/client_members?user_id=eq.${user?.id}&client_id=eq.${clientId}&limit=1`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/client_members?user_id=eq.${userId}&client_id=eq.${clientId}&limit=1`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/clients?id=eq.${clientId}`, { headers })
       ])
 
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedUser = JSON.parse(storedUser)
         setToken(storedToken)
         setUser(parsedUser)
-        fetchClientAndMember(parsedUser.clientId, storedToken)
+        fetchClientAndMember(parsedUser.id, parsedUser.clientId, storedToken)
       } catch {
         localStorage.removeItem('outbound_token')
         localStorage.removeItem('outbound_user')
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ email, password }),
     })
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken)
     setUser(newUser)
     
-    await fetchClientAndMember(newUser.clientId, newToken)
+    await fetchClientAndMember(newUser.id, newUser.clientId, newToken)
     
     toast.success('Signed in successfully')
   }
@@ -139,8 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshClient = async () => {
-    if (token && user?.clientId) {
-      await fetchClientAndMember(user.clientId, token)
+    if (token && user?.id && user?.clientId) {
+      await fetchClientAndMember(user.id, user.clientId, token)
     }
   }
 
