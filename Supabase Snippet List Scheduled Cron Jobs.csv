@@ -1,0 +1,204 @@
+schemaname,tablename,indexname,indexdef
+public,activity_logs,idx_activity_logs_client,"CREATE INDEX idx_activity_logs_client ON public.activity_logs USING btree (client_id, created_at)"
+public,activity_logs,activity_logs_pkey,CREATE UNIQUE INDEX activity_logs_pkey ON public.activity_logs USING btree (id)
+public,api_quota_counters,api_quota_counters_pkey,CREATE UNIQUE INDEX api_quota_counters_pkey ON public.api_quota_counters USING btree (id)
+public,api_quota_counters,unique_source_window,"CREATE UNIQUE INDEX unique_source_window ON public.api_quota_counters USING btree (source_id, window_start)"
+public,api_quota_counters,idx_api_quota_window,"CREATE INDEX idx_api_quota_window ON public.api_quota_counters USING btree (source_id, window_start)"
+public,api_rate_limit,api_rate_limit_api_key_id_window_start_key,"CREATE UNIQUE INDEX api_rate_limit_api_key_id_window_start_key ON public.api_rate_limit USING btree (api_key_id, window_start)"
+public,api_rate_limit,idx_api_rate_limit_key,"CREATE INDEX idx_api_rate_limit_key ON public.api_rate_limit USING btree (api_key_id, window_start)"
+public,api_rate_limit,api_rate_limit_pkey,CREATE UNIQUE INDEX api_rate_limit_pkey ON public.api_rate_limit USING btree (id)
+public,api_usage_logs,idx_api_usage_logs_client,CREATE INDEX idx_api_usage_logs_client ON public.api_usage_logs USING btree (client_id)
+public,api_usage_logs,idx_api_usage_logs_endpoint,CREATE INDEX idx_api_usage_logs_endpoint ON public.api_usage_logs USING btree (endpoint)
+public,api_usage_logs,idx_api_usage_logs_created,CREATE INDEX idx_api_usage_logs_created ON public.api_usage_logs USING btree (created_at DESC)
+public,api_usage_logs,api_usage_logs_pkey,CREATE UNIQUE INDEX api_usage_logs_pkey ON public.api_usage_logs USING btree (id)
+public,audit_logs,idx_audit_logs_created,CREATE INDEX idx_audit_logs_created ON public.audit_logs USING btree (created_at DESC)
+public,audit_logs,audit_logs_pkey,CREATE UNIQUE INDEX audit_logs_pkey ON public.audit_logs USING btree (id)
+public,audit_logs,idx_audit_logs_client,CREATE INDEX idx_audit_logs_client ON public.audit_logs USING btree (client_id)
+public,audit_logs,idx_audit_logs_action,CREATE INDEX idx_audit_logs_action ON public.audit_logs USING btree (action)
+public,blacklist,blacklist_pkey,CREATE UNIQUE INDEX blacklist_pkey ON public.blacklist USING btree (id)
+public,blacklist,blacklist_email_unique,CREATE UNIQUE INDEX blacklist_email_unique ON public.blacklist USING btree (email)
+public,blacklist,blacklist_domain_unique,CREATE UNIQUE INDEX blacklist_domain_unique ON public.blacklist USING btree (domain)
+public,blacklist,idx_blacklist_domain,CREATE INDEX idx_blacklist_domain ON public.blacklist USING btree (domain)
+public,blacklist,idx_blacklist_email,CREATE UNIQUE INDEX idx_blacklist_email ON public.blacklist USING btree (email)
+public,brand_discovery_sources,idx_bds_brand,CREATE INDEX idx_bds_brand ON public.brand_discovery_sources USING btree (brand_id)
+public,brand_discovery_sources,idx_bds_active,CREATE INDEX idx_bds_active ON public.brand_discovery_sources USING btree (brand_id) WHERE (is_active = true)
+public,brand_discovery_sources,idx_bds_unique,"CREATE UNIQUE INDEX idx_bds_unique ON public.brand_discovery_sources USING btree (brand_id, name)"
+public,brand_discovery_sources,brand_discovery_sources_pkey,CREATE UNIQUE INDEX brand_discovery_sources_pkey ON public.brand_discovery_sources USING btree (id)
+public,brand_discovery_sources,idx_discovery_sources_ready,"CREATE INDEX idx_discovery_sources_ready ON public.brand_discovery_sources USING btree (brand_id, is_active, next_attempt_at) WHERE (is_active = true)"
+public,brand_intents,brand_intents_pkey,CREATE UNIQUE INDEX brand_intents_pkey ON public.brand_intents USING btree (id)
+public,brand_intents,idx_brand_intents_brand_id,CREATE INDEX idx_brand_intents_brand_id ON public.brand_intents USING btree (brand_id)
+public,brand_intents,idx_brand_intents_active,CREATE INDEX idx_brand_intents_active ON public.brand_intents USING btree (is_active) WHERE (is_active = true)
+public,brand_intents,brand_intent_unique,"CREATE UNIQUE INDEX brand_intent_unique ON public.brand_intents USING btree (brand_id, intent)"
+public,brand_profiles,brand_profiles_pkey,CREATE UNIQUE INDEX brand_profiles_pkey ON public.brand_profiles USING btree (id)
+public,brand_profiles,idx_brand_profiles_discovery_api_key,CREATE INDEX idx_brand_profiles_discovery_api_key ON public.brand_profiles USING btree (discovery_api_key) WHERE (discovery_api_key IS NOT NULL)
+public,brand_profiles,idx_brand_profiles_outbound_enabled,CREATE INDEX idx_brand_profiles_outbound_enabled ON public.brand_profiles USING btree (outbound_enabled)
+public,brand_profiles,idx_brand_profiles_discovery_enabled,CREATE INDEX idx_brand_profiles_discovery_enabled ON public.brand_profiles USING btree (discovery_enabled)
+public,brand_profiles,idx_brand_profiles_is_paused,CREATE INDEX idx_brand_profiles_is_paused ON public.brand_profiles USING btree (is_paused)
+public,brand_profiles,idx_brand_profiles_is_active,CREATE INDEX idx_brand_profiles_is_active ON public.brand_profiles USING btree (is_active)
+public,brand_profiles,idx_brand_profiles_client,CREATE INDEX idx_brand_profiles_client ON public.brand_profiles USING btree (client_id)
+public,campaign_analytics,campaign_analytics_pkey,CREATE UNIQUE INDEX campaign_analytics_pkey ON public.campaign_analytics USING btree (id)
+public,circuit_breaker_state,circuit_breaker_state_pkey,CREATE UNIQUE INDEX circuit_breaker_state_pkey ON public.circuit_breaker_state USING btree (id)
+public,circuit_breaker_state,circuit_breaker_brand_unique,CREATE UNIQUE INDEX circuit_breaker_brand_unique ON public.circuit_breaker_state USING btree (brand_id) WHERE (brand_id IS NOT NULL)
+public,circuit_breaker_state,idx_circuit_breaker_state,CREATE INDEX idx_circuit_breaker_state ON public.circuit_breaker_state USING btree (state)
+public,circuit_breaker_state,idx_circuit_breaker_client,CREATE INDEX idx_circuit_breaker_client ON public.circuit_breaker_state USING btree (client_id)
+public,circuit_breaker_state,circuit_breaker_state_client_id_entity_type_entity_id_key,"CREATE UNIQUE INDEX circuit_breaker_state_client_id_entity_type_entity_id_key ON public.circuit_breaker_state USING btree (client_id, entity_type, entity_id)"
+public,client_api_keys,idx_client_api_keys_client,CREATE INDEX idx_client_api_keys_client ON public.client_api_keys USING btree (client_id) WHERE (is_active = true)
+public,client_api_keys,client_api_keys_pkey,CREATE UNIQUE INDEX client_api_keys_pkey ON public.client_api_keys USING btree (id)
+public,client_api_keys,client_api_keys_key_hash_key,CREATE UNIQUE INDEX client_api_keys_key_hash_key ON public.client_api_keys USING btree (key_hash)
+public,client_daily_send,idx_client_daily_send_client_date,"CREATE INDEX idx_client_daily_send_client_date ON public.client_daily_send USING btree (client_id, send_date)"
+public,client_daily_send,idx_client_daily_send_client,"CREATE INDEX idx_client_daily_send_client ON public.client_daily_send USING btree (client_id, send_date)"
+public,client_daily_send,client_daily_send_client_id_send_date_key,"CREATE UNIQUE INDEX client_daily_send_client_id_send_date_key ON public.client_daily_send USING btree (client_id, send_date)"
+public,client_daily_send,client_daily_send_pkey,CREATE UNIQUE INDEX client_daily_send_pkey ON public.client_daily_send USING btree (id)
+public,client_hourly_send,idx_client_hourly_send_client,"CREATE INDEX idx_client_hourly_send_client ON public.client_hourly_send USING btree (client_id, hour_bucket)"
+public,client_hourly_send,client_hourly_send_client_id_hour_bucket_key,"CREATE UNIQUE INDEX client_hourly_send_client_id_hour_bucket_key ON public.client_hourly_send USING btree (client_id, hour_bucket)"
+public,client_hourly_send,client_hourly_send_pkey,CREATE UNIQUE INDEX client_hourly_send_pkey ON public.client_hourly_send USING btree (id)
+public,client_members,client_members_pkey,CREATE UNIQUE INDEX client_members_pkey ON public.client_members USING btree (id)
+public,client_members,idx_client_members_client,CREATE INDEX idx_client_members_client ON public.client_members USING btree (client_id)
+public,client_members,idx_client_members_email,CREATE INDEX idx_client_members_email ON public.client_members USING btree (email)
+public,client_members,client_members_user_id_key,CREATE UNIQUE INDEX client_members_user_id_key ON public.client_members USING btree (user_id)
+public,client_members,idx_client_members_user_id,CREATE INDEX idx_client_members_user_id ON public.client_members USING btree (user_id)
+public,client_settings,client_settings_client_id_key,CREATE UNIQUE INDEX client_settings_client_id_key ON public.client_settings USING btree (client_id)
+public,client_settings,idx_client_settings_llm_provider,CREATE INDEX idx_client_settings_llm_provider ON public.client_settings USING btree (llm_provider) WHERE (llm_provider IS NOT NULL)
+public,client_settings,client_settings_pkey,CREATE UNIQUE INDEX client_settings_pkey ON public.client_settings USING btree (id)
+public,client_webhooks,client_webhooks_pkey,CREATE UNIQUE INDEX client_webhooks_pkey ON public.client_webhooks USING btree (id)
+public,client_webhooks,idx_client_webhooks_client,CREATE INDEX idx_client_webhooks_client ON public.client_webhooks USING btree (client_id) WHERE (is_active = true)
+public,clients,idx_clients_is_active,CREATE INDEX idx_clients_is_active ON public.clients USING btree (is_active) WHERE (is_active = true)
+public,clients,clients_pkey,CREATE UNIQUE INDEX clients_pkey ON public.clients USING btree (id)
+public,clients,clients_slug_key,CREATE UNIQUE INDEX clients_slug_key ON public.clients USING btree (slug)
+public,clients,idx_clients_slug,CREATE INDEX idx_clients_slug ON public.clients USING btree (slug)
+public,clients,idx_clients_owner_email,CREATE INDEX idx_clients_owner_email ON public.clients USING btree (owner_email)
+public,companies,idx_companies_brand,CREATE INDEX idx_companies_brand ON public.companies USING btree (brand_id)
+public,companies,idx_companies_brand_status,"CREATE INDEX idx_companies_brand_status ON public.companies USING btree (brand_id, status)"
+public,companies,idx_companies_client_status,"CREATE INDEX idx_companies_client_status ON public.companies USING btree (client_id, status)"
+public,companies,idx_companies_state_updated_at,CREATE INDEX idx_companies_state_updated_at ON public.companies USING btree (state_updated_at)
+public,companies,idx_unique_company_brand_domain,"CREATE UNIQUE INDEX idx_unique_company_brand_domain ON public.companies USING btree (brand_id, domain)"
+public,companies,idx_unique_brand_domain,"CREATE UNIQUE INDEX idx_unique_brand_domain ON public.companies USING btree (brand_id, domain)"
+public,companies,companies_pkey,CREATE UNIQUE INDEX companies_pkey ON public.companies USING btree (id)
+public,companies,idx_companies_status,CREATE INDEX idx_companies_status ON public.companies USING btree (status)
+public,companies,idx_companies_domain,CREATE INDEX idx_companies_domain ON public.companies USING btree (domain)
+public,companies,idx_companies_domain_unique,CREATE UNIQUE INDEX idx_companies_domain_unique ON public.companies USING btree (domain) WHERE (domain IS NOT NULL)
+public,daily_send_limits,daily_send_limits_pkey,"CREATE UNIQUE INDEX daily_send_limits_pkey ON public.daily_send_limits USING btree (product, send_date)"
+public,daily_send_tracker,daily_send_tracker_pkey,CREATE UNIQUE INDEX daily_send_tracker_pkey ON public.daily_send_tracker USING btree (id)
+public,daily_send_tracker,idx_unique_daily_send,"CREATE UNIQUE INDEX idx_unique_daily_send ON public.daily_send_tracker USING btree (brand_id, send_date)"
+public,daily_send_tracker,idx_daily_send_tracker_brand,CREATE INDEX idx_daily_send_tracker_brand ON public.daily_send_tracker USING btree (brand_id)
+public,daily_send_tracker,daily_send_tracker_product_send_date_key,"CREATE UNIQUE INDEX daily_send_tracker_product_send_date_key ON public.daily_send_tracker USING btree (product, send_date)"
+public,dead_letter_queue,dead_letter_queue_pkey,CREATE UNIQUE INDEX dead_letter_queue_pkey ON public.dead_letter_queue USING btree (id)
+public,dead_letters,dead_letters_brand_idx,CREATE INDEX dead_letters_brand_idx ON public.dead_letters USING btree (brand_id)
+public,dead_letters,dead_letters_entity_idx,"CREATE INDEX dead_letters_entity_idx ON public.dead_letters USING btree (entity_type, entity_id)"
+public,dead_letters,dead_letters_pkey,CREATE UNIQUE INDEX dead_letters_pkey ON public.dead_letters USING btree (id)
+public,discovered_companies,idx_discovered_companies_unprocessed,CREATE INDEX idx_discovered_companies_unprocessed ON public.discovered_companies USING btree (brand_id) WHERE (processed = false)
+public,discovered_companies,unique_brand_domain,"CREATE UNIQUE INDEX unique_brand_domain ON public.discovered_companies USING btree (brand_id, domain)"
+public,discovered_companies,idx_discovered_companies_brand,CREATE INDEX idx_discovered_companies_brand ON public.discovered_companies USING btree (brand_id)
+public,discovered_companies,idx_discovered_retry_queue,"CREATE INDEX idx_discovered_retry_queue ON public.discovered_companies USING btree (brand_id, next_attempt_at) WHERE (processed = false)"
+public,discovered_companies,idx_discovered_unprocessed_order,CREATE INDEX idx_discovered_unprocessed_order ON public.discovered_companies USING btree (discovered_at) WHERE (processed = false)
+public,discovered_companies,idx_discovered_companies_confidence,CREATE INDEX idx_discovered_companies_confidence ON public.discovered_companies USING btree (confidence)
+public,discovered_companies,discovered_companies_pkey,CREATE UNIQUE INDEX discovered_companies_pkey ON public.discovered_companies USING btree (id)
+public,discovered_contacts,idx_discovered_contacts_enrichment,"CREATE INDEX idx_discovered_contacts_enrichment ON public.discovered_contacts USING btree (requires_enrichment, processed)"
+public,discovered_contacts,discovered_contacts_pkey,CREATE UNIQUE INDEX discovered_contacts_pkey ON public.discovered_contacts USING btree (id)
+public,discovered_contacts,idx_discovered_contacts_unprocessed,CREATE INDEX idx_discovered_contacts_unprocessed ON public.discovered_contacts USING btree (brand_id) WHERE (processed = false)
+public,discovered_contacts,idx_discovered_contacts_confidence,CREATE INDEX idx_discovered_contacts_confidence ON public.discovered_contacts USING btree (confidence)
+public,discovered_contacts,idx_discovered_contacts_enrichment_queue,"CREATE INDEX idx_discovered_contacts_enrichment_queue ON public.discovered_contacts USING btree (requires_enrichment, next_attempt_at)"
+public,discovered_contacts,idx_unique_discovered_email_per_brand,"CREATE UNIQUE INDEX idx_unique_discovered_email_per_brand ON public.discovered_contacts USING btree (brand_id, email) WHERE (email IS NOT NULL)"
+public,discovered_contacts,idx_discovered_contacts_retry_queue,"CREATE INDEX idx_discovered_contacts_retry_queue ON public.discovered_contacts USING btree (brand_id, next_attempt_at) WHERE (processed = false)"
+public,discovered_contacts,idx_discovered_contacts_brand,CREATE INDEX idx_discovered_contacts_brand ON public.discovered_contacts USING btree (brand_id)
+public,discovery_dead_letters,discovery_dead_letters_pkey,CREATE UNIQUE INDEX discovery_dead_letters_pkey ON public.discovery_dead_letters USING btree (id)
+public,discovery_metrics,discovery_metrics_pkey,CREATE UNIQUE INDEX discovery_metrics_pkey ON public.discovery_metrics USING btree (id)
+public,discovery_sources,discovery_sources_pkey,CREATE UNIQUE INDEX discovery_sources_pkey ON public.discovery_sources USING btree (id)
+public,edge_function_secrets,edge_function_secrets_pkey,CREATE UNIQUE INDEX edge_function_secrets_pkey ON public.edge_function_secrets USING btree (id)
+public,edge_function_secrets,edge_function_secrets_key_name_key,CREATE UNIQUE INDEX edge_function_secrets_key_name_key ON public.edge_function_secrets USING btree (key_name)
+public,email_events,email_events_pkey,CREATE UNIQUE INDEX email_events_pkey ON public.email_events USING btree (id)
+public,email_events,idx_email_events_type,CREATE INDEX idx_email_events_type ON public.email_events USING btree (event_type)
+public,email_events,idx_email_events_message,CREATE INDEX idx_email_events_message ON public.email_events USING btree (message_id)
+public,email_events,idx_email_events_client,CREATE INDEX idx_email_events_client ON public.email_events USING btree (client_id)
+public,enrichment_metrics,enrichment_metrics_pkey,CREATE UNIQUE INDEX enrichment_metrics_pkey ON public.enrichment_metrics USING btree (id)
+public,inbound_events,inbound_events_event_id_key,CREATE UNIQUE INDEX inbound_events_event_id_key ON public.inbound_events USING btree (event_id)
+public,inbound_events,idx_inbound_events_event_id,CREATE INDEX idx_inbound_events_event_id ON public.inbound_events USING btree (event_id)
+public,inbound_events,idx_inbound_events_brand,CREATE INDEX idx_inbound_events_brand ON public.inbound_events USING btree (brand_id)
+public,inbound_events,inbound_events_pkey,CREATE UNIQUE INDEX inbound_events_pkey ON public.inbound_events USING btree (id)
+public,inbound_message_claims,inbound_message_claims_pkey,"CREATE UNIQUE INDEX inbound_message_claims_pkey ON public.inbound_message_claims USING btree (message_id, brand_id)"
+public,lead_company_map,lead_company_map_pkey,"CREATE UNIQUE INDEX lead_company_map_pkey ON public.lead_company_map USING btree (lead_id, company_id)"
+public,lead_company_map,idx_lcm_brand,CREATE INDEX idx_lcm_brand ON public.lead_company_map USING btree (brand_id)
+public,lead_import_batches,lead_import_batches_pkey,CREATE UNIQUE INDEX lead_import_batches_pkey ON public.lead_import_batches USING btree (id)
+public,leads,idx_leads_client_status,"CREATE INDEX idx_leads_client_status ON public.leads USING btree (client_id, status)"
+public,leads,leads_state_updated_idx,CREATE INDEX leads_state_updated_idx ON public.leads USING btree (state_updated_at)
+public,leads,leads_pkey,CREATE UNIQUE INDEX leads_pkey ON public.leads USING btree (id)
+public,leads,idx_leads_score,CREATE INDEX idx_leads_score ON public.leads USING btree (lead_score DESC)
+public,leads,idx_leads_brand_status,"CREATE INDEX idx_leads_brand_status ON public.leads USING btree (brand_id, status)"
+public,leads,idx_leads_domain,CREATE INDEX idx_leads_domain ON public.leads USING btree (domain)
+public,leads,leads_retry_idx,"CREATE INDEX leads_retry_idx ON public.leads USING btree (status, next_retry_at)"
+public,leads,idx_unique_leads_brand_email,"CREATE UNIQUE INDEX idx_unique_leads_brand_email ON public.leads USING btree (brand_id, email) WHERE (email IS NOT NULL)"
+public,leads,idx_leads_company_id,CREATE INDEX idx_leads_company_id ON public.leads USING btree (company_id)
+public,leads,idx_leads_brand,CREATE INDEX idx_leads_brand ON public.leads USING btree (brand_id)
+public,leads,idx_leads_email,CREATE INDEX idx_leads_email ON public.leads USING btree (email)
+public,leads,idx_leads_status,CREATE INDEX idx_leads_status ON public.leads USING btree (status)
+public,leads,idx_leads_conversion,CREATE INDEX idx_leads_conversion ON public.leads USING btree (conversion_value DESC)
+public,messages,messages_pkey,CREATE UNIQUE INDEX messages_pkey ON public.messages USING btree (id)
+public,messages,messages_message_key_unique,CREATE UNIQUE INDEX messages_message_key_unique ON public.messages USING btree (message_key)
+public,messages,messages_message_id_unique,CREATE UNIQUE INDEX messages_message_id_unique ON public.messages USING btree (message_id)
+public,messages,idx_messages_brand,CREATE INDEX idx_messages_brand ON public.messages USING btree (brand_id)
+public,negotiation_drafts,negotiation_drafts_pkey,CREATE UNIQUE INDEX negotiation_drafts_pkey ON public.negotiation_drafts USING btree (id)
+public,negotiation_drafts,idx_negotiation_drafts_brand,CREATE INDEX idx_negotiation_drafts_brand ON public.negotiation_drafts USING btree (brand_id)
+public,negotiation_drafts,idx_negotiation_company,CREATE INDEX idx_negotiation_company ON public.negotiation_drafts USING btree (company_id)
+public,notification_preferences,notification_preferences_user_id_client_id_key,"CREATE UNIQUE INDEX notification_preferences_user_id_client_id_key ON public.notification_preferences USING btree (user_id, client_id)"
+public,notification_preferences,notification_preferences_pkey,CREATE UNIQUE INDEX notification_preferences_pkey ON public.notification_preferences USING btree (id)
+public,opportunities,opportunity_unique,"CREATE UNIQUE INDEX opportunity_unique ON public.opportunities USING btree (brand_id, domain, source, signal)"
+public,opportunities,opportunities_pkey,CREATE UNIQUE INDEX opportunities_pkey ON public.opportunities USING btree (id)
+public,opportunities,idx_opportunities_brand_id,CREATE INDEX idx_opportunities_brand_id ON public.opportunities USING btree (brand_id)
+public,opportunities,idx_opportunities_signal,CREATE INDEX idx_opportunities_signal ON public.opportunities USING btree (signal)
+public,opportunities,idx_opportunities_domain,CREATE INDEX idx_opportunities_domain ON public.opportunities USING btree (domain) WHERE (domain IS NOT NULL)
+public,opportunities,idx_opportunities_score,CREATE INDEX idx_opportunities_score ON public.opportunities USING btree (score DESC)
+public,opportunities,idx_opportunities_qualification,CREATE INDEX idx_opportunities_qualification ON public.opportunities USING btree (qualification_status) WHERE (qualification_status = 'new'::text)
+public,outbound_events,idx_outbound_events_company,CREATE INDEX idx_outbound_events_company ON public.outbound_events USING btree (company_id)
+public,outbound_events,idx_outbound_events_brand,CREATE INDEX idx_outbound_events_brand ON public.outbound_events USING btree (brand_id)
+public,outbound_events,outbound_events_pkey,CREATE UNIQUE INDEX outbound_events_pkey ON public.outbound_events USING btree (id)
+public,outbound_events,idx_outbound_events_product,CREATE INDEX idx_outbound_events_product ON public.outbound_events USING btree (product)
+public,outreach,outreach_pkey,CREATE UNIQUE INDEX outreach_pkey ON public.outreach USING btree (id)
+public,outreach,idx_outreach_company,CREATE INDEX idx_outreach_company ON public.outreach USING btree (company_id)
+public,outreach,idx_outreach_status,CREATE INDEX idx_outreach_status ON public.outreach USING btree (status)
+public,outreach,idx_outreach_brand,CREATE INDEX idx_outreach_brand ON public.outreach USING btree (brand_id)
+public,qualification,idx_qualification_score,CREATE INDEX idx_qualification_score ON public.qualification USING btree (fit_score)
+public,qualification,idx_qualification_company,CREATE INDEX idx_qualification_company ON public.qualification USING btree (company_id)
+public,qualification,qualification_pkey,CREATE UNIQUE INDEX qualification_pkey ON public.qualification USING btree (id)
+public,qualification,idx_qualification_brand,CREATE INDEX idx_qualification_brand ON public.qualification USING btree (brand_id)
+public,replies,replies_pkey,CREATE UNIQUE INDEX replies_pkey ON public.replies USING btree (id)
+public,replies,idx_replies_company,CREATE INDEX idx_replies_company ON public.replies USING btree (company_id)
+public,replies,idx_replies_intent,CREATE INDEX idx_replies_intent ON public.replies USING btree (intent)
+public,replies,unique_message_id,CREATE UNIQUE INDEX unique_message_id ON public.replies USING btree (message_id)
+public,replies,idx_replies_brand,CREATE INDEX idx_replies_brand ON public.replies USING btree (brand_id)
+public,research,research_pkey,CREATE UNIQUE INDEX research_pkey ON public.research USING btree (id)
+public,research,idx_research_company,CREATE INDEX idx_research_company ON public.research USING btree (company_id)
+public,research,idx_research_brand,CREATE INDEX idx_research_brand ON public.research USING btree (brand_id)
+public,scoring_versions,scoring_versions_pkey,CREATE UNIQUE INDEX scoring_versions_pkey ON public.scoring_versions USING btree (id)
+public,scoring_versions,idx_scoring_versions_brand_active,"CREATE INDEX idx_scoring_versions_brand_active ON public.scoring_versions USING btree (brand_id, is_active)"
+public,scoring_versions,idx_scoring_versions_brand,CREATE INDEX idx_scoring_versions_brand ON public.scoring_versions USING btree (brand_id)
+public,scoring_versions,idx_one_active_scoring_per_brand,CREATE UNIQUE INDEX idx_one_active_scoring_per_brand ON public.scoring_versions USING btree (brand_id) WHERE (is_active = true)
+public,send_counters,send_counters_pkey,CREATE UNIQUE INDEX send_counters_pkey ON public.send_counters USING btree (id)
+public,send_counters,idx_send_counters_brand_date,"CREATE INDEX idx_send_counters_brand_date ON public.send_counters USING btree (brand_id, bucket_start)"
+public,send_counters,idx_unique_send_hour,"CREATE UNIQUE INDEX idx_unique_send_hour ON public.send_counters USING btree (brand_id, counter_type, bucket_start)"
+public,send_counters,idx_send_counters_brand,CREATE INDEX idx_send_counters_brand ON public.send_counters USING btree (brand_id)
+public,send_counters,idx_send_counters_bucket,CREATE INDEX idx_send_counters_bucket ON public.send_counters USING btree (bucket_start)
+public,send_counters,idx_send_counters_product,CREATE INDEX idx_send_counters_product ON public.send_counters USING btree (product)
+public,send_counters,unique_product_bucket,"CREATE UNIQUE INDEX unique_product_bucket ON public.send_counters USING btree (product, counter_type, bucket_start)"
+public,sending_domains,sending_domains_pkey,CREATE UNIQUE INDEX sending_domains_pkey ON public.sending_domains USING btree (id)
+public,sending_domains,sending_domains_brand_id_domain_key,"CREATE UNIQUE INDEX sending_domains_brand_id_domain_key ON public.sending_domains USING btree (brand_id, domain)"
+public,sending_domains,sending_domains_brand_idx,CREATE INDEX sending_domains_brand_idx ON public.sending_domains USING btree (brand_id)
+public,sending_domains,sending_domains_active_idx,CREATE INDEX sending_domains_active_idx ON public.sending_domains USING btree (is_active)
+public,sent_messages,sent_messages_message_key_key,CREATE UNIQUE INDEX sent_messages_message_key_key ON public.sent_messages USING btree (message_key)
+public,sent_messages,idx_sent_messages_lead,CREATE INDEX idx_sent_messages_lead ON public.sent_messages USING btree (lead_id)
+public,sent_messages,idx_sent_messages_brand,CREATE INDEX idx_sent_messages_brand ON public.sent_messages USING btree (brand_id)
+public,sent_messages,idx_sent_messages_client,CREATE INDEX idx_sent_messages_client ON public.sent_messages USING btree (client_id)
+public,sent_messages,idx_sent_messages_status_client,"CREATE INDEX idx_sent_messages_status_client ON public.sent_messages USING btree (client_id, status) WHERE (status = 'pending'::text)"
+public,sent_messages,idx_sent_messages_message_key,CREATE UNIQUE INDEX idx_sent_messages_message_key ON public.sent_messages USING btree (message_key)
+public,sent_messages,sent_messages_pkey,CREATE UNIQUE INDEX sent_messages_pkey ON public.sent_messages USING btree (id)
+public,signal_performance,signal_performance_pkey,"CREATE UNIQUE INDEX signal_performance_pkey ON public.signal_performance USING btree (product, signal)"
+public,signal_performance,idx_signal_performance_brand,CREATE INDEX idx_signal_performance_brand ON public.signal_performance USING btree (brand_id)
+public,signal_performance,idx_unique_signal_brand,"CREATE UNIQUE INDEX idx_unique_signal_brand ON public.signal_performance USING btree (brand_id, signal)"
+public,signal_source_performance,signal_source_performance_pkey,CREATE UNIQUE INDEX signal_source_performance_pkey ON public.signal_source_performance USING btree (id)
+public,suppression_list,idx_suppression_list_domain,CREATE INDEX idx_suppression_list_domain ON public.suppression_list USING btree (domain)
+public,suppression_list,idx_suppression_list_email,CREATE INDEX idx_suppression_list_email ON public.suppression_list USING btree (email)
+public,suppression_list,idx_suppression_list_client,CREATE INDEX idx_suppression_list_client ON public.suppression_list USING btree (client_id)
+public,suppression_list,suppression_list_pkey,CREATE UNIQUE INDEX suppression_list_pkey ON public.suppression_list USING btree (id)
+public,system_flags,system_flags_pkey,CREATE UNIQUE INDEX system_flags_pkey ON public.system_flags USING btree (key)
+public,system_flags,system_flags_client_id_key,CREATE UNIQUE INDEX system_flags_client_id_key ON public.system_flags USING btree (client_id)
+public,system_health,system_health_pkey,CREATE UNIQUE INDEX system_health_pkey ON public.system_health USING btree (id)
+public,webhook_deliveries,webhook_deliveries_pkey,CREATE UNIQUE INDEX webhook_deliveries_pkey ON public.webhook_deliveries USING btree (id)

@@ -1,0 +1,2415 @@
+schema,function_name,arguments,definition,owner
+public,check_api_key_rate_limit,"p_api_key_id uuid, p_limit integer","CREATE OR REPLACE FUNCTION public.check_api_key_rate_limit(p_api_key_id uuid, p_limit integer)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_window timestamptz;
+    v_count integer;
+BEGIN
+    v_window := date_trunc('minute', now());
+
+    INSERT INTO api_rate_limit (api_key_id, window_start, request_count)
+    VALUES (p_api_key_id, v_window, 1)
+    ON CONFLICT (api_key_id, window_start)
+    DO UPDATE SET request_count = api_rate_limit.request_count + 1
+    RETURNING request_count INTO v_count;
+
+    IF v_count > p_limit THEN
+        RETURN false;
+    END IF;
+
+    RETURN true;
+END;
+$function$
+",postgres
+public,check_client_send_quota,p_client_id uuid,"CREATE OR REPLACE FUNCTION public.check_client_send_quota(p_client_id uuid)
+ RETURNS TABLE(allowed boolean, daily_remaining integer, hourly_remaining integer, reason text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_limit integer;
+    v_count integer;
+    v_hourly_limit integer;
+    v_hourly_count integer;
+    v_client record;
+BEGIN
+    SELECT * INTO v_client
+    FROM clients
+    WHERE id = p_client_id
+    FOR UPDATE;
+
+    IF NOT FOUND OR v_client.is_active = false OR v_client.is_paused = true THEN
+        RETURN QUERY SELECT false, 0, 0, 'client_inactive';
+    END IF;
+
+    v_limit := v_client.daily_send_limit;
+    v_hourly_limit := v_client.hourly_send_limit;
+
+    -- Check daily
+    INSERT INTO client_daily_send (client_id, send_date, send_count)
+    VALUES (p_client_id, CURRENT_DATE, 0)
+    ON CONFLICT (client_id, send_date)
+    DO UPDATE SET send_count = client_daily_send.send_count;
+
+    SELECT send_count INTO v_count
+    FROM client_daily_send
+    WHERE client_id = p_client_id AND send_date = CURRENT_DATE;
+
+    IF v_count >= v_limit THEN
+        RETURN QUERY SELECT false, 0, 0, 'daily_limit_exceeded';
+    END IF;
+
+    -- Check hourly
+    INSERT INTO client_hourly_send (client_id, hour_bucket, send_count)
+    VALUES (p_client_id, date_trunc('hour', now()), 0)
+    ON CONFLICT (client_id, hour_bucket)
+    DO UPDATE SET send_count = client_hourly_send.send_count;
+
+    SELECT send_count INTO v_hourly_count
+    FROM client_hourly_send
+    WHERE client_id = p_client_id AND hour_bucket = date_trunc('hour', now());
+
+    IF v_hourly_count >= v_hourly_limit THEN
+        RETURN QUERY SELECT false, v_limit - v_count, 0, 'hourly_limit_exceeded';
+    END IF;
+
+    RETURN QUERY SELECT true, v_limit - v_count, v_hourly_limit - v_hourly_count, 'ok';
+END;
+$function$
+",postgres
+public,citext,character,"CREATE OR REPLACE FUNCTION public.citext(character)
+ RETURNS citext
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$rtrim1$function$
+",supabase_admin
+public,citext,boolean,"CREATE OR REPLACE FUNCTION public.citext(boolean)
+ RETURNS citext
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$booltext$function$
+",supabase_admin
+public,citext,inet,"CREATE OR REPLACE FUNCTION public.citext(inet)
+ RETURNS citext
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$network_show$function$
+",supabase_admin
+public,citext_cmp,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_cmp(citext, citext)
+ RETURNS integer
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_cmp$function$
+",supabase_admin
+public,citext_eq,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_eq(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_eq$function$
+",supabase_admin
+public,citext_ge,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_ge(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_ge$function$
+",supabase_admin
+public,citext_gt,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_gt(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_gt$function$
+",supabase_admin
+public,citext_hash,citext,"CREATE OR REPLACE FUNCTION public.citext_hash(citext)
+ RETURNS integer
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_hash$function$
+",supabase_admin
+public,citext_hash_extended,"citext, bigint","CREATE OR REPLACE FUNCTION public.citext_hash_extended(citext, bigint)
+ RETURNS bigint
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_hash_extended$function$
+",supabase_admin
+public,citext_larger,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_larger(citext, citext)
+ RETURNS citext
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_larger$function$
+",supabase_admin
+public,citext_le,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_le(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_le$function$
+",supabase_admin
+public,citext_lt,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_lt(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_lt$function$
+",supabase_admin
+public,citext_ne,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_ne(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_ne$function$
+",supabase_admin
+public,citext_pattern_cmp,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_pattern_cmp(citext, citext)
+ RETURNS integer
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_pattern_cmp$function$
+",supabase_admin
+public,citext_pattern_ge,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_pattern_ge(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_pattern_ge$function$
+",supabase_admin
+public,citext_pattern_gt,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_pattern_gt(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_pattern_gt$function$
+",supabase_admin
+public,citext_pattern_le,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_pattern_le(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_pattern_le$function$
+",supabase_admin
+public,citext_pattern_lt,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_pattern_lt(citext, citext)
+ RETURNS boolean
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_pattern_lt$function$
+",supabase_admin
+public,citext_smaller,"citext, citext","CREATE OR REPLACE FUNCTION public.citext_smaller(citext, citext)
+ RETURNS citext
+ LANGUAGE c
+ IMMUTABLE PARALLEL SAFE STRICT
+AS '$libdir/citext', $function$citext_smaller$function$
+",supabase_admin
+public,citextin,cstring,"CREATE OR REPLACE FUNCTION public.citextin(cstring)
+ RETURNS citext
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$textin$function$
+",supabase_admin
+public,citextout,citext,"CREATE OR REPLACE FUNCTION public.citextout(citext)
+ RETURNS cstring
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$textout$function$
+",supabase_admin
+public,citextrecv,internal,"CREATE OR REPLACE FUNCTION public.citextrecv(internal)
+ RETURNS citext
+ LANGUAGE internal
+ STABLE PARALLEL SAFE STRICT
+AS $function$textrecv$function$
+",supabase_admin
+public,citextsend,citext,"CREATE OR REPLACE FUNCTION public.citextsend(citext)
+ RETURNS bytea
+ LANGUAGE internal
+ STABLE PARALLEL SAFE STRICT
+AS $function$textsend$function$
+",supabase_admin
+public,claim_companies_for_enrichment,"p_brand_id uuid, p_batch_size integer","CREATE OR REPLACE FUNCTION public.claim_companies_for_enrichment(p_brand_id uuid, p_batch_size integer)
+ RETURNS SETOF discovered_companies
+ LANGUAGE plpgsql
+AS $function$
+begin
+  return query
+  update public.discovered_companies
+  set
+    enrichment_status = 'locked',
+    enrichment_attempts = enrichment_attempts + 1,
+    last_enrichment_at = now()
+  where id in (
+    select id
+    from public.discovered_companies
+    where brand_id = p_brand_id
+      and requires_enrichment = true
+      and enrichment_status = 'pending'
+      and enrichment_attempts < 3
+      and (next_attempt_at is null or next_attempt_at <= now())
+    order by confidence asc
+    limit p_batch_size
+    for update skip locked
+  )
+  returning *;
+end;
+$function$
+",postgres
+public,claim_contacts_for_enrichment,"p_brand_id uuid, p_limit integer","CREATE OR REPLACE FUNCTION public.claim_contacts_for_enrichment(p_brand_id uuid, p_limit integer)
+ RETURNS SETOF discovered_contacts
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  RETURN QUERY
+  UPDATE public.discovered_contacts dc
+  SET
+    enrichment_status = 'locked',
+    enrichment_attempts = dc.enrichment_attempts + 1,
+    last_enrichment_at = now()
+  WHERE dc.id IN (
+    SELECT id
+    FROM public.discovered_contacts
+    WHERE brand_id = p_brand_id
+      AND requires_enrichment = true
+      AND enrichment_status = 'pending'
+      AND enrichment_attempts < 3
+      AND (next_attempt_at IS NULL OR next_attempt_at <= now())
+    ORDER BY confidence ASC
+    LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
+  )
+  RETURNING dc.*;
+END;
+$function$
+",postgres
+public,cleanup_old_audit_logs,,"CREATE OR REPLACE FUNCTION public.cleanup_old_audit_logs()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    DELETE FROM audit_logs
+    WHERE created_at < now() - interval '90 days';
+END;
+$function$
+",postgres
+public,client_id,,"CREATE OR REPLACE FUNCTION public.client_id()
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE
+AS $function$
+  SELECT client_id 
+  FROM client_members 
+  WHERE user_id = auth.uid() 
+  LIMIT 1;
+$function$
+",postgres
+public,consume_client_send_quota,p_client_id uuid,"CREATE OR REPLACE FUNCTION public.consume_client_send_quota(p_client_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_allowed boolean;
+BEGIN
+    UPDATE client_daily_send
+    SET send_count = send_count + 1
+    WHERE client_id = p_client_id AND send_date = CURRENT_DATE
+    RETURNING true INTO v_allowed;
+
+    UPDATE client_hourly_send
+    SET send_count = send_count + 1
+    WHERE client_id = p_client_id AND hour_bucket = date_trunc('hour', now());
+
+    RETURN coalesce(v_allowed, false);
+END;
+$function$
+",postgres
+public,consume_send_quota,"p_brand_id uuid, p_domain text DEFAULT NULL::text","CREATE OR REPLACE FUNCTION public.consume_send_quota(p_brand_id uuid, p_domain text DEFAULT NULL::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  allowed boolean := false;
+  brand_record record;
+BEGIN
+  SELECT * INTO brand_record 
+  FROM brand_profiles 
+  WHERE id = p_brand_id AND is_active = true;
+
+  IF brand_record IS NULL THEN
+    RETURN false;
+ END IF;
+
+  IF brand_record.daily_send_limit IS NOT NULL AND brand_record.sent_count >= brand_record.daily_send_limit THEN
+    RETURN false;
+  END IF;
+
+  IF brand_record.hourly_send_limit IS NOT NULL THEN
+    DECLARE
+      hourly_sent int;
+    BEGIN
+      SELECT COUNT(*)::int INTO hourly_sent
+      FROM sent_messages
+      WHERE brand_id = p_brand_id
+        AND status = 'sent'
+        AND created_at >= NOW() - INTERVAL '1 hour';
+      
+      IF hourly_sent >= brand_record.hourly_send_limit THEN
+        RETURN false;
+      END IF;
+    END;
+  END IF;
+
+  UPDATE brand_profiles 
+  SET sent_count = COALESCE(sent_count, 0) + 1,
+      updated_at = NOW()
+  WHERE id = p_brand_id;
+
+  RETURN true;
+END;
+$function$
+",postgres
+public,detect_stuck_leads,,"CREATE OR REPLACE FUNCTION public.detect_stuck_leads()
+ RETURNS integer
+ LANGUAGE plpgsql
+AS $function$
+declare
+  v_count int;
+begin
+
+  update public.leads
+  set status = 'error',
+      last_error = 'Stuck state detected',
+      state_updated_at = now()
+  where
+    (
+      status = 'researching'
+      and state_updated_at < now() - interval '1 hour'
+    )
+    or
+    (
+      status = 'sending'
+      and state_updated_at < now() - interval '10 minutes'
+    );
+
+  get diagnostics v_count = row_count;
+
+  insert into public.system_health (check_type, result, metadata)
+  values (
+    'stuck_leads_check',
+    'completed',
+    jsonb_build_object('affected_rows', v_count)
+  );
+
+  return v_count;
+
+end;
+$function$
+",postgres
+public,fix_client_member_user_id,p_email text,"CREATE OR REPLACE FUNCTION public.fix_client_member_user_id(p_email text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE public.client_members
+  SET user_id = auth.uid()
+  WHERE email = p_email AND user_id IS NULL;
+END;
+$function$
+",postgres
+public,get_brand_credentials,p_brand_id uuid,"CREATE OR REPLACE FUNCTION public.get_brand_credentials(p_brand_id uuid)
+ RETURNS TABLE(brand_id uuid, smtp_host text, smtp_port integer, smtp_secure boolean, smtp_email text, smtp_password text, imap_host text, imap_port integer, imap_secure boolean, imap_email text, imap_password text, reply_to_email text, daily_send_limit integer, hourly_send_limit integer, llm_model_override text, llm_temperature numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT
+    b.id,
+    b.smtp_host,
+    b.smtp_port,
+    b.smtp_secure,
+    b.smtp_email,
+    b.smtp_password,
+    b.imap_host,
+    b.imap_port,
+    b.imap_secure,
+    b.imap_email,
+    b.imap_password,
+    b.reply_to_email,
+    b.daily_send_limit,
+    b.hourly_send_limit,
+    b.llm_model_override,
+    b.llm_temperature
+  FROM public.brand_profiles b
+  WHERE b.id = p_brand_id
+    AND b.is_active = true;
+END;
+$function$
+",postgres
+public,get_client_credentials,p_client_id uuid,"CREATE OR REPLACE FUNCTION public.get_client_credentials(p_client_id uuid)
+ RETURNS TABLE(client_id uuid, smtp_host text, smtp_port integer, smtp_secure boolean, smtp_email text, smtp_password text, smtp_from_name text, smtp_from_email text, imap_host text, imap_port integer, imap_secure boolean, imap_email text, imap_password text, email_provider text, provider_api_key text, sending_domain text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.id,
+        cs.smtp_host,
+        cs.smtp_port,
+        cs.smtp_secure,
+        cs.smtp_email,
+        cs.smtp_password,
+        cs.smtp_from_name,
+        cs.smtp_from_email,
+        cs.imap_host,
+        cs.imap_port,
+        cs.imap_secure,
+        cs.imap_email,
+        cs.imap_password,
+        cs.email_provider,
+        cs.provider_api_key,
+        cs.sending_domain
+    FROM public.clients c
+    JOIN public.client_settings cs ON cs.client_id = c.id
+    WHERE c.id = p_client_id
+      AND c.is_active = true;
+END;
+$function$
+",postgres
+public,get_cors_headers,,"CREATE OR REPLACE FUNCTION public.get_cors_headers()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN jsonb_build_object(
+        'Access-Control-Allow-Origin', '*',
+        'Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client-Info',
+        'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'
+    );
+END;
+$function$
+",postgres
+public,get_domain_health,"p_brand_id uuid, p_domain text","CREATE OR REPLACE FUNCTION public.get_domain_health(p_brand_id uuid, p_domain text)
+ RETURNS TABLE(bounce_rate numeric, complaint_rate numeric, daily_sent bigint, daily_limit bigint, hourly_sent bigint, hourly_limit bigint)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    CASE WHEN COALESCE(sd.sent_today, 0) > 0 
+         THEN sd.bounce_count::numeric / sd.sent_today 
+         ELSE 0 END,
+    0::numeric,
+    COALESCE(sd.sent_today, 0)::bigint,
+    COALESCE(sd.daily_limit, 1000)::bigint,
+    0::bigint,
+    0::bigint
+  FROM sending_domains sd
+  WHERE sd.brand_id = p_brand_id AND sd.domain = p_domain AND sd.is_active = true;
+END;
+$function$
+",postgres
+public,get_edge_secret,p_key_name text,"CREATE OR REPLACE FUNCTION public.get_edge_secret(p_key_name text)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  RETURN NULL;
+END;
+$function$
+",postgres
+public,get_send_quota_status,"p_brand_id uuid, p_domain text","CREATE OR REPLACE FUNCTION public.get_send_quota_status(p_brand_id uuid, p_domain text)
+ RETURNS TABLE(daily_sent bigint, daily_limit bigint, hourly_sent bigint, hourly_limit bigint, bounce_rate numeric, complaint_rate numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    COALESCE(dst.send_count, 0)::bigint,
+    COALESCE(bp.daily_send_limit, 1000)::bigint,
+    COALESCE(dst.send_count, 0)::bigint,
+    COALESCE(bp.hourly_send_limit, 100)::bigint,
+    CASE WHEN COALESCE(dst.send_count, 0) > 0 
+         THEN COALESCE(dst.bounce_count, 0)::numeric / dst.send_count 
+         ELSE 0 END,
+    0::numeric
+  FROM brand_profiles bp
+  LEFT JOIN LATERAL (
+    SELECT send_count, bounce_count
+    FROM send_counters 
+    WHERE brand_id = p_brand_id
+    ORDER BY created_at DESC
+    LIMIT 1
+  ) dst ON true
+  WHERE bp.id = p_brand_id;
+END;
+$function$
+",postgres
+public,handle_new_client,,"CREATE OR REPLACE FUNCTION public.handle_new_client()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO system_flags (client_id, key, value)
+  VALUES 
+    (NEW.id, 'automation_enabled', true),
+    (NEW.id, 'send_enabled', true),
+    (NEW.id, 'imap_enabled', false),
+    (NEW.id, 'discovery_enabled', true)
+  ON CONFLICT (client_id, key) DO NOTHING;
+  RETURN NEW;
+END;
+$function$
+",postgres
+public,increment_discovery_counter,p_brand_id uuid,"CREATE OR REPLACE FUNCTION public.increment_discovery_counter(p_brand_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+begin
+  update public.brand_profiles
+  set discovery_count_today = coalesce(discovery_count_today, 0) + 1
+  where id = p_brand_id;
+end;
+$function$
+",postgres
+public,log_api_usage,"p_client_id uuid, p_api_key_id uuid, p_endpoint text, p_method text, p_status_code integer, p_response_time_ms integer, p_rate_limited boolean DEFAULT false","CREATE OR REPLACE FUNCTION public.log_api_usage(p_client_id uuid, p_api_key_id uuid, p_endpoint text, p_method text, p_status_code integer, p_response_time_ms integer, p_rate_limited boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    INSERT INTO api_usage_logs (
+        client_id,
+        api_key_id,
+        endpoint,
+        method,
+        status_code,
+        response_time_ms,
+        rate_limited
+    )
+    VALUES (
+        p_client_id,
+        p_api_key_id,
+        p_endpoint,
+        p_method,
+        p_status_code,
+        p_response_time_ms,
+        p_rate_limited
+    );
+
+    UPDATE client_api_keys
+    SET usage_count = usage_count + 1,
+        last_used_at = now()
+    WHERE id = p_api_key_id;
+END;
+$function$
+",postgres
+public,log_audit,"p_client_id uuid, p_actor_id text, p_actor_email text, p_action text, p_resource_type text, p_resource_id text, p_changes jsonb DEFAULT '{}'::jsonb, p_metadata jsonb DEFAULT '{}'::jsonb, p_ip_address inet DEFAULT NULL::inet","CREATE OR REPLACE FUNCTION public.log_audit(p_client_id uuid, p_actor_id text, p_actor_email text, p_action text, p_resource_type text, p_resource_id text, p_changes jsonb DEFAULT '{}'::jsonb, p_metadata jsonb DEFAULT '{}'::jsonb, p_ip_address inet DEFAULT NULL::inet)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    INSERT INTO audit_logs (
+        client_id,
+        actor_id,
+        actor_email,
+        actor_type,
+        action,
+        resource_type,
+        resource_id,
+        changes,
+        metadata,
+        ip_address
+    )
+    VALUES (
+        p_client_id,
+        p_actor_id,
+        p_actor_email,
+        coalesce(p_actor_id, 'system'),
+        p_action,
+        p_resource_type,
+        p_resource_id,
+        p_changes,
+        p_metadata,
+        p_ip_address
+    );
+
+    UPDATE clients
+    SET last_activity_at = now()
+    WHERE id = p_client_id;
+END;
+$function$
+",postgres
+public,regexp_match,"citext, citext","CREATE OR REPLACE FUNCTION public.regexp_match(citext, citext)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_match( $1::pg_catalog.text, $2::pg_catalog.text, 'i' );
+$function$
+",supabase_admin
+public,regexp_match,"citext, citext, text","CREATE OR REPLACE FUNCTION public.regexp_match(citext, citext, text)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_match( $1::pg_catalog.text, $2::pg_catalog.text, CASE WHEN pg_catalog.strpos($3, 'c') = 0 THEN  $3 || 'i' ELSE $3 END );
+$function$
+",supabase_admin
+public,regexp_matches,"citext, citext, text","CREATE OR REPLACE FUNCTION public.regexp_matches(citext, citext, text)
+ RETURNS SETOF text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT ROWS 10
+AS $function$
+    SELECT pg_catalog.regexp_matches( $1::pg_catalog.text, $2::pg_catalog.text, CASE WHEN pg_catalog.strpos($3, 'c') = 0 THEN  $3 || 'i' ELSE $3 END );
+$function$
+",supabase_admin
+public,regexp_matches,"citext, citext","CREATE OR REPLACE FUNCTION public.regexp_matches(citext, citext)
+ RETURNS SETOF text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT ROWS 1
+AS $function$
+    SELECT pg_catalog.regexp_matches( $1::pg_catalog.text, $2::pg_catalog.text, 'i' );
+$function$
+",supabase_admin
+public,regexp_replace,"citext, citext, text, text","CREATE OR REPLACE FUNCTION public.regexp_replace(citext, citext, text, text)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_replace( $1::pg_catalog.text, $2::pg_catalog.text, $3, CASE WHEN pg_catalog.strpos($4, 'c') = 0 THEN  $4 || 'i' ELSE $4 END);
+$function$
+",supabase_admin
+public,regexp_replace,"citext, citext, text","CREATE OR REPLACE FUNCTION public.regexp_replace(citext, citext, text)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_replace( $1::pg_catalog.text, $2::pg_catalog.text, $3, 'i');
+$function$
+",supabase_admin
+public,regexp_split_to_array,"citext, citext","CREATE OR REPLACE FUNCTION public.regexp_split_to_array(citext, citext)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_split_to_array( $1::pg_catalog.text, $2::pg_catalog.text, 'i' );
+$function$
+",supabase_admin
+public,regexp_split_to_array,"citext, citext, text","CREATE OR REPLACE FUNCTION public.regexp_split_to_array(citext, citext, text)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_split_to_array( $1::pg_catalog.text, $2::pg_catalog.text, CASE WHEN pg_catalog.strpos($3, 'c') = 0 THEN  $3 || 'i' ELSE $3 END );
+$function$
+",supabase_admin
+public,regexp_split_to_table,"citext, citext","CREATE OR REPLACE FUNCTION public.regexp_split_to_table(citext, citext)
+ RETURNS SETOF text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_split_to_table( $1::pg_catalog.text, $2::pg_catalog.text, 'i' );
+$function$
+",supabase_admin
+public,regexp_split_to_table,"citext, citext, text","CREATE OR REPLACE FUNCTION public.regexp_split_to_table(citext, citext, text)
+ RETURNS SETOF text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_split_to_table( $1::pg_catalog.text, $2::pg_catalog.text, CASE WHEN pg_catalog.strpos($3, 'c') = 0 THEN  $3 || 'i' ELSE $3 END );
+$function$
+",supabase_admin
+public,register_bounce,"p_brand_id uuid, p_domain text","CREATE OR REPLACE FUNCTION public.register_bounce(p_brand_id uuid, p_domain text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+begin
+  update brand_profiles
+  set bounce_count = bounce_count + 1
+  where id = p_brand_id;
+end;
+$function$
+",postgres
+public,register_client_bounce,"p_client_id uuid, p_is_hard boolean DEFAULT false","CREATE OR REPLACE FUNCTION public.register_client_bounce(p_client_id uuid, p_is_hard boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    UPDATE client_daily_send
+    SET bounce_count = bounce_count + 1
+    WHERE client_id = p_client_id AND send_date = CURRENT_DATE;
+
+    IF p_is_hard THEN
+        UPDATE clients
+        SET auto_paused = true,
+            last_activity_at = now()
+        WHERE id = p_client_id;
+    END IF;
+END;
+$function$
+",postgres
+public,register_domain_bounce,"p_brand_id uuid, p_domain text, p_is_hard boolean DEFAULT true","CREATE OR REPLACE FUNCTION public.register_domain_bounce(p_brand_id uuid, p_domain text, p_is_hard boolean DEFAULT true)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE sending_domains
+  SET bounce_count = bounce_count + 1,
+      last_reset_at = CASE WHEN last_reset_at IS NULL OR last_reset_at < NOW() - INTERVAL '24 hours' THEN NOW() ELSE last_reset_at END
+  WHERE brand_id = p_brand_id AND domain = p_domain;
+
+  IF FOUND AND p_is_hard THEN
+    UPDATE sending_domains
+    SET is_active = false,
+        disabled_reason = 'hard_bounce',
+        disabled_at = NOW()
+    WHERE brand_id = p_brand_id AND domain = p_domain
+    AND (bounce_count::numeric / NULLIF(sent_today, 0)) > 0.02;
+  END IF;
+END;
+$function$
+",postgres
+public,replace,"citext, citext, citext","CREATE OR REPLACE FUNCTION public.replace(citext, citext, citext)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.regexp_replace( $1::pg_catalog.text, pg_catalog.regexp_replace($2::pg_catalog.text, '([^a-zA-Z_0-9])', E'\\\\\\1', 'g'), $3::pg_catalog.text, 'gi' );
+$function$
+",supabase_admin
+public,reserve_send_quota,"p_brand_id uuid, p_domain text","CREATE OR REPLACE FUNCTION public.reserve_send_quota(p_brand_id uuid, p_domain text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_daily_ok boolean;
+  v_hourly_ok boolean;
+BEGIN
+  SELECT allowed INTO v_daily_ok 
+  FROM rpc_reserve_daily_send(p_brand_id);
+  
+  SELECT allowed INTO v_hourly_ok 
+  FROM rpc_reserve_hourly_send(p_brand_id);
+  
+  RETURN v_daily_ok AND v_hourly_ok;
+END;
+$function$
+",postgres
+public,reset_discovery_counters,,"CREATE OR REPLACE FUNCTION public.reset_discovery_counters()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+begin
+  update public.brand_profiles
+  set discovery_count_today = 0;
+end;
+$function$
+",postgres
+public,rls_auto_enable,,"CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+ RETURNS event_trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$
+",postgres
+public,rpc_activate_scoring_version,p_version_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_activate_scoring_version(p_version_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  UPDATE scoring_versions
+  SET is_active = false
+  WHERE brand_id = (SELECT brand_id FROM scoring_versions WHERE id = p_version_id);
+  
+  UPDATE scoring_versions
+  SET is_active = true
+  WHERE id = p_version_id;
+END;
+$function$
+",postgres
+public,rpc_adjust_scoring_weights,,"CREATE OR REPLACE FUNCTION public.rpc_adjust_scoring_weights()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_config jsonb;
+  v_row RECORD;
+BEGIN
+  FOR v_row IN SELECT brand_id FROM public.scoring_versions WHERE is_active = true LOOP
+    SELECT scoring_config INTO v_config 
+    FROM public.scoring_versions 
+    WHERE brand_id = v_row.brand_id AND is_active = true
+    LIMIT 1;
+
+    IF v_config IS NOT NULL THEN
+      UPDATE public.scoring_versions 
+      SET scoring_config = v_config 
+      WHERE brand_id = v_row.brand_id AND is_active = true;
+    END IF;
+  END LOOP;
+END;
+$function$
+",postgres
+public,rpc_backfill_member_user_id,,"CREATE OR REPLACE FUNCTION public.rpc_backfill_member_user_id()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_member record;
+BEGIN
+  FOR v_member IN
+    SELECT cm.id, cm.email, au.id as auth_id
+    FROM public.client_members cm
+    JOIN auth.users au ON au.email = cm.email
+    WHERE cm.user_id IS NULL
+  LOOP
+    UPDATE public.client_members
+    SET user_id = v_member.auth_id
+    WHERE id = v_member.id;
+  END LOOP;
+END;
+$function$
+",postgres
+public,rpc_claim_companies,"p_brand_id uuid, p_status text, p_limit integer","CREATE OR REPLACE FUNCTION public.rpc_claim_companies(p_brand_id uuid, p_status text, p_limit integer)
+ RETURNS SETOF companies
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  RETURN QUERY
+  WITH candidates AS (
+    SELECT c.id
+    FROM public.companies c
+    WHERE
+      c.brand_id = p_brand_id
+      AND c.status = p_status
+      AND (
+        c.next_attempt_at IS NULL
+        OR c.next_attempt_at <= now()
+      )
+    ORDER BY
+      c.next_attempt_at NULLS FIRST,
+      c.created_at ASC
+    LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
+  )
+  UPDATE public.companies c
+  SET
+    status = p_status || '_processing',
+    updated_at = now(),
+    state_updated_at = now()
+  FROM candidates
+  WHERE c.id = candidates.id
+  RETURNING c.*;
+END;
+$function$
+",postgres
+public,rpc_claim_discovered_companies,p_limit integer,"CREATE OR REPLACE FUNCTION public.rpc_claim_discovered_companies(p_limit integer)
+ RETURNS SETOF discovered_companies
+ LANGUAGE plpgsql
+AS $function$begin
+  return query
+  with cte as (
+    select id
+    from public.discovered_companies
+    where
+      processed = false
+      and (next_attempt_at is null or next_attempt_at <= now())
+    order by discovered_at asc
+    for update skip locked
+    limit p_limit
+  )
+  update public.discovered_companies d
+  set retry_count = d.retry_count
+  from cte
+  where d.id = cte.id
+  returning d.*;
+end;$function$
+",postgres
+public,rpc_claim_discovered_contacts,p_limit integer,"CREATE OR REPLACE FUNCTION public.rpc_claim_discovered_contacts(p_limit integer)
+ RETURNS SETOF discovered_contacts
+ LANGUAGE plpgsql
+AS $function$
+begin
+  return query
+  with cte as (
+    select dc.id
+    from public.discovered_contacts dc
+    where dc.processed = false
+      and (dc.next_attempt_at is null or dc.next_attempt_at <= now())
+    order by dc.created_at asc
+    limit p_limit
+    for update skip locked
+  )
+  update public.discovered_contacts dc2
+  set
+    retry_count = dc2.retry_count + 1,
+    next_attempt_at = now() + interval '5 minutes'
+  from cte
+  where dc2.id = cte.id
+  returning dc2.*;
+end;
+$function$
+",postgres
+public,rpc_claim_discovery_sources,p_limit integer,"CREATE OR REPLACE FUNCTION public.rpc_claim_discovery_sources(p_limit integer)
+ RETURNS SETOF brand_discovery_sources
+ LANGUAGE plpgsql
+AS $function$
+begin
+  return query
+  update public.brand_discovery_sources s
+  set
+    is_running = true,
+    last_run_at = now()
+  where s.id in (
+    select s2.id
+    from public.brand_discovery_sources s2
+    join public.brand_profiles b
+      on b.id = s2.brand_id
+    where
+      s2.is_active = true
+      and s2.is_running = false
+      and b.discovery_enabled = true
+      and b.manual_discovery_requested = true
+      and (s2.next_attempt_at is null or s2.next_attempt_at <= now())
+    order by s2.last_run_at nulls first, s2.created_at asc
+    limit p_limit
+    for update skip locked
+  )
+  returning s.*;
+end;
+$function$
+",postgres
+public,rpc_claim_inbound_message,"p_message_id text, p_brand_id uuid","CREATE OR REPLACE FUNCTION public.rpc_claim_inbound_message(p_message_id text, p_brand_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+begin
+  insert into inbound_message_claims(message_id, brand_id)
+  values (p_message_id, p_brand_id)
+  on conflict do nothing;
+
+  return found;
+end;
+$function$
+",postgres
+public,rpc_claim_outreach_draft,p_company_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_claim_outreach_draft(p_company_id uuid)
+ RETURNS outreach
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_row public.outreach;
+BEGIN
+  WITH cte AS (
+    SELECT id
+    FROM public.outreach
+    WHERE company_id = p_company_id
+      AND status = 'draft'
+    ORDER BY created_at ASC
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED
+  )
+  UPDATE public.outreach o
+  SET
+    status = 'draft_processing',
+    updated_at = now(),
+    state_updated_at = now()
+  FROM cte
+  WHERE o.id = cte.id
+  RETURNING o.* INTO v_row;
+
+  RETURN v_row;
+END;
+$function$
+",postgres
+public,rpc_close_company,"p_company_id uuid, p_deal_value numeric, p_currency text, p_contract_length integer, p_payment_model text, p_gross_margin numeric","CREATE OR REPLACE FUNCTION public.rpc_close_company(p_company_id uuid, p_deal_value numeric, p_currency text, p_contract_length integer, p_payment_model text, p_gross_margin numeric)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_ltv numeric;
+BEGIN
+
+  v_ltv :=
+    CASE
+      WHEN p_payment_model = 'monthly'
+        THEN p_deal_value * p_contract_length
+      WHEN p_payment_model = 'annual'
+        THEN p_deal_value * (p_contract_length / 12)
+      ELSE p_deal_value
+    END;
+
+  UPDATE public.companies
+  SET
+    status = 'closed_won',
+    deal_value = p_deal_value,
+    lifetime_value = v_ltv,
+    currency = p_currency,
+    contract_length_months = p_contract_length,
+    payment_model = p_payment_model,
+    gross_margin = p_gross_margin,
+    closed_at = now(),
+    updated_at = now()
+  WHERE id = p_company_id;
+
+  UPDATE public.leads
+  SET
+    status = 'closed_won',
+    deal_value = v_ltv,
+    closed_at = now(),
+    updated_at = now()
+  WHERE company_id = p_company_id;
+
+  PERFORM public.rpc_update_signal_performance_for_company(p_company_id);
+
+END;
+$function$
+",postgres
+public,rpc_complete_discovered_company,"p_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_requires_enrichment boolean DEFAULT NULL::boolean","CREATE OR REPLACE FUNCTION public.rpc_complete_discovered_company(p_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_requires_enrichment boolean DEFAULT NULL::boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+declare
+  v_retry_count int;
+  v_source_id uuid;
+  v_payload jsonb;
+begin
+
+  select retry_count, source_id, raw_payload
+  into v_retry_count, v_source_id, v_payload
+  from public.discovered_companies
+  where id = p_id
+  for update;
+
+  if not found then
+    return;
+  end if;
+
+  -- ============================
+  -- SUCCESS
+  -- ============================
+  if p_success then
+
+    update public.discovered_companies
+    set
+      processed = true,
+      retry_count = 0,
+      next_attempt_at = null,
+      error = null,
+      requires_enrichment = coalesce(p_requires_enrichment, requires_enrichment)
+    where id = p_id;
+
+    return;
+
+  end if;
+
+  -- ============================
+  -- FAILURE
+  -- ============================
+
+  v_retry_count := v_retry_count + 1;
+
+  if v_retry_count > 5 then
+
+    insert into public.discovery_dead_letters (
+      entity_type,
+      entity_id,
+      source_id,
+      payload,
+      error
+    )
+    values (
+      'company',
+      p_id,
+      v_source_id,
+      v_payload,
+      p_error
+    );
+
+    delete from public.discovered_companies
+    where id = p_id;
+
+    return;
+
+  end if;
+
+  update public.discovered_companies
+  set
+    retry_count = v_retry_count,
+    next_attempt_at = now() + (interval '5 minutes' * v_retry_count),
+    error = p_error
+  where id = p_id;
+
+end;
+$function$
+",postgres
+public,rpc_complete_discovered_contact,"p_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_requires_enrichment boolean DEFAULT NULL::boolean","CREATE OR REPLACE FUNCTION public.rpc_complete_discovered_contact(p_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_requires_enrichment boolean DEFAULT NULL::boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+declare
+  v_retry_count int;
+  v_source_id uuid;
+  v_payload jsonb;
+begin
+
+  -- Lock row
+  select retry_count,
+         (select source_id from public.discovered_companies dc
+          where dc.id = discovered_company_id),
+         raw_payload
+  into v_retry_count, v_source_id, v_payload
+  from public.discovered_contacts
+  where id = p_id
+  for update;
+
+  if not found then
+    return;
+  end if;
+
+  -- ============================
+  -- SUCCESS PATH
+  -- ============================
+  if p_success then
+
+    update public.discovered_contacts
+    set
+      processed = true,
+      retry_count = 0,
+      next_attempt_at = null,
+      error = null,
+      requires_enrichment = coalesce(p_requires_enrichment, requires_enrichment)
+    where id = p_id;
+
+    return;
+
+  end if;
+
+  -- ============================
+  -- FAILURE PATH
+  -- ============================
+
+  v_retry_count := v_retry_count + 1;
+
+  if v_retry_count > 5 then
+
+    insert into public.discovery_dead_letters (
+      entity_type,
+      entity_id,
+      source_id,
+      payload,
+      error
+    )
+    values (
+      'contact',
+      p_id,
+      v_source_id,
+      v_payload,
+      p_error
+    );
+
+    delete from public.discovered_contacts
+    where id = p_id;
+
+    return;
+
+  end if;
+
+  update public.discovered_contacts
+  set
+    retry_count = v_retry_count,
+    next_attempt_at = now() + (interval '5 minutes' * v_retry_count),
+    error = p_error
+  where id = p_id;
+
+end;
+$function$
+",postgres
+public,rpc_consume_api_quota,"p_source_id uuid, p_limit integer","CREATE OR REPLACE FUNCTION public.rpc_consume_api_quota(p_source_id uuid, p_limit integer)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+declare
+  v_window timestamptz;
+  v_count int;
+begin
+  v_window := date_trunc('minute', now());
+
+  insert into public.api_quota_counters(source_id, window_start, request_count)
+  values (p_source_id, v_window, 1)
+  on conflict (source_id, window_start)
+  do update
+    set request_count = api_quota_counters.request_count + 1
+  returning request_count into v_count;
+
+  if v_count > p_limit then
+    return false;
+  end if;
+
+  return true;
+end;
+$function$
+",postgres
+public,rpc_create_company_from_lead,p_lead_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_create_company_from_lead(p_lead_id uuid)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_lead record;
+  v_company_id uuid;
+BEGIN
+  SELECT * INTO v_lead
+  FROM public.leads
+  WHERE id = p_lead_id;
+
+  IF v_lead.status <> 'icp_passed' THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT id INTO v_company_id
+  FROM public.companies
+  WHERE brand_id = v_lead.brand_id
+    AND domain = v_lead.domain
+  LIMIT 1;
+
+  IF v_company_id IS NULL THEN
+    INSERT INTO public.companies (
+      brand_id,
+      name,
+      domain,
+      status,
+      source
+    )
+    VALUES (
+      v_lead.brand_id,
+      COALESCE(v_lead.domain, 'unknown'),
+      v_lead.domain,
+      'researching',
+      v_lead.source
+    )
+    RETURNING id INTO v_company_id;
+  END IF;
+
+  UPDATE public.leads
+  SET company_id = v_company_id
+  WHERE id = p_lead_id;
+
+  RETURN v_company_id;
+END;
+$function$
+",postgres
+public,rpc_get_active_brands,,"CREATE OR REPLACE FUNCTION public.rpc_get_active_brands()
+ RETURNS TABLE(id uuid)
+ LANGUAGE sql
+ SECURITY DEFINER
+AS $function$
+  select id
+  from public.brand_profiles
+  where is_active = true;
+$function$
+",postgres
+public,rpc_get_imap_brands,,"CREATE OR REPLACE FUNCTION public.rpc_get_imap_brands()
+ RETURNS TABLE(id uuid, imap_email text, imap_password text, imap_host text, imap_port integer, imap_secure boolean)
+ LANGUAGE sql
+ SECURITY DEFINER
+AS $function$
+  select
+    id,
+    imap_email,
+    imap_password,
+    imap_host,
+    imap_port,
+    imap_secure
+  from public.brand_profiles
+  where is_active = true
+    and imap_enabled = true;
+$function$
+",postgres
+public,rpc_increment_company_retry,"p_id uuid, p_error text","CREATE OR REPLACE FUNCTION public.rpc_increment_company_retry(p_id uuid, p_error text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO dead_letters (brand_id, entity_id, entity_type, failure_stage, error_message, retry_count)
+  SELECT brand_id, id, 'company', status, p_error, retry_count
+  FROM discovered_companies WHERE id = p_id;
+END;
+$function$
+",postgres
+public,rpc_increment_domain_metric,"p_product uuid, p_metric text","CREATE OR REPLACE FUNCTION public.rpc_increment_domain_metric(p_product uuid, p_metric text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    IF p_metric = 'bounce' THEN
+        UPDATE brand_profiles 
+        SET bounce_count = COALESCE(bounce_count, 0) + 1 
+        WHERE id = p_product;
+    ELSIF p_metric = 'complaint' THEN
+        UPDATE brand_profiles 
+        SET complaint_count = COALESCE(complaint_count, 0) + 1 
+        WHERE id = p_product;
+    ELSIF p_metric = 'sent' THEN
+        UPDATE brand_profiles 
+        SET sent_count = COALESCE(sent_count, 0) + 1 
+        WHERE id = p_product;
+    END IF;
+END;
+$function$
+",postgres
+public,rpc_ingest_lead,"p_brand_id uuid, p_first_name text, p_last_name text, p_full_name text, p_email text, p_title text, p_company_name text, p_domain text, p_linkedin_url text, p_source text, p_source_id text, p_raw_payload jsonb","CREATE OR REPLACE FUNCTION public.rpc_ingest_lead(p_brand_id uuid, p_first_name text, p_last_name text, p_full_name text, p_email text, p_title text, p_company_name text, p_domain text, p_linkedin_url text, p_source text, p_source_id text, p_raw_payload jsonb)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_lead_id uuid;
+  v_company_id uuid;
+BEGIN
+
+  IF p_email IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  IF public.rpc_is_blacklisted(p_email, p_domain) THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT id INTO v_lead_id
+  FROM public.leads
+  WHERE brand_id = p_brand_id
+    AND email = p_email
+  LIMIT 1;
+
+  IF v_lead_id IS NOT NULL THEN
+    RETURN v_lead_id;
+  END IF;
+
+  INSERT INTO public.leads (
+    brand_id,
+    first_name,
+    last_name,
+    full_name,
+    email,
+    domain,
+    title,
+    linkedin_url,
+    source,
+    source_id,
+    raw_payload
+  )
+  VALUES (
+    p_brand_id,
+    p_first_name,
+    p_last_name,
+    p_full_name,
+    p_email,
+    p_domain,
+    p_title,
+    p_linkedin_url,
+    p_source,
+    p_source_id,
+    p_raw_payload
+  )
+  RETURNING id INTO v_lead_id;
+
+  IF p_domain IS NOT NULL THEN
+    SELECT id INTO v_company_id
+    FROM public.companies
+    WHERE brand_id = p_brand_id
+      AND domain = p_domain
+    LIMIT 1;
+
+    IF v_company_id IS NULL THEN
+      INSERT INTO public.companies (
+        brand_id,
+        name,
+        domain,
+        status,
+        source
+      )
+      VALUES (
+        p_brand_id,
+        COALESCE(p_company_name, p_domain),
+        p_domain,
+        'researching',
+        p_source
+      )
+      RETURNING id INTO v_company_id;
+    END IF;
+
+    INSERT INTO public.lead_company_map (
+      brand_id,
+      lead_id,
+      company_id
+    )
+    VALUES (
+      p_brand_id,
+      v_lead_id,
+      v_company_id
+    )
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN v_lead_id;
+END;
+$function$
+",postgres
+public,rpc_insert_negotiation_draft,"p_company_id uuid, p_draft text","CREATE OR REPLACE FUNCTION public.rpc_insert_negotiation_draft(p_company_id uuid, p_draft text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_brand_id uuid;
+  v_lead_id uuid;
+BEGIN
+  SELECT brand_id INTO v_brand_id FROM public.companies WHERE id = p_company_id;
+  
+  SELECT lead_id INTO v_lead_id 
+  FROM public.lead_company_map 
+  WHERE company_id = p_company_id 
+  LIMIT 1;
+
+  INSERT INTO public.messages (brand_id, lead_id, body, direction, status)
+  VALUES (v_brand_id, v_lead_id, p_draft, 'outbound', 'pending');
+END;
+$function$
+",postgres
+public,rpc_insert_reply,"p_company_id uuid, p_lead_id uuid, p_message_id text, p_body text, p_subject text","CREATE OR REPLACE FUNCTION public.rpc_insert_reply(p_company_id uuid, p_lead_id uuid, p_message_id text, p_body text, p_subject text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO replies (company_id, message_id, raw_message, brand_id)
+  SELECT p_company_id, p_message_id, p_body, brand_id
+  FROM companies WHERE id = p_company_id
+  ON CONFLICT (message_id) DO NOTHING;
+  RETURN FOUND;
+END;
+$function$
+",postgres
+public,rpc_is_blacklisted,"p_email text, p_domain text","CREATE OR REPLACE FUNCTION public.rpc_is_blacklisted(p_email text, p_domain text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_exists boolean;
+BEGIN
+  SELECT true INTO v_exists
+  FROM public.blacklist
+  WHERE (email = p_email AND p_email IS NOT NULL)
+     OR (domain = p_domain AND p_domain IS NOT NULL)
+  LIMIT 1;
+
+  RETURN coalesce(v_exists, false);
+END;
+$function$
+",postgres
+public,rpc_mark_lead_contacted,"p_lead_id uuid, p_subject text, p_body text, p_message_id text","CREATE OR REPLACE FUNCTION public.rpc_mark_lead_contacted(p_lead_id uuid, p_subject text, p_body text, p_message_id text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+declare
+  v_company_id uuid;
+begin
+  -- Prevent duplicate send logging
+  insert into public.messages (
+    lead_id,
+    message_id,
+    subject,
+    body,
+    direction,
+    created_at
+  )
+  values (
+    p_lead_id,
+    p_message_id,
+    p_subject,
+    p_body,
+    'outbound',
+    now()
+  )
+  on conflict (message_id) do nothing;
+
+  if not found then
+    -- Already processed
+    return false;
+  end if;
+
+  -- Mark lead contacted
+  update public.leads
+  set
+    status = 'contacted',
+    contacted_at = now(),
+    updated_at = now()
+  where id = p_lead_id;
+
+  return true;
+end;
+$function$
+",postgres
+public,rpc_recalibrate_lead_confidence,"p_lead_id uuid, p_new_confidence numeric","CREATE OR REPLACE FUNCTION public.rpc_recalibrate_lead_confidence(p_lead_id uuid, p_new_confidence numeric)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE public.leads
+  SET confidence_score = p_new_confidence, last_outcome_at = now()
+  WHERE id = p_lead_id;
+END;
+$function$
+",postgres
+public,rpc_reclaim_stale_companies,"p_brand_id uuid, p_processing_status text, p_timeout_seconds integer","CREATE OR REPLACE FUNCTION public.rpc_reclaim_stale_companies(p_brand_id uuid, p_processing_status text, p_timeout_seconds integer)
+ RETURNS integer
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_count integer;
+BEGIN
+  UPDATE public.companies
+  SET
+    status = replace(p_processing_status, '_processing', ''),
+    updated_at = now(),
+    state_updated_at = now()
+  WHERE
+    brand_id = p_brand_id
+    AND status = p_processing_status
+    AND state_updated_at < now() - make_interval(secs => p_timeout_seconds);
+
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RETURN v_count;
+END;
+$function$
+",postgres
+public,rpc_register_failure,"p_entity_type text, p_entity_id uuid, p_error text","CREATE OR REPLACE FUNCTION public.rpc_register_failure(p_entity_type text, p_entity_id uuid, p_error text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+declare
+  v_retry integer;
+  v_delay interval;
+begin
+  if p_entity_type = 'company' then
+
+    update public.companies
+    set
+      retry_count = retry_count + 1,
+      last_error = p_error
+    where id = p_entity_id
+    returning retry_count into v_retry;
+
+    if v_retry >= 5 then
+      insert into public.dead_letter_queue (
+        entity_type,
+        entity_id,
+        reason
+      )
+      values ('company', p_entity_id, p_error);
+
+      return false;
+    end if;
+
+    v_delay := (power(2, v_retry) || ' minutes')::interval;
+
+    update public.companies
+    set next_attempt_at = now() + v_delay
+    where id = p_entity_id;
+
+    return true;
+
+  elsif p_entity_type = 'lead' then
+
+    update public.leads
+    set
+      retry_count = retry_count + 1,
+      last_error = p_error
+    where id = p_entity_id
+    returning retry_count into v_retry;
+
+    if v_retry >= 5 then
+      insert into public.dead_letter_queue (
+        entity_type,
+        entity_id,
+        reason
+      )
+      values ('lead', p_entity_id, p_error);
+
+      return false;
+    end if;
+
+    v_delay := (power(2, v_retry) || ' minutes')::interval;
+
+    update public.leads
+    set next_attempt_at = now() + v_delay
+    where id = p_entity_id;
+
+    return true;
+
+  end if;
+
+  return false;
+end;
+$function$
+",postgres
+public,rpc_release_discovery_source,"p_source_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_companies integer DEFAULT 0, p_contacts integer DEFAULT 0, p_duration_ms integer DEFAULT NULL::integer","CREATE OR REPLACE FUNCTION public.rpc_release_discovery_source(p_source_id uuid, p_success boolean, p_error text DEFAULT NULL::text, p_companies integer DEFAULT 0, p_contacts integer DEFAULT 0, p_duration_ms integer DEFAULT NULL::integer)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+declare
+  v_brand_id uuid;
+begin
+  select brand_id into v_brand_id
+  from public.brand_discovery_sources
+  where id = p_source_id;
+
+  update public.brand_discovery_sources
+  set
+    is_running = false,
+    last_status = case when p_success then 'success' else 'failed' end,
+    last_error = p_error,
+    retry_count = case
+      when p_success then 0
+      else retry_count + 1
+    end,
+    next_attempt_at = case
+      when p_success then null
+      else now() + (interval '1 minute' * (retry_count + 1))
+    end
+  where id = p_source_id;
+
+  -- clear manual trigger once one source completes
+  if p_success then
+    update public.brand_profiles
+    set manual_discovery_requested = false
+    where id = v_brand_id;
+  end if;
+
+  insert into public.discovery_metrics (
+    source_id,
+    companies_discovered,
+    contacts_discovered,
+    duration_ms,
+    success,
+    error
+  )
+  values (
+    p_source_id,
+    p_companies,
+    p_contacts,
+    p_duration_ms,
+    p_success,
+    p_error
+  );
+
+end;
+$function$
+",postgres
+public,rpc_request_manual_discovery,p_brand_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_request_manual_discovery(p_brand_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+begin
+  update public.brand_profiles
+  set manual_discovery_requested = true
+  where id = p_brand_id
+    and discovery_enabled = true;
+end;
+$function$
+",postgres
+public,rpc_reserve_daily_send,p_brand_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_reserve_daily_send(p_brand_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_limit integer;
+  v_current integer;
+BEGIN
+
+  SELECT daily_send_limit
+  INTO v_limit
+  FROM public.brand_profiles
+  WHERE id = p_brand_id;
+
+  INSERT INTO public.daily_send_tracker (
+    brand_id,
+    send_date,
+    send_count
+  )
+  VALUES (
+    p_brand_id,
+    current_date,
+    0
+  )
+  ON CONFLICT (brand_id, send_date)
+  DO NOTHING;
+
+  SELECT send_count
+  INTO v_current
+  FROM public.daily_send_tracker
+  WHERE brand_id = p_brand_id
+    AND send_date = current_date
+  FOR UPDATE;
+
+  IF v_current >= v_limit THEN
+    RETURN false;
+  END IF;
+
+  UPDATE public.daily_send_tracker
+  SET send_count = send_count + 1
+  WHERE brand_id = p_brand_id
+    AND send_date = current_date;
+
+  RETURN true;
+END;
+$function$
+",postgres
+public,rpc_reserve_hourly_send,p_brand_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_reserve_hourly_send(p_brand_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  current_bucket timestamptz := date_trunc('hour', now());
+  current_count integer;
+  hourly_limit integer;
+BEGIN
+
+  SELECT hourly_send_limit
+  INTO hourly_limit
+  FROM public.brand_profiles
+  WHERE id = p_brand_id
+    AND send_enabled = true;
+
+  IF hourly_limit IS NULL THEN
+    RETURN false;
+  END IF;
+
+  INSERT INTO public.send_counters (
+    brand_id,
+    counter_type,
+    bucket_start,
+    send_count
+  )
+  VALUES (
+    p_brand_id,
+    'hourly',
+    current_bucket,
+    0
+  )
+  ON CONFLICT (brand_id, counter_type, bucket_start)
+  DO NOTHING;
+
+  UPDATE public.send_counters
+  SET send_count = send_count + 1
+  WHERE brand_id = p_brand_id
+    AND counter_type = 'hourly'
+    AND bucket_start = current_bucket
+    AND send_count < hourly_limit
+  RETURNING send_count INTO current_count;
+
+  RETURN current_count IS NOT NULL;
+END;
+$function$
+",postgres
+public,rpc_score_lead,p_lead_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_score_lead(p_lead_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$DECLARE
+  v_lead record;
+  v_config jsonb;
+  v_version_id uuid;
+  v_score numeric := 0;
+  v_threshold numeric := 0;
+  v_breakdown jsonb := '{}'::jsonb;
+  v_key text;
+  v_value jsonb;
+BEGIN
+
+  -- 1️⃣ Load lead
+  SELECT * INTO v_lead
+  FROM public.leads
+  WHERE id = p_lead_id;
+
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+
+  -- 2️⃣ Load active scoring config for brand
+  SELECT scoring_config, id
+  INTO v_config, v_version_id
+  FROM public.scoring_versions
+  WHERE brand_id = v_lead.brand_id
+    AND is_active = true
+  LIMIT 1;
+
+  IF v_config IS NULL THEN
+    RETURN;
+  END IF;
+
+  v_threshold := COALESCE((v_config->>'threshold')::numeric, 0);
+
+  -- =====================================================
+  -- TITLE MATCH SCORING
+  -- =====================================================
+
+  IF v_config->'weights' ? 'title_contains'
+     AND v_lead.title IS NOT NULL
+  THEN
+    FOR v_key, v_value IN
+      SELECT key, value
+      FROM jsonb_each(v_config->'weights'->'title_contains')
+    LOOP
+      IF lower(v_lead.title) LIKE '%' || lower(v_key) || '%' THEN
+        v_score := v_score + (v_value::numeric);
+        v_breakdown := v_breakdown || jsonb_build_object(v_key, v_value);
+      END IF;
+    END LOOP;
+  END IF;
+
+  -- =====================================================
+  -- GEO MATCH (DOMAIN BASED)
+  -- =====================================================
+
+  IF v_config->'weights' ? 'geo_contains'
+     AND v_lead.domain IS NOT NULL
+  THEN
+    FOR v_key, v_value IN
+      SELECT key, value
+      FROM jsonb_each(v_config->'weights'->'geo_contains')
+    LOOP
+      IF lower(v_lead.domain) LIKE '%' || lower(v_key) || '%' THEN
+        v_score := v_score + (v_value::numeric);
+        v_breakdown := v_breakdown || jsonb_build_object(v_key, v_value);
+      END IF;
+    END LOOP;
+  END IF;
+
+  -- =====================================================
+  -- FINAL DECISION
+  -- =====================================================
+
+  UPDATE public.leads
+  SET lead_score = v_score,
+      score_breakdown = v_breakdown,
+      scoring_version_id = v_version_id,
+      status = CASE
+        WHEN v_score >= v_threshold THEN 'icp_passed'
+        ELSE 'filtered_out'
+      END,
+      updated_at = now()
+  WHERE id = p_lead_id;
+
+END;$function$
+",postgres
+public,rpc_update_brand_deliverability,"p_brand_id uuid, p_score numeric, p_auto_pause boolean","CREATE OR REPLACE FUNCTION public.rpc_update_brand_deliverability(p_brand_id uuid, p_score numeric, p_auto_pause boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+begin
+  update public.brand_profiles
+  set
+    deliverability_score = p_score,
+    auto_paused = p_auto_pause,
+    last_deliverability_check = now()
+  where id = p_brand_id;
+end;
+$function$
+",postgres
+public,rpc_update_company_status,"p_brand_id uuid, p_company_id uuid, p_expected_status text, p_new_status text","CREATE OR REPLACE FUNCTION public.rpc_update_company_status(p_brand_id uuid, p_company_id uuid, p_expected_status text, p_new_status text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_updated boolean;
+BEGIN
+  UPDATE public.companies
+  SET status = p_new_status,
+      updated_at = now()
+  WHERE id = p_company_id
+    AND brand_id = p_brand_id
+    AND status = p_expected_status;
+
+  v_updated := FOUND;
+  RETURN v_updated;
+END;
+$function$
+",postgres
+public,rpc_update_lead_status,"p_lead_id uuid, p_new_status text","CREATE OR REPLACE FUNCTION public.rpc_update_lead_status(p_lead_id uuid, p_new_status text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE public.leads
+  SET status = p_new_status,
+      updated_at = now()
+  WHERE id = p_lead_id;
+END;
+$function$
+",postgres
+public,rpc_update_signal_performance_for_company,p_company_id uuid,"CREATE OR REPLACE FUNCTION public.rpc_update_signal_performance_for_company(p_company_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_lead record;
+  v_key text;
+  v_value jsonb;
+  v_ltv numeric;
+BEGIN
+
+  SELECT lifetime_value INTO v_ltv
+  FROM public.companies
+  WHERE id = p_company_id;
+
+  IF v_ltv IS NULL THEN
+    RETURN;
+  END IF;
+
+  FOR v_lead IN
+    SELECT *
+    FROM public.leads
+    WHERE company_id = p_company_id
+      AND status = 'closed_won'
+  LOOP
+
+    FOR v_key, v_value IN
+      SELECT key, value
+      FROM jsonb_each(v_lead.score_breakdown)
+    LOOP
+
+      INSERT INTO public.signal_performance (
+        brand_id,
+        signal,
+        total_leads,
+        total_closed,
+        total_revenue
+      )
+      VALUES (
+        v_lead.brand_id,
+        v_key,
+        1,
+        1,
+        v_ltv
+      )
+      ON CONFLICT (brand_id, signal)
+      DO UPDATE SET
+        total_leads = signal_performance.total_leads + 1,
+        total_closed = signal_performance.total_closed + 1,
+        total_revenue = signal_performance.total_revenue + v_ltv;
+
+    END LOOP;
+
+  END LOOP;
+
+END;
+$function$
+",postgres
+public,rpc_update_signal_source_performance,"p_brand_id uuid, p_source_id uuid, p_send_delta integer DEFAULT 0, p_reply_delta integer DEFAULT 0, p_bounce_delta integer DEFAULT 0","CREATE OR REPLACE FUNCTION public.rpc_update_signal_source_performance(p_brand_id uuid, p_source_id uuid, p_send_delta integer DEFAULT 0, p_reply_delta integer DEFAULT 0, p_bounce_delta integer DEFAULT 0)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO signal_source_performance (source_id, brand_id, sends, replies, bounces, last_updated)
+  VALUES (p_source_id, p_brand_id, p_send_delta, p_reply_delta, p_bounce_delta, now())
+  ON CONFLICT (source_id, brand_id) DO UPDATE SET
+    sends = signal_source_performance.sends + p_send_delta,
+    replies = signal_source_performance.replies + p_reply_delta,
+    bounces = signal_source_performance.bounces + p_bounce_delta,
+    last_updated = now();
+END;
+$function$
+",postgres
+public,schedule_retry,"p_lead_id uuid, p_error text, p_max_attempts integer DEFAULT 5","CREATE OR REPLACE FUNCTION public.schedule_retry(p_lead_id uuid, p_error text, p_max_attempts integer DEFAULT 5)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+declare
+  v_retry int;
+  v_delay interval;
+begin
+  select retry_count into v_retry
+  from public.leads
+  where id = p_lead_id
+  for update;
+
+  if v_retry is null then
+    raise exception 'Lead not found';
+  end if;
+
+  v_retry := v_retry + 1;
+
+  -- Exponential backoff
+  if v_retry = 1 then
+    v_delay := interval '5 minutes';
+  elsif v_retry = 2 then
+    v_delay := interval '15 minutes';
+  elsif v_retry = 3 then
+    v_delay := interval '1 hour';
+  elsif v_retry = 4 then
+    v_delay := interval '6 hours';
+  else
+    v_delay := interval '24 hours';
+  end if;
+
+  if v_retry >= p_max_attempts then
+    -- Move to dead letter
+    insert into public.dead_letters (
+      brand_id,
+      entity_type,
+      entity_id,
+      failure_stage,
+      error_message,
+      retry_count,
+      last_attempt_at
+    )
+    select brand_id,
+           'lead',
+           id,
+           status,
+           p_error,
+           v_retry,
+           now()
+    from public.leads
+    where id = p_lead_id;
+
+    update public.leads
+    set status = 'error',
+        last_error = p_error,
+        retry_count = v_retry,
+        state_updated_at = now()
+    where id = p_lead_id;
+
+  else
+    update public.leads
+    set retry_count = v_retry,
+        next_retry_at = now() + v_delay,
+        last_error = p_error,
+        state_updated_at = now()
+    where id = p_lead_id;
+  end if;
+
+end;
+$function$
+",postgres
+public,set_discovered_companies_updated_at,,"CREATE OR REPLACE FUNCTION public.set_discovered_companies_updated_at()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$function$
+",postgres
+public,split_part,"citext, citext, integer","CREATE OR REPLACE FUNCTION public.split_part(citext, citext, integer)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT (pg_catalog.regexp_split_to_array( $1::pg_catalog.text, pg_catalog.regexp_replace($2::pg_catalog.text, '([^a-zA-Z_0-9])', E'\\\\\\1', 'g'), 'i'))[$3];
+$function$
+",supabase_admin
+public,strpos,"citext, citext","CREATE OR REPLACE FUNCTION public.strpos(citext, citext)
+ RETURNS integer
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.strpos( pg_catalog.lower( $1::pg_catalog.text ), pg_catalog.lower( $2::pg_catalog.text ) );
+$function$
+",supabase_admin
+public,texticlike,"citext, citext","CREATE OR REPLACE FUNCTION public.texticlike(citext, citext)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticlike$function$
+",supabase_admin
+public,texticlike,"citext, text","CREATE OR REPLACE FUNCTION public.texticlike(citext, text)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticlike$function$
+",supabase_admin
+public,texticnlike,"citext, citext","CREATE OR REPLACE FUNCTION public.texticnlike(citext, citext)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticnlike$function$
+",supabase_admin
+public,texticnlike,"citext, text","CREATE OR REPLACE FUNCTION public.texticnlike(citext, text)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticnlike$function$
+",supabase_admin
+public,texticregexeq,"citext, citext","CREATE OR REPLACE FUNCTION public.texticregexeq(citext, citext)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticregexeq$function$
+",supabase_admin
+public,texticregexeq,"citext, text","CREATE OR REPLACE FUNCTION public.texticregexeq(citext, text)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticregexeq$function$
+",supabase_admin
+public,texticregexne,"citext, text","CREATE OR REPLACE FUNCTION public.texticregexne(citext, text)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticregexne$function$
+",supabase_admin
+public,texticregexne,"citext, citext","CREATE OR REPLACE FUNCTION public.texticregexne(citext, citext)
+ RETURNS boolean
+ LANGUAGE internal
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$texticregexne$function$
+",supabase_admin
+public,translate,"citext, citext, text","CREATE OR REPLACE FUNCTION public.translate(citext, citext, text)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE PARALLEL SAFE STRICT
+AS $function$
+    SELECT pg_catalog.translate( pg_catalog.translate( $1::pg_catalog.text, pg_catalog.lower($2::pg_catalog.text), $3), pg_catalog.upper($2::pg_catalog.text), $3);
+$function$
+",supabase_admin
+public,trigger_create_company_from_lead,,"CREATE OR REPLACE FUNCTION public.trigger_create_company_from_lead()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_company_id uuid;
+BEGIN
+
+  -- Only trigger when status changes to icp_passed
+  IF NEW.status = 'icp_passed'
+     AND (OLD.status IS DISTINCT FROM 'icp_passed')
+  THEN
+
+    -- Skip if no domain
+    IF NEW.domain IS NULL THEN
+      RETURN NEW;
+    END IF;
+
+    -- Check existing company (brand-scoped)
+    SELECT id INTO v_company_id
+    FROM public.companies
+    WHERE brand_id = NEW.brand_id
+      AND domain = NEW.domain
+    LIMIT 1;
+
+    -- Create company if not exists
+    IF v_company_id IS NULL THEN
+      INSERT INTO public.companies (
+        brand_id,
+        name,
+        domain,
+        status,
+        source,
+        source_id
+      )
+      VALUES (
+        NEW.brand_id,
+        COALESCE(NEW.domain, 'unknown'),
+        NEW.domain,
+        'researching',
+        NEW.source,
+        NEW.source_id
+      )
+      RETURNING id INTO v_company_id;
+    END IF;
+
+    -- Link lead to company
+    UPDATE public.leads
+    SET company_id = v_company_id
+    WHERE id = NEW.id;
+
+    INSERT INTO public.lead_company_map (
+      brand_id,
+      lead_id,
+      company_id
+    )
+    VALUES (
+      NEW.brand_id,
+      NEW.id,
+      v_company_id
+    )
+    ON CONFLICT DO NOTHING;
+
+  END IF;
+
+  RETURN NEW;
+
+END;
+$function$
+",postgres
+public,update_company_enrichment,"p_company_id uuid, p_status text, p_enrichment_data jsonb DEFAULT NULL::jsonb, p_error text DEFAULT NULL::text","CREATE OR REPLACE FUNCTION public.update_company_enrichment(p_company_id uuid, p_status text, p_enrichment_data jsonb DEFAULT NULL::jsonb, p_error text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE discovered_companies
+  SET 
+    enrichment_status = LOWER(p_status),
+    enrichment_attempts = enrichment_attempts + 1,
+    last_enrichment_at = NOW(),
+    enrichment_data = COALESCE(p_enrichment_data, enrichment_data),
+    enrichment_error = p_error,
+    requires_enrichment = CASE 
+      WHEN LOWER(p_status) IN ('success', 'enriched') THEN false 
+      ELSE requires_enrichment 
+    END
+  WHERE id = p_company_id;
+END;
+$function$
+",postgres
+public,update_company_enrichment,"p_company_id uuid, p_confidence numeric, p_company_name text, p_website text, p_domain text, p_status text, p_error text DEFAULT NULL::text","CREATE OR REPLACE FUNCTION public.update_company_enrichment(p_company_id uuid, p_confidence numeric, p_company_name text, p_website text, p_domain text, p_status text, p_error text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+
+  UPDATE public.discovered_companies
+  SET
+    name = COALESCE(p_company_name, name),
+    website = COALESCE(p_website, website),
+    domain = COALESCE(p_domain, domain),
+    confidence = p_confidence,
+    enrichment_status = p_status,
+    enrichment_error = p_error,
+    requires_enrichment =
+      CASE
+        WHEN p_status IN ('SUCCESS', 'SKIPPED') THEN false
+        WHEN enrichment_attempts >= 3 THEN false
+        ELSE true
+      END,
+    next_attempt_at =
+      CASE
+        WHEN p_status = 'FAILED'
+        THEN now() + interval '15 minutes'
+        ELSE NULL
+      END,
+    updated_at = now()
+  WHERE id = p_company_id;
+
+END;
+$function$
+",postgres
+public,update_contact_enrichment,"p_contact_id uuid, p_confidence numeric, p_email text DEFAULT NULL::text, p_title text DEFAULT NULL::text, p_linkedin_url text DEFAULT NULL::text, p_intent_score numeric DEFAULT NULL::numeric, p_status text DEFAULT NULL::text, p_error text DEFAULT NULL::text","CREATE OR REPLACE FUNCTION public.update_contact_enrichment(p_contact_id uuid, p_confidence numeric, p_email text DEFAULT NULL::text, p_title text DEFAULT NULL::text, p_linkedin_url text DEFAULT NULL::text, p_intent_score numeric DEFAULT NULL::numeric, p_status text DEFAULT NULL::text, p_error text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE discovered_contacts
+  SET 
+    confidence = p_confidence,
+    email = COALESCE(p_email, email),
+    title = COALESCE(p_title, title),
+    linkedin_url = COALESCE(p_linkedin_url, linkedin_url),
+    intent_score = COALESCE(p_intent_score, intent_score),
+    enrichment_status = CASE 
+      WHEN p_status IS NOT NULL THEN LOWER(p_status)
+      ELSE enrichment_status 
+    END,
+    enrichment_attempts = enrichment_attempts + 1,
+    last_enrichment_at = NOW(),
+    enrichment_error = p_error,
+    requires_enrichment = CASE 
+      WHEN LOWER(p_status) IN ('success', 'enriched') THEN false 
+      ELSE requires_enrichment 
+    END
+  WHERE id = p_contact_id;
+END;
+$function$
+",postgres
+public,update_contact_enrichment,"p_contact_id uuid, p_email text, p_confidence numeric, p_status text, p_requires_enrichment boolean, p_source text, p_reasoning jsonb, p_error text, p_intent_score numeric, p_linkedin_url text, p_title text, p_attempts integer","CREATE OR REPLACE FUNCTION public.update_contact_enrichment(p_contact_id uuid, p_email text, p_confidence numeric, p_status text, p_requires_enrichment boolean, p_source text, p_reasoning jsonb, p_error text, p_intent_score numeric, p_linkedin_url text, p_title text, p_attempts integer)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+begin
+  update public.discovered_contacts
+  set
+    email = p_email,
+    confidence = p_confidence,
+    enrichment_status = p_status,
+    requires_enrichment = p_requires_enrichment,
+    enrichment_source = p_source,
+    enrichment_reasoning = p_reasoning,
+    enrichment_error = p_error,
+    intent_score = p_intent_score,
+    linkedin_url = p_linkedin_url,
+    title = p_title,
+    enrichment_attempts = p_attempts,
+    updated_at = now()
+  where id = p_contact_id;
+end;
+$function$
+",postgres
+public,update_timestamp,,"CREATE OR REPLACE FUNCTION public.update_timestamp()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$function$
+",postgres
+public,update_updated_at_column,,"CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$function$
+",postgres
