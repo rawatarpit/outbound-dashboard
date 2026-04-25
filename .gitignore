@@ -32,5 +32,3 @@ npm-debug.log*
 *.sublime-*
 
 # Supabase (backend only - we only deploy frontend)
-supabase/
-.supabase/
