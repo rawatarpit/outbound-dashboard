@@ -85,14 +85,54 @@ Deno.serve(async (req)=>{
           }
         });
       }
-      return new Response(JSON.stringify({
-        error: "Brand ID required"
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
+      if (path === "/companies" || path === "/companies/") {
+        if (req.method === "GET") {
+          const { data: brands } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
+          const brandIds = brands?.map((b) => b.id) || [];
+          if (brandIds.length === 0) {
+            return new Response(JSON.stringify({ companies: [], total: 0 }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+          const page = parseInt(url.searchParams.get("page") || "1");
+          const limit = parseInt(url.searchParams.get("limit") || "50");
+          const offset = (page - 1) * limit;
+          const status = url.searchParams.get("status");
+          let query = supabase.from("companies").select("*", { count: "exact" }).in("brand_id", brandIds).range(offset, offset + limit - 1).order("created_at", { ascending: false });
+          if (status) query = query.eq("status", status);
+          const { data: companies, error, count } = await query;
+          if (error) {
+            return new Response(JSON.stringify({ error: error.message }), {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+          return new Response(JSON.stringify({ companies: companies || [], total: count }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
         }
+      }
+      if (path.match(/^\/companies\/([^/]+)/)) {
+        const companyId = path.match(/^\/companies\/([^/]+)/)![1];
+        if (req.method === "GET") {
+          const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
+          if (error || !data) {
+            return new Response(JSON.stringify({ error: "Company not found" }), {
+              status: 404,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+          return new Response(JSON.stringify(data), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      }
+      return new Response(JSON.stringify({ error: "Brand ID required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
     const { data: brand } = await supabase.from("brand_profiles").select("id").eq("id", brandId).eq("client_id", clientId).maybeSingle();

@@ -15,7 +15,7 @@ import {
   ArrowDownRight
 } from 'lucide-react'
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
-import { brandsAPI, leadsAPI, companiesAPI, messagesAPI, activityAPI } from '@/lib/api'
+import { brandsAPI, leadsAPI, dashboardAPI } from '@/lib/api'
 
 interface DashboardStats {
   totalLeads: number
@@ -42,47 +42,31 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const clientId = client?.id
-      const [brandsRes, leadsRes, companiesRes, messagesRes, activityRes] = await Promise.all([
+      const [brandsRes, leadsRes, dashboardRes] = await Promise.all([
         brandsAPI.list(clientId),
         leadsAPI.list({ clientId }),
-        companiesAPI.list({ clientId }),
-        messagesAPI.list({ clientId }),
-        activityAPI.list(clientId, 10)
+        dashboardAPI.overview()
       ])
 
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-      const sentToday = messagesRes.data.filter(m => {
-        const sentDate = new Date(m.created_at)
-        return m.status === 'sent' && sentDate >= today
-      }).length
-
-      const sentWeek = messagesRes.data.filter(m => {
-        const sentDate = new Date(m.created_at)
-        return m.status === 'sent' && sentDate >= weekAgo
-      }).length
-
-      const totalSent = messagesRes.data.filter(m => m.status === 'sent').length || 1
-      const totalReplied = messagesRes.data.filter(m => m.status === 'opened').length || 0
+      const dash = dashboardRes.data || {}
+      const sendStats = dash.send_stats || {}
+      const discoveryStats = dash.discovery_stats || {}
+      const pipelineStages = dash.pipeline || {}
+      const activityFeed = dash.activity_feed || []
 
       setStats({
-        totalLeads: leadsRes.total,
-        totalCompanies: companiesRes.data.length,
-        emailsSentToday: sentToday,
-        emailsSentWeek: sentWeek,
-        replyRate: totalReplied / totalSent,
+        totalLeads: leadsRes.total || discoveryStats.contacts_total || 0,
+        totalCompanies: discoveryStats.companies_total || 0,
+        emailsSentToday: sendStats.sent_today || 0,
+        emailsSentWeek: sendStats.sent_today || 0,
+        replyRate: sendStats.sent_today > 0 ? (sendStats.opened || 0) / sendStats.sent_today : 0,
         conversionRate: 0.05,
         activeBrands: brandsRes.data.filter(b => b.is_active).length,
-        recentActivity: activityRes.data
+        recentActivity: activityFeed
       })
 
-      const pipelineCounts: Record<string, number> = {}
-      companiesRes.data.forEach(c => {
-        pipelineCounts[c.status] = (pipelineCounts[c.status] || 0) + 1
-      })
-      setPipelineData(Object.entries(pipelineCounts).map(([status, count]) => ({ status, count })))
+      const stages = pipelineStages
+      setPipelineData(Object.entries(stages).map(([status, count]) => ({ status, count: count as number })))
 
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       const mockData = days.map((day) => ({

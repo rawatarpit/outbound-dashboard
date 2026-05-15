@@ -94,6 +94,7 @@ async function fetchAPI(
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   }
 
   if (options.count) {
@@ -139,6 +140,7 @@ async function insertAPI(table: string, data: any) {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Prefer': 'return=representation'
     },
     body: JSON.stringify(data)
@@ -157,6 +159,7 @@ async function updateAPI(table: string, id: string, data: any) {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
     body: JSON.stringify(data)
   })
@@ -174,6 +177,7 @@ async function deleteAPI(table: string, id: string) {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     }
   })
 
@@ -291,21 +295,21 @@ export const leadsAPI = {
 // Companies / Pipeline
 // ─────────────────────────────────────────────
 export const companiesAPI = {
-  list: async (options: { brandId?: string; clientId?: string } = {}): Promise<{ data: Company[], error: any }> => {
-    if (!options.brandId) {
-      return fetchAPI('companies', {
-        params: { 'order': 'updated_at.desc', ...(options.clientId ? { 'client_id': `eq.${options.clientId}` } : {}) }
-      })
-    }
+  list: async (options: { brandId?: string; clientId?: string; status?: string; page?: number; perPage?: number } = {}): Promise<{ data: Company[], error: any }> => {
     const params: Record<string, string> = {}
-    const { data, error } = await callEdgeFunction<{ companies: Company[]; total: number }>(`pipeline/${options.brandId}`, { params })
+    if (options.status) params['status'] = options.status
+    if (options.page) params['page'] = String(options.page)
+    if (options.perPage) params['limit'] = String(options.perPage)
+    const endpoint = options.brandId ? `pipeline/${options.brandId}` : 'pipeline/companies'
+    const { data, error } = await callEdgeFunction<{ companies: Company[]; total: number }>(endpoint, { params })
     if (error) return { data: [], error }
     return { data: data.companies || [], error: null }
   },
 
   get: async (id: string): Promise<{ data: Company | null, error: any }> => {
-    return fetchAPI('companies', { params: { 'id': `eq.${id}` } })
-      .then(r => ({ data: r.data[0] || null, error: r.error }))
+    const { data, error } = await callEdgeFunction<Company>(`pipeline/companies/${id}`)
+    if (error) return { data: null, error }
+    return { data, error: null }
   },
 
   create: async (data: Partial<Company>): Promise<{ data: Company[], error: any }> => {
