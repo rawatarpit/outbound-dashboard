@@ -178,12 +178,12 @@ export default function DashboardPage() {
           { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, gradient: 'from-amber-500 to-amber-600', accent: 'text-amber-400', sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
         ].map(({ label, value, icon: Icon, gradient, accent, barColor, progressWidth, badge, sub }) => (
           <div key={label} className="group relative">
-            <div className="absolute -inset-[1px] bg-gradient-to-r from-white/[0.04] to-white/[0.02] rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition duration-500" />
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/20 to-violet-500/20 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
             <Card className="relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-2xl pointer-events-none" />
                 <CardContent className="p-5 relative">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`rounded-xl bg-gradient-to-br ${gradient} p-3 shadow-lg shadow-primary/20`}>
+                  <div className={`rounded-xl bg-gradient-to-br ${gradient} p-3 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.15)]`}>
                     <Icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   {badge !== undefined && badge !== '' ? (
@@ -375,7 +375,7 @@ export default function DashboardPage() {
                     <div className={`h-9 w-9 rounded-xl flex items-center justify-center border ${
                       isRunning ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/[0.03] border-white/[0.04]'
                     }`}>
-                      <Icon className={`h-4.5 w-4.5 ${isRunning ? 'text-emerald-400' : 'text-muted-foreground/50'}`} />
+                      <Icon className={`h-[18px] w-[18px] ${isRunning ? 'text-emerald-400' : 'text-muted-foreground/50'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground/90 capitalize">{type}</p>

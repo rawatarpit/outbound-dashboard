@@ -14,9 +14,9 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-gradient-to-r from-primary to-violet-500 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:from-primary/90 hover:to-violet-500/90',
-        destructive: 'bg-gradient-to-r from-destructive to-rose-600 text-destructive-foreground shadow-lg shadow-destructive/25 hover:shadow-xl hover:shadow-destructive/30',
-        outline: 'border border-white/[0.08] bg-white/[0.04] text-foreground/80 hover:bg-white/[0.08] hover:text-foreground shadow-sm',
+        default: 'bg-gradient-to-r from-primary to-violet-500 text-primary-foreground shadow-[0_2px_10px_-2px_rgba(99,102,241,0.3),0_4px_20px_-4px_rgba(99,102,241,0.2)] hover:shadow-[0_4px_16px_-2px_rgba(99,102,241,0.4),0_8px_32px_-4px_rgba(99,102,241,0.25)] hover:from-primary/90 hover:to-violet-500/90 active:scale-[0.97]',
+        destructive: 'bg-gradient-to-r from-destructive to-rose-600 text-destructive-foreground shadow-[0_2px_10px_-2px_rgba(239,68,68,0.3),0_4px_20px_-4px_rgba(239,68,68,0.2)] hover:shadow-[0_4px_16px_-2px_rgba(239,68,68,0.4),0_8px_32px_-4px_rgba(239,68,68,0.25)] hover:from-destructive/90 hover:to-rose-600/90 active:scale-[0.97]',
+        outline: 'border border-white/[0.08] bg-white/[0.04] text-foreground/80 hover:bg-white/[0.08] hover:text-foreground hover:border-white/[0.14] shadow-sm active:scale-[0.97]',
         secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
         ghost: 'text-foreground/60 hover:text-foreground hover:bg-white/[0.06]',
         link: 'text-primary underline-offset-4 hover:underline',

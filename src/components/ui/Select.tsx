@@ -38,9 +38,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-10 w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-foreground/90 shadow-sm transition-all duration-200',
-      'hover:bg-white/[0.06] hover:border-white/[0.12]',
-      'focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50',
+      'flex h-10 w-full items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-foreground/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-200',
+      'hover:bg-white/[0.06] hover:border-white/[0.14]',
+      'focus:outline-none focus:ring-[3px] focus:ring-primary/25 focus:border-primary/60 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2),0_0_20px_-4px_rgba(99,102,241,0.15)]',
       'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-white/[0.02]',
       '[&>span]:line-clamp-1',
       className
@@ -63,7 +63,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl p-1.5 shadow-2xl shadow-black/20',
+        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.03)]',
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
         position === 'popper' &&

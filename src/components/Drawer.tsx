@@ -71,7 +71,7 @@ export default function Drawer({
             >
               <Dialog.Panel
                 className={cn(
-                  'w-full transform overflow-hidden rounded-2xl bg-gradient-to-br from-card/95 to-card/90 backdrop-blur-2xl border border-white/[0.06] shadow-2xl shadow-black/30 transition-all h-full',
+                  'w-full transform overflow-hidden rounded-2xl bg-gradient-to-br from-card/95 to-card/90 backdrop-blur-2xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_40px_rgba(0,0,0,0.5),0_2px_10px_rgba(0,0,0,0.35)] transition-all h-full',
                   isVertical ? sizeClasses[size] : 'w-full',
                   side === 'left' && 'rounded-r-2xl',
                   side === 'right' && 'rounded-l-2xl'
