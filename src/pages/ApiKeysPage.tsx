@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type ClientApiKey } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -13,9 +13,6 @@ import {
   Trash2,
   Copy,
   MoreHorizontal,
-  Eye,
-  EyeOff,
-  Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, copyToClipboard } from '@/lib/utils'
@@ -71,7 +68,7 @@ export default function ApiKeysPage() {
 
       if (error) throw error
 
-      const rawKey = data[0]?._rawKey
+      const rawKey = (data[0] as any)?._rawKey
       if (rawKey) {
         setNewKey({ name: formData.name, key: rawKey })
         toast.success('API key created - copy it now, you won\'t see it again!')

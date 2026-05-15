@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import {
   Select,
   SelectContent,
@@ -19,7 +18,6 @@ import {
   Mail,
   Building2,
   Calendar,
-  ExternalLink,
   Linkedin,
   MessageSquare,
   Edit2,
@@ -61,7 +59,7 @@ export default function LeadDetailPage() {
   const fetchLeadData = async () => {
     try {
       const { data: leadData, error: leadError } = await leadsAPI.get(id!)
-      if (leadError) throw leadError
+      if (leadError || !leadData) throw leadError || new Error('Lead not found')
       setLead(leadData)
       setEditedLead(leadData)
 
@@ -171,11 +169,9 @@ export default function LeadDetailPage() {
             </Button>
           )}
           {lead.email && (
-            <Button asChild>
-              <a href={`mailto:${lead.email}`}>
-                <Mail className="h-4 w-4 mr-2" />
-                Send Email
-              </a>
+            <Button onClick={() => window.location.href = `mailto:${lead.email}`}>
+              <Mail className="h-4 w-4 mr-2" />
+              Send Email
             </Button>
           )}
         </div>
@@ -277,11 +273,9 @@ export default function LeadDetailPage() {
                   </Select>
                 </div>
                 {lead.linkedin_url && (
-                  <Button variant="outline" asChild>
-                    <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      <Linkedin className="h-4 w-4 mr-2" />
-                      LinkedIn
-                    </a>
+                  <Button variant="outline" onClick={() => window.open(lead.linkedin_url!, '_blank', 'noopener,noreferrer')}>
+                    <Linkedin className="h-4 w-4 mr-2" />
+                    LinkedIn
                   </Button>
                 )}
               </div>

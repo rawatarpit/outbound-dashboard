@@ -21,7 +21,7 @@ import toast from 'react-hot-toast'
 export default function SettingsPage() {
   const { client, user } = useAuth()
   const clientId = user?.clientId || client?.id
-  const [settings, setSettings] = useState<ClientSettings | null>(null)
+  const [_settings, setSettings] = useState<ClientSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<Partial<ClientSettings>>({})

@@ -93,7 +93,7 @@ function SourceDetailView({
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{source.total_records_fetched || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{(source as any).total_records_fetched || 0}</p>
                 <p className="text-sm text-gray-500">Total Records</p>
               </div>
             </div>
@@ -106,7 +106,7 @@ function SourceDetailView({
                 <Building2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{source.total_companies_enriched || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{(source as any).total_companies_enriched || 0}</p>
                 <p className="text-sm text-gray-500">Companies Enriched</p>
               </div>
             </div>
@@ -119,7 +119,7 @@ function SourceDetailView({
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{source.total_contacts_enriched || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{(source as any).total_contacts_enriched || 0}</p>
                 <p className="text-sm text-gray-500">Contacts Enriched</p>
               </div>
             </div>

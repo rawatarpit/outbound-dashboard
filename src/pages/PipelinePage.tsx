@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type Company, type BrandProfile, COMPANY_STATUSES, PIPELINE_STAGES } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import Drawer from '@/components/Drawer'
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
-import { Plus, ExternalLink, DollarSign, Building2, MoreHorizontal, GripVertical } from 'lucide-react'
+import { Plus, ExternalLink, Building2, MoreHorizontal } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, cn } from '@/lib/utils'
 import { companiesAPI, brandsAPI } from '@/lib/api'
@@ -79,17 +79,6 @@ export default function PipelinePage() {
       toast.error(error.message || 'Failed to fetch companies')
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleStatusChange = async (company: Company, newStatus: string) => {
-    try {
-      const { error } = await companiesAPI.update(company.id, { status: newStatus, state_updated_at: new Date().toISOString() })
-      if (error) throw error
-      toast.success(`Status updated to ${newStatus.replace('_', ' ')}`)
-      fetchCompanies()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update status')
     }
   }
 

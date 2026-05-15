@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type BrandProfile, supabase as supabaseClient } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
@@ -21,7 +21,7 @@ import {
 import { TrendingUp, Mail, Users, MessageSquare, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
-import { brandsAPI } from '@/lib/api'
+import { brandsAPI, analyticsAPI } from '@/lib/api'
 import { Link } from 'react-router-dom'
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
@@ -62,54 +62,52 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     setIsLoading(true)
     try {
-      let query = supabaseClient
-        .from('sent_messages')
-        .select('status, created_at, brand_id')
+      const [overviewRes, chartRes] = await Promise.all([
+        analyticsAPI.overview(),
+        analyticsAPI.chart(parseInt(dateRange)),
+      ])
 
-      if (selectedBrand) {
-        query = query.eq('brand_id', selectedBrand)
-      }
+      if (overviewRes.error) throw overviewRes.error
 
-      const { data, error } = await query
-      if (error) throw error
-
-      const messages = data || []
-      const total = messages.length
-      const delivered = messages.filter((m: { status: string }) => ['delivered', 'opened', 'clicked'].includes(m.status)).length
-      const opened = messages.filter((m: { status: string }) => ['opened', 'clicked'].includes(m.status)).length
-      const clicked = messages.filter((m: { status: string }) => m.status === 'clicked').length
-      const bounced = messages.filter((m: { status: string }) => m.status === 'bounced').length
+      const overview = overviewRes.data
+      const chartData = chartRes.data || []
 
       const days = parseInt(dateRange)
       const timeSeriesData = Array.from({ length: days }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - (days - 1 - i))
         const dateStr = date.toISOString().split('T')[0]
-        const dayMessages = messages.filter((m: { created_at: string }) => m.created_at.startsWith(dateStr))
+        const dayEntry = chartData.find((d: any) => d.date === dateStr)
         return {
           name: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-          sent: dayMessages.filter((m: { status: string }) => m.status === 'sent').length,
-          delivered: dayMessages.filter((m: { status: string }) => ['delivered', 'opened', 'clicked'].includes(m.status)).length,
-          opened: dayMessages.filter((m: { status: string }) => ['opened', 'clicked'].includes(m.status)).length
+          sent: dayEntry?.sent || 0,
+          delivered: dayEntry?.sent || 0,
+          opened: dayEntry?.replied || 0
         }
       })
 
+      const total = overview.sentCount || 0
+      const replied = parseInt(overview.replyRate || '0')
+      const bounced = parseInt(overview.bounceRate || '0')
+      const delivered = total - bounced
+      const opened = replied
+
       const funnelData = [
-        { name: 'Sent', value: messages.filter((m: { status: string }) => m.status === 'sent').length },
+        { name: 'Sent', value: total },
         { name: 'Delivered', value: delivered },
         { name: 'Opened', value: opened },
-        { name: 'Clicked', value: clicked }
+        { name: 'Replied', value: replied }
       ]
 
       setStats({
         total,
         delivered,
         opened,
-        clicked,
+        clicked: replied,
         bounced,
         deliveryRate: total ? delivered / total : 0,
         openRate: delivered ? opened / delivered : 0,
-        clickRate: delivered ? clicked / delivered : 0,
+        clickRate: delivered ? replied / delivered : 0,
         bounceRate: total ? bounced / total : 0,
         timeSeriesData,
         funnelData

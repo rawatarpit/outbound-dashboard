@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Client, ClientMember } from '@/lib/supabase'
+import { clientAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface AuthUser {
@@ -25,9 +26,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -37,15 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchClientAndMember = async (userId: string, clientId: string, storedToken: string) => {
     try {
-      const headers = {
-        'apikey': SUPABASE_ANON_KEY,
+      const memberHeaders = {
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${storedToken}`,
         'Content-Type': 'application/json',
       }
 
-      const [memberRes, clientRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/client_members?user_id=eq.${userId}&client_id=eq.${clientId}&limit=1`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/clients?id=eq.${clientId}`, { headers })
+      const [memberRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/client_members?user_id=eq.${userId}&client_id=eq.${clientId}&limit=1`, { headers: memberHeaders }),
       ])
 
       const memberData = await memberRes.json()
@@ -53,9 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMember(memberData[0])
       }
 
-      const clientData = await clientRes.json()
-      if (clientData?.[0]) {
-        setClient(clientData[0])
+      const { data: clientData } = await clientAPI.get(clientId)
+      if (clientData) {
+        setClient(clientData)
       }
     } catch (error) {
       console.error('Error fetching client:', error)
@@ -89,12 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/login`, {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ email, password }),
     })
@@ -123,11 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, name: string, companyName: string) => {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/signup`, {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ email, password, name, company: companyName }),
     })

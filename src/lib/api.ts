@@ -1,4 +1,4 @@
-import { getStoredToken, createAuthenticatedClient } from '@/lib/supabase'
+import { getStoredToken } from '@/lib/supabase'
 import type {
   BrandProfile,
   Lead,
@@ -16,6 +16,56 @@ import type {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`
+
+async function callEdgeFunction<T = any>(
+  endpoint: string,
+  options: {
+    method?: string
+    body?: any
+    params?: Record<string, string>
+  } = {}
+): Promise<{ data: T; error: any }> {
+  const token = getStoredToken()
+
+  if (!token) {
+    return { data: null as any, error: { message: 'No token' } }
+  }
+
+  let url = `${FUNCTIONS_URL}/${endpoint}`
+
+  if (options.params) {
+    const queryString = new URLSearchParams(options.params).toString()
+    url += `?${queryString}`
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      if (data?.message?.includes('JWT expired')) {
+        localStorage.removeItem('outbound_token')
+        localStorage.removeItem('outbound_user')
+        window.location.href = '/login'
+      }
+      return { data: null as any, error: data }
+    }
+
+    return { data, error: null }
+  } catch (err: any) {
+    return { data: null as any, error: { message: err.message || 'Network error' } }
+  }
+}
 
 async function fetchAPI(
   table: string,
@@ -28,51 +78,51 @@ async function fetchAPI(
   } = {}
 ) {
   const token = getStoredToken()
-  
+
   if (!token) {
     return { data: [], error: { message: 'No token' }, count: '0' }
   }
-  
+
   let url = `${SUPABASE_URL}/rest/v1/${table}`
-  
+
   if (options.params) {
     const queryString = new URLSearchParams(options.params).toString()
     url += `?${queryString}`
   }
-  
+
   const headers: Record<string, string> = {
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
   }
-  
+
   if (options.count) {
     headers['Prefer'] = 'count=exact'
   }
-  
+
   if (options.range) {
     headers['Range'] = `${options.range[0]}-${options.range[1]}`
     headers['Prefer'] = 'count=exact'
   }
-  
+
   const response = await fetch(url, {
     method: options.method || 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   })
-  
+
   const data = await response.json()
-  
+
   if (!response.ok) {
     console.error(`API Error [${table}]:`, data)
-    
+
     if (data?.code === 'PGRST303' || data?.message?.includes('JWT expired')) {
       localStorage.removeItem('outbound_token')
       localStorage.removeItem('outbound_user')
       window.location.href = '/login'
     }
   }
-  
+
   return {
     data: Array.isArray(data) ? data : data ? [data] : [],
     error: response.ok ? null : data,
@@ -82,7 +132,7 @@ async function fetchAPI(
 
 async function insertAPI(table: string, data: any) {
   const token = getStoredToken()
-  
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
     headers: {
@@ -93,14 +143,14 @@ async function insertAPI(table: string, data: any) {
     },
     body: JSON.stringify(data)
   })
-  
+
   const result = await response.json()
   return { data: Array.isArray(result) ? result : [result], error: response.ok ? null : result }
 }
 
 async function updateAPI(table: string, id: string, data: any) {
   const token = getStoredToken()
-  
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'PATCH',
     headers: {
@@ -110,14 +160,14 @@ async function updateAPI(table: string, id: string, data: any) {
     },
     body: JSON.stringify(data)
   })
-  
+
   const result = await response.json()
   return { data: result, error: response.ok ? null : result }
 }
 
 async function deleteAPI(table: string, id: string) {
   const token = getStoredToken()
-  
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'DELETE',
     headers: {
@@ -126,36 +176,58 @@ async function deleteAPI(table: string, id: string) {
       'Content-Type': 'application/json',
     }
   })
-  
+
   return { error: response.ok ? null : await response.json() }
 }
 
+// ─────────────────────────────────────────────
+// Brand Profiles
+// ─────────────────────────────────────────────
 export const brandsAPI = {
-  list: async (clientId?: string): Promise<{ data: BrandProfile[], error: any }> => {
-    const params: Record<string, string> = { 'order': 'created_at.desc' }
-    if (clientId) params['client_id'] = `eq.${clientId}`
-    return fetchAPI('brand_profiles', { params })
+  list: async (_clientId?: string): Promise<{ data: BrandProfile[], error: any }> => {
+    const { data, error } = await callEdgeFunction<{ brands: BrandProfile[] }>('brands')
+    if (error) return { data: [], error }
+    return { data: data.brands || [], error: null }
   },
-  
+
   get: async (id: string): Promise<{ data: BrandProfile | null, error: any }> => {
-    return fetchAPI('brand_profiles', {
-      params: { 'id': `eq.${id}`, 'select': '*' }
-    }).then(r => ({ data: r.data[0] || null, error: r.error }))
+    const { data, error } = await callEdgeFunction<BrandProfile>(`brands/${id}`)
+    if (error) return { data: null, error }
+    return { data, error: null }
   },
-  
+
   create: async (data: Partial<BrandProfile>): Promise<{ data: BrandProfile[], error: any }> => {
-    return insertAPI('brand_profiles', data)
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; brand: BrandProfile }>('brands', {
+      method: 'POST',
+      body: data,
+    })
+    if (error) return { data: [], error }
+    return { data: [res.brand], error: null }
   },
-  
+
   update: async (id: string, data: Partial<BrandProfile>): Promise<{ data: any, error: any }> => {
-    return updateAPI('brand_profiles', id, data)
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; brand: BrandProfile }>(`brands/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res.brand, error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
-    return deleteAPI('brand_profiles', id)
+    const { error } = await callEdgeFunction(`brands/${id}`, { method: 'DELETE' })
+    return { error }
+  },
+
+  triggerDiscovery: async (id: string): Promise<{ error: any }> => {
+    const { error } = await callEdgeFunction(`brands/${id}/trigger-discovery`, { method: 'POST' })
+    return { error }
   }
 }
 
+// ─────────────────────────────────────────────
+// Leads
+// ─────────────────────────────────────────────
 export const leadsAPI = {
   list: async (options: {
     brandId?: string
@@ -165,69 +237,102 @@ export const leadsAPI = {
     page?: number
     perPage?: number
   } = {}): Promise<{ data: Lead[], total: number, error: any }> => {
-    const params: Record<string, string> = { 'order': 'created_at.desc' }
-    
-    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
-    if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
-    if (options.status) params['status'] = `eq.${options.status}`
-    if (options.search) params['or'] = `(email.ilike.%${options.search}%,full_name.ilike.%${options.search}%)`
-    
-    const page = options.page || 1
-    const perPage = options.perPage || 50
-    const range: [number, number] = [(page - 1) * perPage, page * perPage - 1]
-    
-    return fetchAPI('leads', { params, range, count: true })
-      .then(r => ({ data: r.data, total: parseInt(r.count || '0'), error: r.error }))
+    const params: Record<string, string> = {}
+    if (options.status) params['status'] = options.status
+    if (options.search) params['search'] = options.search
+    if (options.page) params['page'] = String(options.page)
+    if (options.perPage) params['limit'] = String(options.perPage)
+
+    const { data, error } = await callEdgeFunction<{ leads: Lead[]; total: number; totalPages: number; page: number }>('leads', { params })
+    if (error) return { data: [], total: 0, error }
+    return { data: data.leads || [], total: data.total || 0, error: null }
   },
-  
+
   get: async (id: string): Promise<{ data: Lead | null, error: any }> => {
-    return fetchAPI('leads', { params: { 'id': `eq.${id}` } })
-      .then(r => ({ data: r.data[0] || null, error: r.error }))
+    const { data, error } = await callEdgeFunction<Lead>(`leads/${id}`)
+    if (error) return { data: null, error }
+    return { data, error: null }
   },
-  
+
   create: async (data: Partial<Lead>): Promise<{ data: Lead[], error: any }> => {
-    return insertAPI('leads', data)
+    const { data: res, error } = await callEdgeFunction<Lead>('leads', {
+      method: 'POST',
+      body: data,
+    })
+    if (error) return { data: [], error }
+    return { data: [res], error: null }
   },
-  
+
   createMany: async (data: Partial<Lead>[]): Promise<{ data: any[], error: any }> => {
-    return insertAPI('leads', data)
+    const { data: res, error } = await callEdgeFunction<{ imported: number; leads: Lead[] }>('leads/import', {
+      method: 'POST',
+      body: { leads: data },
+    })
+    if (error) return { data: [], error }
+    return { data: res.leads || [], error: null }
   },
-  
+
   update: async (id: string, data: Partial<Lead>): Promise<{ data: any, error: any }> => {
-    return updateAPI('leads', id, data)
+    const { data: res, error } = await callEdgeFunction<Lead>(`leads/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res, error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
-    return deleteAPI('leads', id)
+    const { error } = await callEdgeFunction(`leads/${id}`, { method: 'DELETE' })
+    return { error }
   }
 }
 
+// ─────────────────────────────────────────────
+// Companies / Pipeline
+// ─────────────────────────────────────────────
 export const companiesAPI = {
   list: async (options: { brandId?: string; clientId?: string } = {}): Promise<{ data: Company[], error: any }> => {
-    const params: Record<string, string> = { 'order': 'updated_at.desc' }
-    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
-    if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
-    return fetchAPI('companies', { params })
+    if (!options.brandId) {
+      return fetchAPI('companies', {
+        params: { 'order': 'updated_at.desc', ...(options.clientId ? { 'client_id': `eq.${options.clientId}` } : {}) }
+      })
+    }
+    const params: Record<string, string> = {}
+    const { data, error } = await callEdgeFunction<{ companies: Company[]; total: number }>(`pipeline/${options.brandId}`, { params })
+    if (error) return { data: [], error }
+    return { data: data.companies || [], error: null }
   },
-  
+
   get: async (id: string): Promise<{ data: Company | null, error: any }> => {
     return fetchAPI('companies', { params: { 'id': `eq.${id}` } })
       .then(r => ({ data: r.data[0] || null, error: r.error }))
   },
-  
+
   create: async (data: Partial<Company>): Promise<{ data: Company[], error: any }> => {
     return insertAPI('companies', data)
   },
-  
+
   update: async (id: string, data: Partial<Company>): Promise<{ data: any, error: any }> => {
     return updateAPI('companies', id, data)
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
     return deleteAPI('companies', id)
   }
 }
 
+// ─────────────────────────────────────────────
+// Pipeline Overview
+// ─────────────────────────────────────────────
+export const pipelineAPI = {
+  overview: async (): Promise<{ data: { stages: Record<string, number> }; error: any }> => {
+    return callEdgeFunction('pipeline/overview')
+  }
+}
+
+// ─────────────────────────────────────────────
+// Sent Messages
+// ─────────────────────────────────────────────
 export const messagesAPI = {
   list: async (options: { brandId?: string; clientId?: string; leadId?: string } = {}): Promise<{ data: SentMessage[], error: any }> => {
     const params: Record<string, string> = { 'order': 'created_at.desc' }
@@ -238,118 +343,211 @@ export const messagesAPI = {
   }
 }
 
+// ─────────────────────────────────────────────
+// Discovery Sources
+// ─────────────────────────────────────────────
 export const discoverySourcesAPI = {
   list: async (brandId?: string): Promise<{ data: BrandDiscoverySource[], error: any }> => {
-    const params: Record<string, string> = { 'order': 'created_at.desc' }
-    if (brandId) params['brand_id'] = `eq.${brandId}`
-    return fetchAPI('brand_discovery_sources', { params })
+    if (!brandId) return { data: [], error: { message: 'Brand ID required' } }
+    const { data, error } = await callEdgeFunction<{ sources: BrandDiscoverySource[] }>(`discovery/${brandId}`)
+    if (error) return { data: [], error }
+    return { data: data.sources || [], error: null }
   },
-  
+
   create: async (data: Partial<BrandDiscoverySource>): Promise<{ data: BrandDiscoverySource[], error: any }> => {
-    return insertAPI('brand_discovery_sources', data)
+    const brandId = data.brand_id
+    if (!brandId) return { data: [], error: { message: 'Brand ID required' } }
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; source: BrandDiscoverySource }>(`discovery/${brandId}`, {
+      method: 'POST',
+      body: data,
+    })
+    if (error) return { data: [], error }
+    return { data: [res.source], error: null }
   },
-  
+
   update: async (id: string, data: Partial<BrandDiscoverySource>): Promise<{ data: any, error: any }> => {
-    return updateAPI('brand_discovery_sources', id, data)
+    const brandId = (data as any).brand_id
+    if (!brandId) return updateAPI('brand_discovery_sources', id, data)
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; source: BrandDiscoverySource }>(`discovery/${brandId}/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res.source, error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
     return deleteAPI('brand_discovery_sources', id)
   }
 }
 
+// ─────────────────────────────────────────────
+// Settings
+// ─────────────────────────────────────────────
 export const settingsAPI = {
-  get: async (clientId: string): Promise<{ data: ClientSettings | null, error: any }> => {
-    return fetchAPI('client_settings', { params: { 'client_id': `eq.${clientId}` } })
-      .then(r => ({ data: r.data[0] || null, error: r.error }))
+  get: async (_clientId: string): Promise<{ data: ClientSettings | null, error: any }> => {
+    const { data, error } = await callEdgeFunction<ClientSettings>('settings')
+    if (error) return { data: null, error }
+    return { data, error: null }
   },
-  
-  upsert: async (clientId: string, data: Partial<ClientSettings>): Promise<{ data: any, error: any }> => {
-    const token = getStoredToken()
-    
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/client_settings`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ ...data, client_id: clientId })
+
+  upsert: async (_clientId: string, data: Partial<ClientSettings>): Promise<{ data: any, error: any }> => {
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; settings: ClientSettings }>('settings', {
+      method: 'PUT',
+      body: data,
     })
-    
-    const result = await response.json()
-    return { data: result, error: response.ok ? null : result }
+    if (error) return { data: null, error }
+    return { data: res.settings, error: null }
+  },
+
+  getLLMProviders: async (): Promise<{ data: { providers: string[] }; error: any }> => {
+    return callEdgeFunction('settings/llm/providers')
+  },
+
+  getLLMModels: async (provider: string): Promise<{ data: { provider: string; models: string[] }; error: any }> => {
+    return callEdgeFunction(`settings/llm/models?provider=${provider}`)
+  },
+
+  getLLM: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('settings/llm')
+  },
+
+  updateLLM: async (data: any): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('settings/llm', { method: 'PUT', body: data })
+  },
+
+  getEmail: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('settings/email')
+  },
+
+  updateEmail: async (data: any): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('settings/email', { method: 'PUT', body: data })
   }
 }
 
+// ─────────────────────────────────────────────
+// Team Members
+// ─────────────────────────────────────────────
 export const teamAPI = {
-  list: async (clientId: string): Promise<{ data: ClientMember[], error: any }> => {
-    return fetchAPI('client_members', { params: { 'client_id': `eq.${clientId}` } })
+  list: async (_clientId: string): Promise<{ data: ClientMember[], error: any }> => {
+    const { data, error } = await callEdgeFunction<ClientMember[]>('team')
+    if (error) return { data: [], error }
+    return { data: Array.isArray(data) ? data : [], error: null }
   },
-  
+
   invite: async (data: { clientId: string; email: string; role: string }): Promise<{ data: any, error: any }> => {
-    return insertAPI('client_members', {
-      client_id: data.clientId,
-      email: data.email,
-      role: data.role,
-      invite_token: Math.random().toString(36).substring(2),
-      invited_at: new Date().toISOString()
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; member: ClientMember }>('team/invite', {
+      method: 'POST',
+      body: { email: data.email, role: data.role },
     })
+    if (error) return { data: null, error }
+    return { data: res.member, error: null }
   },
-  
+
   updateRole: async (id: string, role: string): Promise<{ data: any, error: any }> => {
-    return updateAPI('client_members', id, { role })
+    const { data, error } = await callEdgeFunction<ClientMember>(`team/${id}`, {
+      method: 'PATCH',
+      body: { role },
+    })
+    if (error) return { data: null, error }
+    return { data, error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
-    return deleteAPI('client_members', id)
+    const { error } = await callEdgeFunction(`team/${id}`, { method: 'DELETE' })
+    return { error }
   }
 }
 
+// ─────────────────────────────────────────────
+// Webhooks
+// ─────────────────────────────────────────────
 export const webhooksAPI = {
-  list: async (clientId: string): Promise<{ data: ClientWebhook[], error: any }> => {
-    return fetchAPI('client_webhooks', { params: { 'client_id': `eq.${clientId}` } })
+  list: async (_clientId: string): Promise<{ data: ClientWebhook[], error: any }> => {
+    const { data, error } = await callEdgeFunction<ClientWebhook[]>('webhooks')
+    if (error) return { data: [], error }
+    return { data: Array.isArray(data) ? data : [], error: null }
   },
-  
+
   create: async (data: Partial<ClientWebhook>): Promise<{ data: ClientWebhook[], error: any }> => {
-    return insertAPI('client_webhooks', data)
+    const { data: res, error } = await callEdgeFunction<ClientWebhook>('webhooks', {
+      method: 'POST',
+      body: data,
+    })
+    if (error) return { data: [], error }
+    return { data: [res], error: null }
   },
-  
+
   update: async (id: string, data: Partial<ClientWebhook>): Promise<{ data: any, error: any }> => {
-    return updateAPI('client_webhooks', id, data)
+    const { data: res, error } = await callEdgeFunction<ClientWebhook>(`webhooks/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res, error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
-    return deleteAPI('client_webhooks', id)
+    const { error } = await callEdgeFunction(`webhooks/${id}`, { method: 'DELETE' })
+    return { error }
+  },
+
+  test: async (id: string): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`webhooks/${id}/test`, { method: 'POST' })
   }
 }
 
+// ─────────────────────────────────────────────
+// API Keys
+// ─────────────────────────────────────────────
 export const apiKeysAPI = {
-  list: async (clientId: string): Promise<{ data: ClientApiKey[], error: any }> => {
-    return fetchAPI('client_api_keys', { params: { 'client_id': `eq.${clientId}` } })
+  list: async (_clientId: string): Promise<{ data: ClientApiKey[], error: any }> => {
+    const { data, error } = await callEdgeFunction<ClientApiKey[]>('keys')
+    if (error) return { data: [], error }
+    return { data: Array.isArray(data) ? data : [], error: null }
   },
-  
+
   create: async (data: Partial<ClientApiKey>): Promise<{ data: ClientApiKey[], error: any }> => {
-    const keyValue = 'oe_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    return insertAPI('client_api_keys', { ...data, key_hash: await hashKey(keyValue) })
-      .then(r => ({ data: r.data.map((d: any, i: number) => ({ ...d, _rawKey: keyValue })), error: r.error }))
+    const { data: res, error } = await callEdgeFunction<any>('keys', {
+      method: 'POST',
+      body: { name: data.name },
+    })
+    if (error) return { data: [], error }
+    const rawKey = res.raw_key
+    return { data: [{ ...res, _rawKey: rawKey }], error: null }
   },
-  
+
   delete: async (id: string): Promise<{ error: any }> => {
-    return deleteAPI('client_api_keys', id)
+    const { error } = await callEdgeFunction(`keys/${id}`, { method: 'DELETE' })
+    return { error }
   }
 }
 
-async function hashKey(key: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(key)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
+// ─────────────────────────────────────────────
+// Analytics
+// ─────────────────────────────────────────────
 export const analyticsAPI = {
+  overview: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('analytics/overview')
+  },
+
+  activity: async (limit = 20): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`analytics/activity?limit=${limit}`)
+  },
+
+  chart: async (days = 7): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`analytics/chart?days=${days}`)
+  },
+
+  leads: async (status?: string): Promise<{ data: any; error: any }> => {
+    const params = status ? `?status=${status}` : ''
+    return callEdgeFunction(`analytics/leads${params}`)
+  },
+
+  campaigns: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('analytics/campaigns')
+  },
+
   getMessages: async (clientId?: string, brandId?: string): Promise<{ data: SentMessage[], error: any }> => {
     const params: Record<string, string> = {}
     if (clientId) params['client_id'] = `eq.${clientId}`
@@ -358,6 +556,9 @@ export const analyticsAPI = {
   }
 }
 
+// ─────────────────────────────────────────────
+// Activity Logs
+// ─────────────────────────────────────────────
 export const activityAPI = {
   list: async (clientId?: string, limit = 10): Promise<{ data: ActivityLog[], error: any }> => {
     const params: Record<string, string> = { 'order': 'created_at.desc', 'limit': limit.toString() }
@@ -366,13 +567,101 @@ export const activityAPI = {
   }
 }
 
+// ─────────────────────────────────────────────
+// Clients
+// ─────────────────────────────────────────────
 export const clientAPI = {
-  get: async (clientId: string): Promise<{ data: Client | null, error: any }> => {
-    return fetchAPI('clients', { params: { 'id': `eq.${clientId}` } })
-      .then(r => ({ data: r.data[0] || null, error: r.error }))
+  get: async (_clientId: string): Promise<{ data: Client | null, error: any }> => {
+    const { data, error } = await callEdgeFunction<Client>('clients')
+    if (error) return { data: null, error }
+    return { data, error: null }
+  },
+
+  getById: async (id: string): Promise<{ data: Client | null, error: any }> => {
+    const { data, error } = await callEdgeFunction<Client>(`clients/${id}`)
+    if (error) return { data: null, error }
+    return { data, error: null }
+  },
+
+  update: async (id: string, data: Partial<Client>): Promise<{ data: any, error: any }> => {
+    const { data: res, error } = await callEdgeFunction<Client>(`clients/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res, error: null }
   }
 }
 
+// ─────────────────────────────────────────────
+// Dashboard
+// ─────────────────────────────────────────────
+export const dashboardAPI = {
+  overview: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('dashboard/overview')
+  },
+
+  toggle: async (brandId: string, toggles: { discovery?: boolean; outbound?: boolean }): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`dashboard/${brandId}/toggle`, {
+      method: 'PATCH',
+      body: toggles,
+    })
+  }
+}
+
+// ─────────────────────────────────────────────
+// System
+// ─────────────────────────────────────────────
+export const systemAPI = {
+  health: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('system/health')
+  },
+
+  flags: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('system/flags')
+  },
+
+  updateFlag: async (key: string, value: boolean): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`system/flags/${key}`, {
+      method: 'POST',
+      body: { value },
+    })
+  },
+
+  metrics: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('system/metrics')
+  }
+}
+
+// ─────────────────────────────────────────────
+// Workers
+// ─────────────────────────────────────────────
+export const workersAPI = {
+  status: async (): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction('workers/status')
+  },
+
+  metrics: async (brandId?: string): Promise<{ data: any; error: any }> => {
+    const params = brandId ? `?brand_id=${brandId}` : ''
+    return callEdgeFunction(`workers/metrics${params}`)
+  },
+
+  trigger: async (workerName: string): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`workers/${workerName}/trigger`, { method: 'POST' })
+  },
+
+  pause: async (workerName: string): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`workers/${workerName}/pause`, { method: 'POST' })
+  },
+
+  resume: async (workerName: string): Promise<{ data: any; error: any }> => {
+    return callEdgeFunction(`workers/${workerName}/resume`, { method: 'POST' })
+  }
+}
+
+// ─────────────────────────────────────────────
+// Import Batches (REST fallback)
+// ─────────────────────────────────────────────
 export const importBatchesAPI = {
   create: async (data: Partial<LeadImportBatch>): Promise<{ data: LeadImportBatch[], error: any }> => {
     return insertAPI('lead_import_batches', data)

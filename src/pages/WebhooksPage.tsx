@@ -1,27 +1,17 @@
 import { useState, useEffect } from 'react'
 import { type ClientWebhook, WEBHOOK_EVENTS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Badge } from '@/components/ui/Badge'
-import { Switch } from '@/components/ui/Switch'
 import Drawer from '@/components/Drawer'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
 import {
   Plus,
   Webhook,
   Trash2,
   MoreHorizontal,
-  ExternalLink,
-  RefreshCw,
   Send
 } from 'lucide-react'
 import toast from 'react-hot-toast'

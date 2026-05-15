@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react'
 import { type BrandProfile } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react'
+import { Upload, AlertCircle, CheckCircle } from 'lucide-react'
 import { leadsAPI, importBatchesAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -56,7 +55,7 @@ export default function LeadImportForm({ brands, onSuccess, onCancel }: LeadImpo
 
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i])
-      const lead: ParsedLead = {}
+      const lead: Partial<ParsedLead> = {}
 
       headers.forEach((header, index) => {
         const value = values[index]?.trim()
@@ -122,7 +121,7 @@ export default function LeadImportForm({ brands, onSuccess, onCancel }: LeadImpo
         continue
       }
 
-      leads.push(lead)
+      leads.push(lead as ParsedLead)
     }
 
     setParsedLeads(leads)

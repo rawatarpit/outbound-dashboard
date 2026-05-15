@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
@@ -25,9 +25,7 @@ import {
 } from '@/components/ui/Select'
 import {
   Users,
-  Plus,
   Search,
-  Download,
   Upload,
   ChevronLeft,
   ChevronRight,

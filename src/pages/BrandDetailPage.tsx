@@ -11,18 +11,14 @@ import BrandForm from '@/components/forms/BrandForm'
 import DiscoverySourceForm from '@/components/forms/DiscoverySourceForm'
 import {
   ArrowLeft,
-  Building2,
   Mail,
   Search,
   Settings,
-  BarChart3,
   Play,
   Pause,
   Plus,
   Trash2,
-  ExternalLink,
   Clock,
-  AlertCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'

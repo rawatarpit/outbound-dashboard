@@ -9,7 +9,7 @@ const Select = React.forwardRef<
     value?: string
     onValueChange?: (value: string) => void
   }
->(({ value, onValueChange, children, ...props }, ref) => {
+>(({ value, onValueChange, children, ...props }, _ref) => {
   const handleValueChange = (newValue: string) => {
     if (newValue !== '') {
       onValueChange?.(newValue)
