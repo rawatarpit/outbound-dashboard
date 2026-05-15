@@ -94,7 +94,10 @@ export default function WebhooksPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -103,8 +106,8 @@ export default function WebhooksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Webhooks</h1>
-          <p className="text-gray-500">Configure outbound webhooks for system events</p>
+          <h1 className="text-2xl font-bold text-foreground">Webhooks</h1>
+          <p className="text-muted-foreground">Configure outbound webhooks for system events</p>
         </div>
         <Button onClick={() => { setEditingWebhook(null); setIsModalOpen(true) }}>
           <Plus className="h-4 w-4 mr-2" />
@@ -115,9 +118,9 @@ export default function WebhooksPage() {
       {webhooks.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Webhook className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No webhooks configured</h3>
-            <p className="text-gray-500 mb-4">Add a webhook to receive notifications about system events</p>
+            <Webhook className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-medium text-foreground">No webhooks configured</h3>
+            <p className="text-muted-foreground mb-4">Add a webhook to receive notifications about system events</p>
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Webhook
@@ -131,17 +134,17 @@ export default function WebhooksPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-purple-50 p-2">
-                      <Webhook className="h-5 w-5 text-purple-600" />
+                    <div className="rounded-xl bg-primary/10 p-2.5">
+                      <Webhook className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <CardTitle className="text-base">{webhook.name}</CardTitle>
-                      <p className="text-sm text-gray-500 truncate max-w-[200px]">{webhook.url}</p>
+                      <p className="text-sm text-muted-foreground truncate max-w-[200px]">{webhook.url}</p>
                     </div>
                   </div>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
-                      <MoreHorizontal className="h-5 w-5 text-gray-400" />
+                    <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                      <MoreHorizontal className="h-5 w-5 text-muted-foreground/50" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleTestWebhook(webhook)}>
@@ -176,7 +179,7 @@ export default function WebhooksPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Events</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Events</p>
                   <div className="flex flex-wrap gap-1">
                     {webhook.events.map((event) => (
                       <Badge key={event} variant="outline" className="text-xs">
@@ -187,13 +190,13 @@ export default function WebhooksPage() {
                 </div>
 
                 {webhook.last_triggered_at && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Last triggered: {formatRelativeTime(webhook.last_triggered_at)}
                   </p>
                 )}
 
                 {webhook.last_error && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                  <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-xl">
                     {webhook.last_error}
                   </p>
                 )}
@@ -350,7 +353,7 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
               {WEBHOOK_EVENTS.map((event) => (
                 <label
                   key={event.id}
-                  className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
+                  className="flex items-center gap-2 p-2 border border-white/[0.06] rounded-xl cursor-pointer hover:bg-white/[0.03]"
                 >
                   <input
                     type="checkbox"
@@ -389,7 +392,7 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

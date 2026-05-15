@@ -73,7 +73,10 @@ export default function SystemFlagsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -81,15 +84,15 @@ export default function SystemFlagsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">System Flags</h1>
-        <p className="text-gray-500">Master switches that control the entire system</p>
+        <h1 className="text-2xl font-bold text-foreground">System Flags</h1>
+        <p className="text-muted-foreground">Master switches that control the entire system</p>
       </div>
 
       {!canManage && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-amber-500/20 bg-amber-500/5">
           <CardContent className="flex items-center gap-3 p-4">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <p className="text-sm text-amber-800">Only owners and admins can modify system flags</p>
+            <p className="text-sm text-amber-400">Only owners and admins can modify system flags</p>
           </CardContent>
         </Card>
       )}
@@ -101,23 +104,23 @@ export default function SystemFlagsPage() {
             Toggle system-wide features. Turning off automation will pause all workers.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {flags.map((flag) => {
             const Icon = flag.icon
             return (
-              <div key={flag.key} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={flag.key} className="flex items-center justify-between p-4 border border-white/[0.06] rounded-xl hover:bg-white/[0.02] transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${flag.value ? 'bg-indigo-50' : 'bg-gray-50'}`}>
-                    <Icon className={`h-5 w-5 ${flag.value ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <div className={`p-2 rounded-lg ${flag.value ? 'bg-primary/10' : 'bg-white/[0.03]'}`}>
+                    <Icon className={`h-5 w-5 ${flag.value ? 'text-primary' : 'text-muted-foreground/50'}`} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900">{flag.label}</h3>
+                      <h3 className="font-medium text-foreground">{flag.label}</h3>
                       <Badge variant={flag.value ? 'success' : 'secondary'}>
                         {flag.value ? 'Enabled' : 'Disabled'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{flag.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{flag.description}</p>
                   </div>
                 </div>
                 <Switch

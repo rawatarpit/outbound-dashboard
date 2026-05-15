@@ -117,7 +117,10 @@ export default function BrandsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -126,8 +129,8 @@ export default function BrandsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Brands</h1>
-          <p className="text-gray-500">Manage your brand profiles and campaigns</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Brands</h1>
+          <p className="text-muted-foreground mt-1">Manage your brand profiles and campaigns</p>
         </div>
         <Button onClick={handleCreateBrand}>
           <Plus className="h-4 w-4 mr-2" />
@@ -136,11 +139,13 @@ export default function BrandsPage() {
       </div>
 
       {brands.length === 0 ? (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No brands yet</h3>
-            <p className="text-gray-500 mb-4">Get started by creating your first brand profile</p>
+            <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6 shadow-inner">
+              <Building2 className="h-8 w-8 text-muted-foreground/40" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground mb-1">No brands yet</h3>
+            <p className="text-sm text-muted-foreground mb-8">Get started by creating your first brand profile</p>
             <Button onClick={handleCreateBrand}>
               <Plus className="h-4 w-4 mr-2" />
               Add Brand
@@ -150,106 +155,102 @@ export default function BrandsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {brands.map((brand) => (
-            <Card key={brand.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-primary" />
+            <div key={brand.id} className="group relative">
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/20 to-violet-500/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition duration-500" />
+              <Card className="relative overflow-hidden">
+                <div className="h-[3px] bg-gradient-to-r from-primary via-violet-500 to-primary" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-2xl pointer-events-none" />
+                <CardHeader className="pb-3 relative">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center border border-primary/10 shadow-sm">
+                        <Building2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">{brand.brand_name}</CardTitle>
+                        <p className="text-sm text-muted-foreground truncate">{brand.product}</p>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{brand.brand_name}</CardTitle>
-                      <p className="text-sm text-gray-500">{brand.product}</p>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200">
+                        <MoreHorizontal className="h-5 w-5" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditBrand(brand)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleTriggerDiscovery(brand)}>
+                          <Search className="h-4 w-4 mr-2" />
+                          Trigger Discovery
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleTogglePause(brand)}>
+                          {brand.is_paused ? (
+                            <><Play className="h-4 w-4 mr-2" />Resume</>
+                          ) : (
+                            <><Pause className="h-4 w-4 mr-2" />Pause</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteBrand(brand)} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
-                      <MoreHorizontal className="h-5 w-5 text-gray-500" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditBrand(brand)}>
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleTriggerDiscovery(brand)}>
-                        <Search className="h-4 w-4 mr-2" />
-                        Trigger Discovery
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleTogglePause(brand)}>
-                        {brand.is_paused ? (
-                          <>
-                            <Play className="h-4 w-4 mr-2" />
-                            Resume
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="h-4 w-4 mr-2" />
-                            Pause
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDeleteBrand(brand)}
-                        className="text-destructive"
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(brand)}
-                  {brand.discovery_enabled && (
-                    <Badge variant="secondary">Discovery</Badge>
-                  )}
-                  {brand.outbound_enabled && (
-                    <Badge variant="secondary">Outbound</Badge>
-                  )}
-                </div>
+                </CardHeader>
+                <CardContent className="space-y-4 relative">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getStatusBadge(brand)}
+                    {brand.discovery_enabled && (
+                      <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded-full">Discovery</span>
+                    )}
+                    {brand.outbound_enabled && (
+                      <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded-full">Outbound</span>
+                    )}
+                  </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Search className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-600">Discovery</span>
+                  <div className="bg-white/[0.02] rounded-xl p-4 space-y-3 border border-white/[0.04]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Search className="h-4 w-4 text-muted-foreground/50" />
+                        <span className="text-muted-foreground/80">Discovery</span>
+                      </div>
+                      <Switch
+                        checked={brand.discovery_enabled}
+                        onCheckedChange={(checked) => handleToggleDiscovery(brand, checked)}
+                      />
                     </div>
-                    <Switch
-                      checked={brand.discovery_enabled}
-                      onCheckedChange={(checked) => handleToggleDiscovery(brand, checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-600">Outbound</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground/50" />
+                        <span className="text-muted-foreground/80">Outbound</span>
+                      </div>
+                      <Switch
+                        checked={brand.outbound_enabled}
+                        onCheckedChange={(checked) => handleToggleOutbound(brand, checked)}
+                      />
                     </div>
-                    <Switch
-                      checked={brand.outbound_enabled}
-                      onCheckedChange={(checked) => handleToggleOutbound(brand, checked)}
-                    />
                   </div>
-                </div>
 
-                <div className="pt-3 border-t space-y-2 text-sm">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Sent Today</span>
-                    <span className="font-medium">{brand.sent_count || 0}</span>
+                  <div className="border-t border-white/[0.06] pt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground/80">Sent Today</span>
+                      <span className="font-bold text-foreground">{brand.sent_count || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground/80">Daily Limit</span>
+                      <span className="font-bold text-foreground">{brand.daily_send_limit || 'Unlimited'}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Daily Limit</span>
-                    <span className="font-medium">{brand.daily_send_limit || 'Unlimited'}</span>
-                  </div>
-                </div>
 
-                <Link to={`/brands/${brand.id}`}>
-                  <Button variant="outline" className="w-full">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                  <Link to={`/brands/${brand.id}`} className="block">
+                    <Button variant="outline" className="w-full">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       )}

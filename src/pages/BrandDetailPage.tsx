@@ -243,7 +243,7 @@ export default function BrandDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 py-10 px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ───── Header ───── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-900/90 to-slate-950/80 p-8 shadow-2xl shadow-indigo-500/20 border border-indigo-500/10 backdrop-blur-xl">
@@ -827,7 +827,7 @@ export default function BrandDetailPage() {
           title={editingIntent ? 'Edit Intent' : 'Add Intent'}
           size="md"
         >
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-slate-300 mb-2">Intent Description</label>
               <textarea

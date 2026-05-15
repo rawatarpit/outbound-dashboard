@@ -30,15 +30,15 @@ interface CompanyWithBrand extends Company {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  researching: 'bg-blue-100 text-blue-800',
-  qualified: 'bg-indigo-100 text-indigo-800',
-  icp_passed: 'bg-violet-100 text-violet-800',
-  draft_ready: 'bg-purple-100 text-purple-800',
-  contacted: 'bg-pink-100 text-pink-800',
-  replied: 'bg-green-100 text-green-800',
-  negotiating: 'bg-amber-100 text-amber-800',
-  closed_won: 'bg-emerald-100 text-emerald-800',
-  closed_lost: 'bg-red-100 text-red-800'
+  researching: 'bg-blue-500/10 text-blue-400',
+  qualified: 'bg-indigo-500/10 text-indigo-400',
+  icp_passed: 'bg-violet-500/10 text-violet-400',
+  draft_ready: 'bg-purple-500/10 text-purple-400',
+  contacted: 'bg-pink-500/10 text-pink-400',
+  replied: 'bg-green-500/10 text-green-400',
+  negotiating: 'bg-amber-500/10 text-amber-400',
+  closed_won: 'bg-emerald-500/10 text-emerald-400',
+  closed_lost: 'bg-red-500/10 text-red-400'
 }
 
 export default function PipelinePage() {
@@ -103,7 +103,10 @@ export default function PipelinePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+            <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+          </div>
       </div>
     )
   }
@@ -112,8 +115,8 @@ export default function PipelinePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pipeline</h1>
-          <p className="text-gray-500">Manage companies through the sales pipeline</p>
+          <h1 className="text-2xl font-bold text-foreground">Pipeline</h1>
+          <p className="text-muted-foreground">Manage companies through the sales pipeline</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={brandFilter} onValueChange={setBrandFilter}>
@@ -132,7 +135,7 @@ export default function PipelinePage() {
             <button
               className={cn(
                 'px-3 py-2 text-sm font-medium',
-                viewMode === 'kanban' ? 'bg-primary text-white' : 'bg-white text-gray-600'
+                viewMode === 'kanban' ? 'bg-primary text-white' : 'bg-card text-muted-foreground'
               )}
               onClick={() => setViewMode('kanban')}
             >
@@ -141,7 +144,7 @@ export default function PipelinePage() {
             <button
               className={cn(
                 'px-3 py-2 text-sm font-medium',
-                viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-gray-600'
+                viewMode === 'list' ? 'bg-primary text-white' : 'bg-card text-muted-foreground'
               )}
               onClick={() => setViewMode('list')}
             >
@@ -165,7 +168,7 @@ export default function PipelinePage() {
                   <span className="text-sm opacity-80">{companiesByStage[stage.id]?.length || 0}</span>
                 </div>
               </div>
-              <div className="bg-gray-100 rounded-b-lg p-2 space-y-2 min-h-[500px]">
+              <div className="bg-white/[0.03] rounded-b-lg border border-white/[0.06] p-2 space-y-2 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
                   <Card key={company.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-3">
@@ -173,12 +176,12 @@ export default function PipelinePage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{company.name}</p>
                           {company.domain && (
-                            <p className="text-xs text-gray-500 truncate">{company.domain}</p>
+                            <p className="text-xs text-muted-foreground truncate">{company.domain}</p>
                           )}
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
-                            <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground/50" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
@@ -206,13 +209,13 @@ export default function PipelinePage() {
                         )}
                       </div>
                       {company.brand && (
-                        <p className="mt-2 text-xs text-gray-400">{company.brand.brand_name}</p>
+                        <p className="mt-2 text-xs text-muted-foreground/50">{company.brand.brand_name}</p>
                       )}
                     </CardContent>
                   </Card>
                 ))}
                 {companiesByStage[stage.id]?.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 py-4">No companies</p>
+                  <p className="text-center text-sm text-muted-foreground/50 py-4">No companies</p>
                 )}
               </div>
             </div>
@@ -223,29 +226,29 @@ export default function PipelinePage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-white/[0.03] border-b border-white/[0.06]">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Company</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Industry</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Score</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Deal Value</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Brand</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Company</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Industry</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Score</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Deal Value</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Brand</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {companies.map((company) => (
-                    <tr key={company.id} className="hover:bg-gray-50">
+                    <tr key={company.id} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <Building2 className="h-4 w-4 text-gray-500" />
+                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Building2 className="h-4 w-4 text-primary" />
                           </div>
                           <div>
                             <p className="font-medium">{company.name}</p>
                             {company.domain && (
-                              <p className="text-xs text-gray-500">{company.domain}</p>
+                              <p className="text-xs text-muted-foreground">{company.domain}</p>
                             )}
                           </div>
                         </div>
@@ -260,8 +263,8 @@ export default function PipelinePage() {
                         {company.lead_score != null ? (
                           <span className={cn(
                             'font-medium',
-                            company.lead_score >= 70 ? 'text-green-600' :
-                            company.lead_score >= 40 ? 'text-amber-600' : 'text-gray-600'
+                            company.lead_score >= 70 ? 'text-green-400' :
+                            company.lead_score >= 40 ? 'text-amber-400' : 'text-muted-foreground'
                           )}>
                             {company.lead_score}
                           </span>
@@ -273,7 +276,7 @@ export default function PipelinePage() {
                       <td className="px-4 py-3 text-sm">{company.brand?.brand_name || 'N/A'}</td>
                       <td className="px-4 py-3 text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -298,8 +301,8 @@ export default function PipelinePage() {
               </table>
               {companies.length === 0 && (
                 <div className="text-center py-16">
-                  <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No companies found</p>
+                  <Building2 className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No companies found</p>
                 </div>
               )}
             </div>

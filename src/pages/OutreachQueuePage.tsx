@@ -184,7 +184,10 @@ export default function OutreachQueuePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -193,8 +196,8 @@ export default function OutreachQueuePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Outreach Queue</h1>
-          <p className="text-gray-500">Review and approve email drafts before sending</p>
+          <h1 className="text-2xl font-bold text-foreground">Outreach Queue</h1>
+          <p className="text-muted-foreground">Review and approve email drafts before sending</p>
         </div>
         <Select value={brandFilter} onValueChange={setBrandFilter}>
           <SelectTrigger className="w-[200px]">
@@ -209,11 +212,11 @@ export default function OutreachQueuePage() {
       </div>
 
       {entries.length === 0 ? (
-        <Card>
+        <Card className="bg-white/[0.03] backdrop-blur-xl border-white/[0.06]">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Mail className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No outreach drafts</h3>
-            <p className="text-gray-500 mb-4">Draft emails will appear here once the engine generates them</p>
+            <Mail className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-medium text-foreground">No outreach drafts</h3>
+            <p className="text-muted-foreground mb-4">Draft emails will appear here once the engine generates them</p>
           </CardContent>
         </Card>
       ) : (
@@ -223,31 +226,31 @@ export default function OutreachQueuePage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-purple-600" />
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">{entry.company?.name || 'Unknown Company'}</CardTitle>
                       <CardDescription>{entry.company?.domain || entry.company_id}</CardDescription>
                     </div>
                   </div>
-                  <Badge variant="secondary">Draft</Badge>
+                  <Badge className="bg-primary/10 text-primary border border-white/[0.06]">Draft</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-3 bg-gray-50 rounded-lg space-y-1">
-                  <p className="text-sm font-medium text-gray-700">{entry.subject || 'No subject'}</p>
-                  <p className="text-sm text-gray-500 line-clamp-3 whitespace-pre-wrap">
+                <div className="p-3 bg-white/[0.03] rounded-xl space-y-1">
+                  <p className="text-sm font-medium text-foreground/80">{entry.subject || 'No subject'}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-wrap">
                     {entry.body || 'No body'}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
                   <span>Created {formatRelativeTime(entry.created_at)}</span>
                   {entry.brand && <span>· Brand: {entry.brand.brand_name}</span>}
                 </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t">
+                <div className="flex items-center gap-3 pt-2 border-t border-white/[0.06]">
                   <Button size="sm" onClick={() => handleApproveSend(entry)} isLoading={isSending === entry.id}>
                     <Send className="h-4 w-4 mr-2" />
                     Approve & Send
@@ -278,7 +281,7 @@ export default function OutreachQueuePage() {
           <div className="space-y-6">
             <div className="space-y-2">
               <Label>To</Label>
-              <p className="text-sm text-gray-500">{editingEntry.company?.domain || 'Unknown'}</p>
+              <p className="text-sm text-muted-foreground">{editingEntry.company?.domain || 'Unknown'}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_subject">Subject</Label>
@@ -298,12 +301,12 @@ export default function OutreachQueuePage() {
                 className="font-mono text-sm"
               />
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs font-medium text-gray-500 mb-1">Preview</p>
-              <p className="text-sm font-medium text-gray-700">{editSubject}</p>
-              <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap line-clamp-6">{editBody}</p>
+            <div className="p-3 bg-white/[0.03] rounded-xl">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Preview</p>
+              <p className="text-sm font-medium text-foreground/80">{editSubject}</p>
+              <p className="text-sm text-muted-foreground/80 mt-2 whitespace-pre-wrap line-clamp-6">{editBody}</p>
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
               <Button variant="outline" onClick={() => setEditingEntry(null)}>Cancel</Button>
               <Button onClick={handleSaveEdit} isLoading={isSavingEdit}>
                 <Save className="h-4 w-4 mr-2" />

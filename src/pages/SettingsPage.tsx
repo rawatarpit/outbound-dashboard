@@ -90,7 +90,10 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -98,8 +101,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Configure your outbound engine</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground">Configure your outbound engine</p>
       </div>
 
       <Tabs defaultValue="llm" className="w-full">
@@ -130,7 +133,7 @@ export default function SettingsPage() {
                 Configure the AI model used for outreach and analysis
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="llm_provider">Provider</Label>
@@ -173,7 +176,7 @@ export default function SettingsPage() {
                     value={formData.llm_temperature ?? 0.7}
                     onChange={(e) => handleChange('llm_temperature', parseFloat(e.target.value))}
                   />
-                  <p className="text-xs text-gray-500">Lower values are more deterministic</p>
+                  <p className="text-xs text-muted-foreground/70">Lower values are more deterministic</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="llm_base_url">Base URL (for Ollama)</Label>
@@ -208,7 +211,7 @@ export default function SettingsPage() {
                 Configure SMTP settings for sending emails
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email_provider">Email Provider</Label>
                 <Select
@@ -338,7 +341,7 @@ export default function SettingsPage() {
                 Configure IMAP settings for receiving replies
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div className="flex items-center gap-2">
                 <Switch
                   id="imap_enabled"
@@ -417,7 +420,7 @@ export default function SettingsPage() {
                 Webhook configuration and other settings
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="sending_domain">Default Sending Domain</Label>
                 <Input

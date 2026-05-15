@@ -26,12 +26,12 @@ import { brandsAPI, messagesAPI, analyticsAPI } from '@/lib/api'
 import { Input } from '@/components/ui/Input'
 
 const STATUS_COLORS: Record<string, string> = {
-  sent: 'bg-blue-100 text-blue-800',
-  delivered: 'bg-green-100 text-green-800',
-  opened: 'bg-purple-100 text-purple-800',
-  bounced: 'bg-red-100 text-red-800',
-  failed: 'bg-red-100 text-red-800',
-  replied: 'bg-emerald-100 text-emerald-800',
+  sent: 'bg-blue-500/10 text-blue-400',
+  delivered: 'bg-green-500/10 text-green-400',
+  opened: 'bg-purple-500/10 text-purple-400',
+  bounced: 'bg-red-500/10 text-red-400',
+  failed: 'bg-red-500/10 text-red-400',
+  replied: 'bg-emerald-500/10 text-emerald-400',
 }
 
 export default function CampaignsPage() {
@@ -89,7 +89,10 @@ export default function CampaignsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -98,8 +101,8 @@ export default function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sent Campaigns</h1>
-          <p className="text-gray-500">Track all sent emails and their delivery status</p>
+          <h1 className="text-2xl font-bold text-foreground">Sent Campaigns</h1>
+          <p className="text-muted-foreground">Track all sent emails and their delivery status</p>
         </div>
       </div>
 
@@ -107,7 +110,7 @@ export default function CampaignsPage() {
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
               <Input
                 placeholder="Search by subject or email..."
                 value={searchQuery}
@@ -143,9 +146,9 @@ export default function CampaignsPage() {
         <CardContent>
           {filteredMessages.length === 0 ? (
             <div className="text-center py-16">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No emails sent yet</h3>
-              <p className="text-gray-500">Campaigns will appear here after sending begins</p>
+              <MessageSquare className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground">No emails sent yet</h3>
+              <p className="text-muted-foreground">Campaigns will appear here after sending begins</p>
             </div>
           ) : (
             <Table>
@@ -165,19 +168,19 @@ export default function CampaignsPage() {
                     <TableCell className="font-medium max-w-[250px] truncate">
                       {msg.subject || 'No subject'}
                     </TableCell>
-                    <TableCell className="text-gray-500">{msg.to_email || 'N/A'}</TableCell>
+                    <TableCell className="text-muted-foreground">{msg.to_email || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge className={STATUS_COLORS[msg.status] || ''}>
                         {msg.status || 'pending'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="text-muted-foreground">
                       {msg.sent_at ? formatRelativeTime(msg.sent_at) : formatRelativeTime(msg.created_at)}
                     </TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="text-muted-foreground">
                       {msg.delivered_at ? formatRelativeTime(msg.delivered_at) : '-'}
                     </TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="text-muted-foreground">
                       {msg.opened_at ? formatRelativeTime(msg.opened_at) : '-'}
                     </TableCell>
                   </TableRow>

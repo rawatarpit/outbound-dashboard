@@ -122,7 +122,10 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -131,15 +134,15 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500">Track your outbound performance</p>
+          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground">Track your outbound performance</p>
         </div>
         
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No Brands Configured</h3>
-            <p className="text-gray-500 mb-4 text-center max-w-md">
+            <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-medium text-foreground">No Brands Configured</h3>
+            <p className="text-muted-foreground mb-4 text-center max-w-md">
               Create your first brand profile to start tracking analytics
             </p>
             <Link to="/brands" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
@@ -155,8 +158,8 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500">Track your outbound performance</p>
+          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground">Track your outbound performance</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedBrand} onValueChange={setSelectedBrand}>
@@ -186,13 +189,13 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <Mail className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Mail className="h-5 w-5 text-blue-400" />
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(stats?.total || 0)}</p>
-              <p className="text-sm text-gray-500">Total Sent</p>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(stats?.total || 0)}</p>
+              <p className="text-sm text-muted-foreground">Total Sent</p>
             </div>
           </CardContent>
         </Card>
@@ -200,13 +203,13 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-400" />
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-2xl font-bold text-gray-900">{formatPercentage(stats?.deliveryRate || 0)}</p>
-              <p className="text-sm text-gray-500">Delivery Rate</p>
+              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.deliveryRate || 0)}</p>
+              <p className="text-sm text-muted-foreground">Delivery Rate</p>
             </div>
           </CardContent>
         </Card>
@@ -214,13 +217,13 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <Users className="h-5 w-5 text-purple-400" />
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-2xl font-bold text-gray-900">{formatPercentage(stats?.openRate || 0)}</p>
-              <p className="text-sm text-gray-500">Open Rate</p>
+              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.openRate || 0)}</p>
+              <p className="text-sm text-muted-foreground">Open Rate</p>
             </div>
           </CardContent>
         </Card>
@@ -228,13 +231,13 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-amber-50 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-amber-600" />
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <MessageSquare className="h-5 w-5 text-amber-400" />
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-2xl font-bold text-gray-900">{formatPercentage(stats?.clickRate || 0)}</p>
-              <p className="text-sm text-gray-500">Click Rate</p>
+              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.clickRate || 0)}</p>
+              <p className="text-sm text-muted-foreground">Click Rate</p>
             </div>
           </CardContent>
         </Card>
@@ -248,7 +251,7 @@ export default function AnalyticsPage() {
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Email Volume</CardTitle>
@@ -263,7 +266,7 @@ export default function AnalyticsPage() {
                           <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                       <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
                       <YAxis stroke="#6b7280" fontSize={12} />
                       <Tooltip />
@@ -282,7 +285,7 @@ export default function AnalyticsPage() {
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats?.timeSeriesData || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                       <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
                       <YAxis stroke="#6b7280" fontSize={12} />
                       <Tooltip />
@@ -323,9 +326,9 @@ export default function AnalyticsPage() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="grid gap-4 md:grid-cols-4 mt-6">
+              <div className="grid gap-4 md:grid-cols-4 mt-5">
                 {stats?.funnelData.map((item: { name: string; value: number }, index: number) => (
-                  <div key={item.name} className="text-center p-4 border rounded-lg">
+                  <div key={item.name} className="text-center p-4 border border-white/[0.06] rounded-xl">
                     <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: COLORS[index] }} />
                     <p className="font-medium">{item.name}</p>
                     <p className="text-2xl font-bold">{formatNumber(item.value)}</p>
@@ -348,12 +351,12 @@ export default function AnalyticsPage() {
                   const value = stats?.[key] || 0
                   const isLast = label === 'Bounced'
                   return (
-                    <div key={label} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={label} className="flex items-center justify-between p-4 border border-white/[0.06] rounded-xl">
                       <div>
                         <p className="font-medium">{label}</p>
-                        <p className="text-sm text-gray-500">{label === 'Bounced' ? 'Failed deliveries' : `Total ${label.toLowerCase()}`}</p>
+                        <p className="text-sm text-muted-foreground">{label === 'Bounced' ? 'Failed deliveries' : `Total ${label.toLowerCase()}`}</p>
                       </div>
-                      <p className={`text-2xl font-bold ${isLast ? 'text-red-600' : 'text-gray-900'}`}>
+                      <p className={`text-2xl font-bold ${isLast ? 'text-red-400' : 'text-foreground'}`}>
                         {formatNumber(value)}
                       </p>
                     </div>

@@ -46,15 +46,15 @@ import {
 const PAGE_SIZE = 50
 
 const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800',
-  researching: 'bg-purple-100 text-purple-800',
-  qualified: 'bg-indigo-100 text-indigo-800',
-  icp_passed: 'bg-violet-100 text-violet-800',
-  contacted: 'bg-pink-100 text-pink-800',
-  replied: 'bg-green-100 text-green-800',
-  negotiating: 'bg-amber-100 text-amber-800',
-  closed_won: 'bg-emerald-100 text-emerald-800',
-  closed_lost: 'bg-red-100 text-red-800'
+  new: 'bg-blue-500/10 text-blue-400',
+  researching: 'bg-purple-500/10 text-purple-400',
+  qualified: 'bg-indigo-500/10 text-indigo-400',
+  icp_passed: 'bg-violet-500/10 text-violet-400',
+  contacted: 'bg-pink-500/10 text-pink-400',
+  replied: 'bg-green-500/10 text-green-400',
+  negotiating: 'bg-amber-500/10 text-amber-400',
+  closed_won: 'bg-emerald-500/10 text-emerald-400',
+  closed_lost: 'bg-red-500/10 text-red-400'
 }
 
 export default function LeadsPage() {
@@ -132,8 +132,8 @@ export default function LeadsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
-          <p className="text-gray-500">Manage and track your leads through the pipeline</p>
+          <h1 className="text-2xl font-bold text-foreground">Leads</h1>
+          <p className="text-muted-foreground">Manage and track your leads through the pipeline</p>
         </div>
         <Button onClick={() => setIsImportModalOpen(true)}>
           <Upload className="h-4 w-4 mr-2" />
@@ -146,7 +146,7 @@ export default function LeadsPage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                 <Input
                   placeholder="Search by name or email..."
                   value={searchQuery}
@@ -187,14 +187,17 @@ export default function LeadsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="flex items-center justify-center h-64">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+                <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+              </div>
             </div>
           ) : leads.length === 0 ? (
             <div className="text-center py-16">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No leads found</h3>
-              <p className="text-gray-500">Import leads or adjust your filters</p>
+              <Users className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground">No leads found</h3>
+              <p className="text-muted-foreground">Import leads or adjust your filters</p>
             </div>
           ) : (
             <>
@@ -234,20 +237,20 @@ export default function LeadsPage() {
                         {lead.lead_score != null ? (
                           <span className={cn(
                             'font-medium',
-                            lead.lead_score >= 70 ? 'text-green-600' :
-                            lead.lead_score >= 40 ? 'text-amber-600' : 'text-gray-600'
+                            lead.lead_score >= 70 ? 'text-green-400' :
+                            lead.lead_score >= 40 ? 'text-amber-400' : 'text-muted-foreground'
                           )}>
                             {lead.lead_score}
                           </span>
                         ) : 'N/A'}
                       </TableCell>
                       <TableCell className="capitalize">{lead.source || 'manual'}</TableCell>
-                      <TableCell className="text-gray-500">
+                      <TableCell className="text-muted-foreground">
                         {formatRelativeTime(lead.created_at)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -279,8 +282,8 @@ export default function LeadsPage() {
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-500">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+                <p className="text-sm text-muted-foreground">
                   Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, totalCount)} of {formatNumber(totalCount)} leads
                 </p>
                 <div className="flex items-center gap-2">
@@ -292,7 +295,7 @@ export default function LeadsPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-muted-foreground/80">
                     Page {currentPage} of {totalPages}
                   </span>
                   <Button

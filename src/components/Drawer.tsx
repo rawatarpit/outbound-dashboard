@@ -38,7 +38,7 @@ export default function Drawer({
   size = 'md'
 }: DrawerProps) {
   const isVertical = side === 'left' || side === 'right'
-  
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -51,7 +51,7 @@ export default function Drawer({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/25" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
@@ -71,34 +71,34 @@ export default function Drawer({
             >
               <Dialog.Panel
                 className={cn(
-                  'w-full transform overflow-hidden rounded-l-xl bg-white shadow-xl transition-all h-full',
+                  'w-full transform overflow-hidden rounded-2xl bg-gradient-to-br from-card/95 to-card/90 backdrop-blur-2xl border border-white/[0.06] shadow-2xl shadow-black/30 transition-all h-full',
                   isVertical ? sizeClasses[size] : 'w-full',
-                  side === 'left' && 'rounded-r-xl',
-                  side === 'right' && 'rounded-l-xl'
+                  side === 'left' && 'rounded-r-2xl',
+                  side === 'right' && 'rounded-l-2xl'
                 )}
               >
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
                     <div>
                       {title && (
-                        <Dialog.Title className="text-lg font-semibold text-gray-900">
+                        <Dialog.Title className="text-lg font-bold text-foreground">
                           {title}
                         </Dialog.Title>
                       )}
                       {description && (
-                        <Dialog.Description className="mt-1 text-sm text-gray-500">
+                        <Dialog.Description className="mt-1 text-sm text-muted-foreground">
                           {description}
                         </Dialog.Description>
                       )}
                     </div>
                     <button
                       onClick={onClose}
-                      className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      className="rounded-xl p-2 text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200"
                     >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="flex-1 overflow-auto p-4">
+                  <div className="flex-1 overflow-auto p-5">
                     {children}
                   </div>
                 </div>

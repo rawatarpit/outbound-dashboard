@@ -10,11 +10,11 @@ import {
   UserCog,
   Webhook,
   Key,
-  Rocket,
   Send,
   MessageSquare,
   Shield,
   Activity,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,19 +40,19 @@ const configNavigation = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-64 flex-col bg-white border-r border-gray-200 h-full">
-      <div className="flex h-16 items-center gap-3 px-6 border-b border-gray-200">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-600">
-          <Rocket className="h-6 w-6 text-white" />
+    <aside className="flex w-64 flex-col bg-gradient-to-b from-card/95 to-card/90 border-r border-white/[0.06] backdrop-blur-2xl h-full">
+      <div className="flex h-14 items-center gap-3 px-5 border-b border-white/[0.06]">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-violet-500 shadow-lg shadow-primary/25">
+          <Sparkles className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-gray-900">Outbound</h1>
-          <p className="text-xs text-gray-500">Engine</p>
+          <h1 className="text-lg font-bold text-foreground">Outbound</h1>
+          <p className="text-xs text-muted-foreground">Engine</p>
         </div>
       </div>
-      
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="space-y-1">
+
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        <div className="space-y-0.5">
           {navigation.map((item) => (
             <NavLink
               key={item.name}
@@ -60,38 +60,45 @@ export default function Sidebar() {
               end={item.href === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200',
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-primary/15 to-violet-500/15 text-primary shadow-sm border border-primary/10'
+                    : 'text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.04] hover:border-transparent'
                 )
               }
             >
-              <item.icon className="h-5 w-5" />
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
               {item.name}
             </NavLink>
           ))}
         </div>
-        
-        <div className="mt-6 mb-2 px-3">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Configuration</p>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/[0.06]" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-3 text-xs font-bold text-muted-foreground/50 uppercase tracking-wider bg-gradient-to-b from-card/95 to-card/90">
+              Configuration
+            </span>
+          </div>
         </div>
-        
-        <div className="space-y-1">
+
+        <div className="space-y-0.5">
           {configNavigation.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200',
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-primary/15 to-violet-500/15 text-primary shadow-sm border border-primary/10'
+                    : 'text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.04]'
                 )
               }
             >
-              <item.icon className="h-5 w-5" />
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
               {item.name}
             </NavLink>
           ))}

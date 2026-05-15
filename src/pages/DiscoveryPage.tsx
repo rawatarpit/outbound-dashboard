@@ -39,10 +39,10 @@ import {
 } from '@/components/ui/Select'
 
 const SOURCE_COLORS: Record<string, { bg: string; icon: string }> = {
-  apollo: { bg: 'bg-blue-50', icon: 'text-blue-600' },
-  apify: { bg: 'bg-green-50', icon: 'text-green-600' },
-  hunter: { bg: 'bg-amber-50', icon: 'text-amber-600' },
-  default: { bg: 'bg-gray-50', icon: 'text-gray-600' }
+  apollo: { bg: 'bg-blue-500/10', icon: 'text-blue-400' },
+  apify: { bg: 'bg-green-500/10', icon: 'text-green-400' },
+  hunter: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
+  default: { bg: 'bg-white/[0.03]', icon: 'text-muted-foreground' }
 }
 
 function SourceDetailView({ 
@@ -63,17 +63,17 @@ function SourceDetailView({
       <div className="flex items-center gap-4">
         <button 
           onClick={onClose}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
+          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-4 flex-1">
           <div className={cn('rounded-lg p-3', colors.bg)}>
             <Search className={cn('h-6 w-6', colors.icon)} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{source.name}</h2>
-            <p className="text-gray-500">{DISCOVERY_SOURCE_TYPES.find(t => t.id === source.type)?.label || source.type}</p>
+            <h2 className="text-xl font-bold text-foreground">{source.name}</h2>
+            <p className="text-muted-foreground">{DISCOVERY_SOURCE_TYPES.find(t => t.id === source.type)?.label || source.type}</p>
           </div>
         </div>
         <Button variant="outline" onClick={onEdit}>
@@ -89,12 +89,12 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Users className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{(source as any).total_records_fetched || 0}</p>
-                <p className="text-sm text-gray-500">Total Records</p>
+                <p className="text-2xl font-bold text-foreground">{(source as any).total_records_fetched || 0}</p>
+                <p className="text-sm text-muted-foreground">Total Records</p>
               </div>
             </div>
           </CardContent>
@@ -102,12 +102,12 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <Building2 className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Building2 className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{(source as any).total_companies_enriched || 0}</p>
-                <p className="text-sm text-gray-500">Companies Enriched</p>
+                <p className="text-2xl font-bold text-foreground">{(source as any).total_companies_enriched || 0}</p>
+                <p className="text-sm text-muted-foreground">Companies Enriched</p>
               </div>
             </div>
           </CardContent>
@@ -115,12 +115,12 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <Users className="h-5 w-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{(source as any).total_contacts_enriched || 0}</p>
-                <p className="text-sm text-gray-500">Contacts Enriched</p>
+                <p className="text-2xl font-bold text-foreground">{(source as any).total_contacts_enriched || 0}</p>
+                <p className="text-sm text-muted-foreground">Contacts Enriched</p>
               </div>
             </div>
           </CardContent>
@@ -128,14 +128,14 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-50 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-amber-600" />
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-foreground">
                   {source.last_status === 'success' ? '100%' : source.last_status === 'failed' ? '0%' : 'N/A'}
                 </p>
-                <p className="text-sm text-gray-500">Success Rate</p>
+                <p className="text-sm text-muted-foreground">Success Rate</p>
               </div>
             </div>
           </CardContent>
@@ -149,23 +149,23 @@ function SourceDetailView({
           </CardHeader>
           <CardContent className="space-y-3">
             {source.brand && (
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Brand</span>
+              <div className="flex justify-between py-2 border-b border-white/[0.06]">
+                <span className="text-muted-foreground">Brand</span>
                 <span className="font-medium">{source.brand.brand_name}</span>
               </div>
             )}
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-gray-500">Rate Limit</span>
+            <div className="flex justify-between py-2 border-b border-white/[0.06]">
+              <span className="text-muted-foreground">Rate Limit</span>
               <span className="font-medium">{source.rate_limit_per_min}/min</span>
             </div>
             {source.schedule_cron && (
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Schedule</span>
-                <code className="text-sm bg-gray-100 px-2 py-1 rounded">{source.schedule_cron}</code>
+              <div className="flex justify-between py-2 border-b border-white/[0.06]">
+                <span className="text-muted-foreground">Schedule</span>
+                <code className="text-sm bg-white/[0.06] px-2 py-1 rounded text-foreground">{source.schedule_cron}</code>
               </div>
             )}
             <div className="flex justify-between py-2">
-              <span className="text-gray-500">Status</span>
+              <span className="text-muted-foreground">Status</span>
               <Badge variant={source.is_active ? 'success' : 'secondary'}>
                 {source.is_active ? 'Active' : 'Inactive'}
               </Badge>
@@ -186,21 +186,21 @@ function SourceDetailView({
               ) : source.last_status === 'failed' ? (
                 <AlertCircle className="h-5 w-5 text-red-500" />
               ) : (
-                <Clock className="h-5 w-5 text-gray-400" />
+                <Clock className="h-5 w-5 text-muted-foreground/50" />
               )}
               <div className="flex-1">
                 <p className="font-medium">
                   {source.is_running ? 'Running...' : source.last_status === 'success' ? 'Last run successful' : source.last_status === 'failed' ? 'Last run failed' : 'Never run'}
                 </p>
                 {source.last_run_at && (
-                  <p className="text-sm text-gray-500">{formatRelativeTime(source.last_run_at)}</p>
+                  <p className="text-sm text-muted-foreground">{formatRelativeTime(source.last_run_at)}</p>
                 )}
               </div>
             </div>
             {source.last_error && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm font-medium text-red-800">Last Error</p>
-                <p className="text-xs text-red-600 mt-1">{source.last_error}</p>
+              <div className="mt-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
+                <p className="text-sm font-medium text-red-400">Last Error</p>
+                <p className="text-xs text-red-400 mt-1">{source.last_error}</p>
               </div>
             )}
           </CardContent>
@@ -303,7 +303,10 @@ export default function DiscoveryPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="relative">
+            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+            <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+          </div>
       </div>
     )
   }
@@ -323,8 +326,8 @@ export default function DiscoveryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Discovery Sources</h1>
-          <p className="text-gray-500">Configure data sources for company and contact discovery</p>
+          <h1 className="text-2xl font-bold text-foreground">Discovery Sources</h1>
+          <p className="text-muted-foreground">Configure data sources for company and contact discovery</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={brandFilter} onValueChange={setBrandFilter}>
@@ -347,9 +350,9 @@ export default function DiscoveryPage() {
       {sources.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Search className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No discovery sources</h3>
-            <p className="text-gray-500 mb-4">Configure your first data source to start discovering companies</p>
+            <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground">No discovery sources</h3>
+            <p className="text-muted-foreground mb-4">Configure your first data source to start discovering companies</p>
             <Button onClick={() => { setEditingSource(null); setIsModalOpen(true) }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Source
@@ -374,13 +377,13 @@ export default function DiscoveryPage() {
                       </div>
                       <div>
                         <CardTitle className="text-base">{source.name}</CardTitle>
-                        <p className="text-sm text-gray-500">{getSourceTypeLabel(source.type)}</p>
+                        <p className="text-sm text-muted-foreground">{getSourceTypeLabel(source.type)}</p>
                       </div>
                     </div>
                     <div onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
-                          <MoreHorizontal className="h-5 w-5 text-gray-400" />
+                        <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                          <MoreHorizontal className="h-5 w-5 text-muted-foreground/50" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditSource(source)}>Edit</DropdownMenuItem>
@@ -391,7 +394,7 @@ export default function DiscoveryPage() {
                             <Play className="h-4 w-4 mr-2" />
                             Run Now
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteSource(source)} className="text-red-600">
+                          <DropdownMenuItem onClick={() => handleDeleteSource(source)} className="text-red-400">
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -410,23 +413,23 @@ export default function DiscoveryPage() {
                   <div className="space-y-2 text-sm">
                     {source.brand && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Brand</span>
+                        <span className="text-muted-foreground">Brand</span>
                         <span className="font-medium">{source.brand.brand_name}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Rate Limit</span>
+                      <span className="text-muted-foreground">Rate Limit</span>
                       <span>{source.rate_limit_per_min}/min</span>
                     </div>
                     {source.last_run_at && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Last Run</span>
+                        <span className="text-muted-foreground">Last Run</span>
                         <span>{formatRelativeTime(source.last_run_at)}</span>
                       </div>
                     )}
                   </div>
                   {source.last_error && (
-                    <div className="p-2 bg-red-50 rounded text-xs text-red-600">{source.last_error}</div>
+                    <div className="p-2 bg-red-500/10 rounded text-xs text-red-400">{source.last_error}</div>
                   )}
                 </CardContent>
               </Card>

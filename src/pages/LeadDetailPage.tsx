@@ -30,15 +30,15 @@ import { formatDate, formatRelativeTime } from '@/lib/utils'
 import { leadsAPI, brandsAPI, companiesAPI, messagesAPI } from '@/lib/api'
 
 const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800',
-  researching: 'bg-purple-100 text-purple-800',
-  qualified: 'bg-indigo-100 text-indigo-800',
-  icp_passed: 'bg-violet-100 text-violet-800',
-  contacted: 'bg-pink-100 text-pink-800',
-  replied: 'bg-green-100 text-green-800',
-  negotiating: 'bg-amber-100 text-amber-800',
-  closed_won: 'bg-emerald-100 text-emerald-800',
-  closed_lost: 'bg-red-100 text-red-800'
+  new: 'bg-blue-500/10 text-blue-400',
+  researching: 'bg-purple-500/10 text-purple-400',
+  qualified: 'bg-indigo-500/10 text-indigo-400',
+  icp_passed: 'bg-violet-500/10 text-violet-400',
+  contacted: 'bg-pink-500/10 text-pink-400',
+  replied: 'bg-green-500/10 text-green-400',
+  negotiating: 'bg-amber-500/10 text-amber-400',
+  closed_won: 'bg-emerald-500/10 text-emerald-400',
+  closed_lost: 'bg-red-500/10 text-red-400'
 }
 
 export default function LeadDetailPage() {
@@ -113,7 +113,10 @@ export default function LeadDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -121,7 +124,7 @@ export default function LeadDetailPage() {
   if (!lead) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500">Lead not found</p>
+        <p className="text-muted-foreground">Lead not found</p>
         <Button onClick={() => navigate('/leads')} className="mt-4">
           Back to Leads
         </Button>
@@ -137,7 +140,7 @@ export default function LeadDetailPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-foreground">
               {lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Lead Details'}
             </h1>
             <Badge className={STATUS_COLORS[lead.status] || ''}>
@@ -145,7 +148,7 @@ export default function LeadDetailPage() {
             </Badge>
           </div>
           {lead.email && (
-            <a href={`mailto:${lead.email}`} className="text-gray-500 hover:underline">
+            <a href={`mailto:${lead.email}`} className="text-muted-foreground hover:underline">
               {lead.email}
             </a>
           )}
@@ -177,16 +180,16 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Lead Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <Label className="text-gray-500">Full Name</Label>
+                  <Label className="text-muted-foreground">Full Name</Label>
                   {isEditing ? (
                     <Input
                       value={editedLead.full_name || ''}
@@ -197,7 +200,7 @@ export default function LeadDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-gray-500">Email</Label>
+                  <Label className="text-muted-foreground">Email</Label>
                   {isEditing ? (
                     <Input
                       type="email"
@@ -209,7 +212,7 @@ export default function LeadDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-gray-500">Phone</Label>
+                  <Label className="text-muted-foreground">Phone</Label>
                   {isEditing ? (
                     <Input
                       value={editedLead.raw_payload?.['phone'] as string || ''}
@@ -223,7 +226,7 @@ export default function LeadDetailPage() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-gray-500">Title</Label>
+                  <Label className="text-muted-foreground">Title</Label>
                   {isEditing ? (
                     <Input
                       value={editedLead.title || ''}
@@ -237,28 +240,28 @@ export default function LeadDetailPage() {
 
               <div className="space-y-4">
                 <div>
-                  <Label className="text-gray-500">Company</Label>
+                  <Label className="text-muted-foreground">Company</Label>
                   <p>{lead.domain || 'N/A'}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Source</Label>
+                  <Label className="text-muted-foreground">Source</Label>
                   <p className="capitalize">{lead.source || 'manual'}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Lead Score</Label>
+                  <Label className="text-muted-foreground">Lead Score</Label>
                   <p className="text-2xl font-bold">{lead.lead_score ?? 'N/A'}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Confidence</Label>
+                  <Label className="text-muted-foreground">Confidence</Label>
                   <p>{lead.confidence_score ? `${(lead.confidence_score * 100).toFixed(1)}%` : 'N/A'}</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t">
+            <div className="mt-6 pt-6 border-t border-white/[0.06]">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <Label className="text-gray-500">Status</Label>
+                  <Label className="text-muted-foreground">Status</Label>
                   <Select value={lead.status} onValueChange={handleStatusChange}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue />
@@ -282,15 +285,15 @@ export default function LeadDetailPage() {
             </div>
 
             {lead.notes && (
-              <div className="mt-6 pt-6 border-t">
-                <Label className="text-gray-500">Notes</Label>
+              <div className="mt-6 pt-6 border-t border-white/[0.06]">
+                <Label className="text-muted-foreground">Notes</Label>
                 <p className="mt-1">{lead.notes}</p>
               </div>
             )}
 
             {lead.tags && lead.tags.length > 0 && (
-              <div className="mt-6 pt-6 border-t">
-                <Label className="text-gray-500">Tags</Label>
+              <div className="mt-6 pt-6 border-t border-white/[0.06]">
+                <Label className="text-muted-foreground">Tags</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {lead.tags.map((tag, i) => (
                     <Badge key={i} variant="secondary">{tag}</Badge>
@@ -308,24 +311,24 @@ export default function LeadDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-gray-400" />
+                <Calendar className="h-4 w-4 text-muted-foreground/50" />
                 <div>
-                  <p className="text-sm text-gray-500">Created</p>
+                  <p className="text-sm text-muted-foreground">Created</p>
                   <p className="text-sm font-medium">{formatDate(lead.created_at)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Activity className="h-4 w-4 text-gray-400" />
+                <Activity className="h-4 w-4 text-muted-foreground/50" />
                 <div>
-                  <p className="text-sm text-gray-500">Last Updated</p>
+                  <p className="text-sm text-muted-foreground">Last Updated</p>
                   <p className="text-sm font-medium">{formatRelativeTime(lead.updated_at)}</p>
                 </div>
               </div>
               {brand && (
                 <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-gray-400" />
+                  <Building2 className="h-4 w-4 text-muted-foreground/50" />
                   <div>
-                    <p className="text-sm text-gray-500">Brand</p>
+                    <p className="text-sm text-muted-foreground">Brand</p>
                     <p className="text-sm font-medium">{brand.brand_name}</p>
                   </div>
                 </div>
@@ -341,18 +344,18 @@ export default function LeadDetailPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="text-sm text-muted-foreground">Name</p>
                     <p className="font-medium">{company.name}</p>
                   </div>
                   {company.industry && (
                     <div>
-                      <p className="text-sm text-gray-500">Industry</p>
+                      <p className="text-sm text-muted-foreground">Industry</p>
                       <p>{company.industry}</p>
                     </div>
                   )}
                   {company.employee_count && (
                     <div>
-                      <p className="text-sm text-gray-500">Employees</p>
+                      <p className="text-sm text-muted-foreground">Employees</p>
                       <p>{company.employee_count}</p>
                     </div>
                   )}
@@ -372,15 +375,15 @@ export default function LeadDetailPage() {
         </CardHeader>
         <CardContent>
           {messages.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No emails sent yet</p>
+            <p className="text-center text-muted-foreground py-8">No emails sent yet</p>
           ) : (
             <div className="space-y-4">
               {messages.map((msg) => (
-                <div key={msg.id} className="p-4 border rounded-lg">
+                <div key={msg.id} className="p-4 border border-white/[0.06] rounded-xl">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-medium">{msg.subject || 'No subject'}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         To: {msg.to_email} • {formatRelativeTime(msg.created_at)}
                       </p>
                     </div>

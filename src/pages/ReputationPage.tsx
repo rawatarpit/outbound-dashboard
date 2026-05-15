@@ -91,15 +91,18 @@ export default function ReputationPage() {
   }
 
   const getHealthBg = (score: number) => {
-    if (score >= 80) return 'bg-green-50 border-green-200'
-    if (score >= 50) return 'bg-amber-50 border-amber-200'
-    return 'bg-red-50 border-red-200'
+    if (score >= 80) return 'bg-green-500/5 border-green-500/20'
+    if (score >= 50) return 'bg-amber-500/5 border-amber-500/20'
+    return 'bg-red-500/5 border-red-500/20'
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -107,9 +110,9 @@ export default function ReputationPage() {
   if (brands.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reputation & Domain Health</h1>
+        <h1 className="text-2xl font-bold text-foreground">Reputation & Domain Health</h1>
         <Card>
-          <CardContent className="py-16 text-center text-gray-500">
+          <CardContent className="py-16 text-center text-muted-foreground">
             No brands configured yet
           </CardContent>
         </Card>
@@ -121,8 +124,8 @@ export default function ReputationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reputation & Domain Health</h1>
-          <p className="text-gray-500">Monitor sending reputation and deliverability</p>
+          <h1 className="text-2xl font-bold text-foreground">Reputation & Domain Health</h1>
+          <p className="text-muted-foreground">Monitor sending reputation and deliverability</p>
         </div>
         <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
           <SelectTrigger className="w-[200px]">
@@ -137,13 +140,13 @@ export default function ReputationPage() {
       </div>
 
       {brand?.auto_paused && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-500/20 bg-red-500/5">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <Ban className="h-5 w-5 text-red-600" />
+              <Ban className="h-5 w-5 text-red-400" />
               <div>
-                <p className="font-medium text-red-800">Auto-Paused</p>
-                <p className="text-sm text-red-600">Sending has been automatically paused due to reputation issues</p>
+                <p className="font-medium text-red-400">Auto-Paused</p>
+                <p className="text-sm text-red-400">Sending has been automatically paused due to reputation issues</p>
               </div>
             </div>
             <Button variant="outline" onClick={handleUnpause}>
@@ -158,13 +161,13 @@ export default function ReputationPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <Shield className="h-5 w-5 text-gray-400" />
+              <Shield className="h-5 w-5 text-muted-foreground/50" />
             </div>
             <p className={`text-3xl font-bold ${getHealthColor(deliverabilityScore)}`}>
               {deliverabilityScore}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Health Score</p>
-            <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <p className="text-sm text-muted-foreground mt-1">Health Score</p>
+            <div className="mt-3 h-2 bg-white/[0.06] rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${deliverabilityScore >= 80 ? 'bg-green-500' : deliverabilityScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                 style={{ width: `${deliverabilityScore}%` }}
@@ -176,34 +179,34 @@ export default function ReputationPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-muted-foreground/50" />
             </div>
-            <p className="text-3xl font-bold text-gray-900">{formatNumber(sentCount)}</p>
-            <p className="text-sm text-gray-500 mt-1">Total Sent</p>
+            <p className="text-3xl font-bold text-foreground">{formatNumber(sentCount)}</p>
+            <p className="text-sm text-muted-foreground mt-1">Total Sent</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <AlertCircle className="h-5 w-5 text-gray-400" />
+              <AlertCircle className="h-5 w-5 text-muted-foreground/50" />
             </div>
-            <p className={`text-3xl font-bold ${bounceRate > 5 ? 'text-red-600' : 'text-gray-900'}`}>
+            <p className={`text-3xl font-bold ${bounceRate > 5 ? 'text-red-600' : 'text-foreground'}`}>
               {formatPercentage(bounceRate / 100)}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Bounce Rate ({formatNumber(bounceCount)} total)</p>
+            <p className="text-sm text-muted-foreground mt-1">Bounce Rate ({formatNumber(bounceCount)} total)</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <AlertTriangle className="h-5 w-5 text-gray-400" />
+              <AlertTriangle className="h-5 w-5 text-muted-foreground/50" />
             </div>
-            <p className={`text-3xl font-bold ${complaintCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+            <p className={`text-3xl font-bold ${complaintCount > 0 ? 'text-red-600' : 'text-foreground'}`}>
               {formatNumber(complaintCount)}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Complaints</p>
+            <p className="text-sm text-muted-foreground mt-1">Complaints</p>
           </CardContent>
         </Card>
       </div>
@@ -217,7 +220,7 @@ export default function ReputationPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className={`p-4 border rounded-lg ${getHealthBg(deliverabilityScore)}`}>
+            <div className={`p-4 border border-white/[0.06] rounded-xl ${getHealthBg(deliverabilityScore)}`}>
               <div className="flex items-center gap-2 mb-2">
                 {deliverabilityScore >= 80 ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
@@ -229,31 +232,31 @@ export default function ReputationPage() {
               <p className={`text-2xl font-bold ${getHealthColor(deliverabilityScore)}`}>
                 {deliverabilityScore}/100
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {deliverabilityScore >= 80 ? 'Good' : deliverabilityScore >= 50 ? 'Fair' : 'Poor'}
               </p>
             </div>
 
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border border-white/[0.06] rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-5 w-5 text-gray-500" />
+                <Activity className="h-5 w-5 text-muted-foreground" />
                 <h3 className="font-medium">Send Statistics</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Sent</span>
+                  <span className="text-muted-foreground">Sent</span>
                   <span className="font-medium">{formatNumber(sentCount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Bounced</span>
+                  <span className="text-muted-foreground">Bounced</span>
                   <span className="font-medium">{formatNumber(bounceCount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Complaints</span>
+                  <span className="text-muted-foreground">Complaints</span>
                   <span className="font-medium">{formatNumber(complaintCount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Bounce Rate</span>
+                  <span className="text-muted-foreground">Bounce Rate</span>
                   <span className="font-medium">{formatPercentage(bounceRate / 100)}</span>
                 </div>
               </div>
@@ -261,17 +264,17 @@ export default function ReputationPage() {
           </div>
 
           {brand?.is_paused && !brand?.auto_paused && (
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+            <div className="mt-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
-                <span className="text-sm text-amber-800">Brand is manually paused</span>
+                <span className="text-sm text-amber-400">Brand is manually paused</span>
               </div>
               <Button variant="outline" size="sm" onClick={handleUnpause}>Resume</Button>
             </div>
           )}
 
           {brand?.last_deliverability_check && (
-            <p className="mt-4 text-xs text-gray-400">
+            <p className="mt-4 text-xs text-muted-foreground/50">
               Last check: {new Date(brand.last_deliverability_check).toLocaleString()}
             </p>
           )}

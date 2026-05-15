@@ -116,16 +116,16 @@ export default function DashboardPage() {
   const getWorkerIcon = (_type: string, status: string) => {
     if (status === 'running' || status === 'processing') return <Play className="h-3.5 w-3.5 text-green-600" />
     if (status === 'paused') return <PauseCircle className="h-3.5 w-3.5 text-amber-600" />
-    return <CheckCircle className="h-3.5 w-3.5 text-gray-400" />
+     return <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/50" />
   }
 
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          <p className="text-sm text-gray-500">Loading dashboard...</p>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-primary/5 blur-xl" />
         </div>
       </div>
     )
@@ -135,11 +135,14 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <Card className="max-w-md">
+          <div className="h-1 bg-gradient-to-r from-destructive to-rose-500" />
           <CardContent className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load dashboard</h2>
-            <p className="text-gray-500 mb-4">There was an error fetching your dashboard data. Please try again.</p>
-            <button onClick={fetchDashboardData} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+            <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Unable to load dashboard</h2>
+            <p className="text-muted-foreground mb-6">There was an error fetching your dashboard data. Please try again.</p>
+            <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-violet-500 text-primary-foreground hover:from-primary/90 hover:to-violet-500/90 shadow-lg shadow-primary/25 text-sm font-bold transition-all duration-200">
               Retry
             </button>
           </CardContent>
@@ -156,98 +159,69 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Real-time overview of your outbound sales engine</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Real-time overview of your outbound sales engine</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="success" className="gap-1">
-            <Sparkles className="h-3 w-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
             {stats?.activeBrands || 0} Active Brands
-          </Badge>
+          </span>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 bg-indigo-50 rounded-xl">
-                <Users className="h-5 w-5 text-indigo-600" />
-              </div>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{formatNumber(stats?.totalLeads || 0)}</p>
-            <p className="text-sm text-gray-500 mt-1">Total Leads in Pipeline</p>
-            <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, (stats?.totalLeads || 0) / 100)}%` }} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 bg-purple-50 rounded-xl">
-                <Building2 className="h-5 w-5 text-purple-600" />
-              </div>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{formatNumber(stats?.totalCompanies || 0)}</p>
-            <p className="text-sm text-gray-500 mt-1">Discovered Companies</p>
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-              <span>Pending: {formatNumber((stats?.totalLeads || 0) - (stats?.totalCompanies || 0))}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 bg-green-50 rounded-xl">
-                <Mail className="h-5 w-5 text-green-600" />
-              </div>
-              {totalSent > 0 && <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">{stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : ''}</span>}
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{formatNumber(totalSent)}</p>
-            <p className="text-sm text-gray-500 mt-1">Emails Sent Today</p>
-            {stats?.dailyLimit && (
-              <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(100, (totalSent / stats.dailyLimit) * 100)}%` }} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2.5 bg-amber-50 rounded-xl">
-                <MessageSquare className="h-5 w-5 text-amber-600" />
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{formatPercentage(stats?.replyRate || 0)}</p>
-            <p className="text-sm text-gray-500 mt-1">Open Rate</p>
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-              <span>{formatNumber(opened)} opened</span>
-              <span>{formatNumber(bounced)} bounced</span>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, gradient: 'from-indigo-500 to-indigo-600', accent: 'text-primary', barColor: 'bg-primary', progressWidth: Math.min(100, (stats?.totalLeads || 0) / 100) },
+          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2, gradient: 'from-violet-500 to-violet-600', accent: 'text-primary', barColor: 'bg-violet-500', progressWidth: 0 },
+          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, gradient: 'from-emerald-500 to-emerald-600', accent: 'text-emerald-400', barColor: 'bg-emerald-500', progressWidth: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
+          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, gradient: 'from-amber-500 to-amber-600', accent: 'text-amber-400', sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
+        ].map(({ label, value, icon: Icon, gradient, accent, barColor, progressWidth, badge, sub }) => (
+          <div key={label} className="group relative">
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-white/[0.04] to-white/[0.02] rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition duration-500" />
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-2xl pointer-events-none" />
+                <CardContent className="p-5 relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`rounded-xl bg-gradient-to-br ${gradient} p-3 shadow-lg shadow-primary/20`}>
+                    <Icon className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  {badge !== undefined && badge !== '' ? (
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">{badge}</span>
+                  ) : (
+                    <TrendingUp className="h-4 w-4 text-emerald-400/60" />
+                  )}
+                </div>
+                <p className={`text-3xl font-extrabold tracking-tight ${accent}`}>{value}</p>
+                <p className="text-sm text-muted-foreground mt-1.5">{label}</p>
+                {sub && (
+                  <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>
+                )}
+                {barColor && progressWidth !== undefined && progressWidth > 0 && (
+                  <div className="mt-4 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                    <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${Math.min(100, progressWidth)}%` }} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      <div className="grid gap-5 lg:grid-cols-7">
+        <Card className="lg:col-span-4 overflow-hidden">
+          <div className="h-[3px] bg-gradient-to-r from-primary via-violet-500 to-primary" />
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
-                <TrendingUp className="h-5 w-5 text-indigo-600" />
+                <TrendingUp className="h-5 w-5 text-primary" />
                 Email Performance (7 Days)
               </CardTitle>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" /> Sent
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Sent
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Delivered
                 </span>
               </div>
@@ -259,68 +233,74 @@ export default function DashboardPage() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorDelivered" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.15)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
                       borderRadius: '12px',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      backgroundColor: 'rgba(20,20,40,0.95)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                      color: '#e2e2ee',
                     }}
                   />
-                  <Area type="monotone" dataKey="sent" stroke="#6366f1" strokeWidth={2.5} fill="url(#colorSent)" />
-                  <Area type="monotone" dataKey="delivered" stroke="#10b981" strokeWidth={2.5} fill="url(#colorDelivered)" />
+                  <Area type="monotone" dataKey="sent" stroke="#818cf8" strokeWidth={2.5} fill="url(#colorSent)" />
+                  <Area type="monotone" dataKey="delivered" stroke="#34d399" strokeWidth={2.5} fill="url(#colorDelivered)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 overflow-hidden">
+          <div className="h-[3px] bg-gradient-to-r from-violet-500 via-primary to-violet-500" />
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-5 w-5 text-indigo-600" />
+              <Target className="h-5 w-5 text-primary" />
               Pipeline Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pipelineData.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No companies in pipeline</p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
+                  <Target className="h-6 w-6 text-muted-foreground/40" />
+                </div>
+                <p className="text-sm text-muted-foreground">No companies in pipeline</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {pipelineData.map((item) => (
                   <div key={item.key}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700 capitalize">{item.name}</span>
-                      <span className="text-sm font-semibold text-gray-900">{item.value}</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-semibold text-foreground/80 capitalize">{item.name}</span>
+                      <span className="text-sm font-bold text-foreground">{item.value}</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: `${(item.value / Math.max(...pipelineData.map((d: any) => d.value), 1)) * 100}%`,
-                          backgroundColor: PIPELINE_COLORS[item.key] || '#6366f1',
+                          backgroundColor: PIPELINE_COLORS[item.key] || '#818cf8',
                         }}
                       />
                     </div>
                   </div>
                 ))}
-                <div className="pt-3 border-t mt-4">
+                <div className="pt-4 border-t border-white/[0.06] mt-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Total</span>
-                    <span className="font-semibold">{pipelineData.reduce((sum: number, d: any) => sum + d.value, 0)}</span>
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-bold text-foreground">{pipelineData.reduce((sum: number, d: any) => sum + d.value, 0)}</span>
                   </div>
                 </div>
               </div>
@@ -329,43 +309,46 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2 overflow-hidden">
+          <div className="h-[3px] bg-gradient-to-r from-primary via-violet-500 to-primary" />
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Activity className="h-5 w-5 text-indigo-600" />
+                <Activity className="h-5 w-5 text-primary" />
                 Recent Activity
               </CardTitle>
               {stats?.recentActivity?.length > 0 && (
-                <span className="text-xs text-gray-400">{stats.recentActivity.length} events</span>
+                <span className="text-xs text-muted-foreground bg-white/[0.03] px-2 py-1 rounded-full">{stats.recentActivity.length} events</span>
               )}
             </div>
           </CardHeader>
           <CardContent>
             {!stats?.recentActivity?.length ? (
-              <div className="text-center py-12 text-gray-500">
-                <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No recent activity</p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
+                  <Activity className="h-6 w-6 text-muted-foreground/40" />
+                </div>
+                <p className="text-sm text-muted-foreground">No recent activity</p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {stats.recentActivity.slice(0, 8).map((activity: any) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                      <Activity className="h-4 w-4 text-indigo-600" />
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/10 to-violet-500/10 flex items-center justify-center shrink-0 border border-primary/10">
+                      <Activity className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-semibold text-foreground/90 truncate">
                         {activity.description || activity.activity_type}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {formatRelativeTime(activity.created_at)}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="shrink-0 text-xs capitalize">
+                    <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2.5 py-1 rounded-full shrink-0 capitalize">
                       {activity.activity_type?.replace(/_/g, ' ')}
-                    </Badge>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -373,10 +356,11 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
+          <div className="h-[3px] bg-gradient-to-r from-amber-500 via-primary to-amber-500" />
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-5 w-5 text-indigo-600" />
+              <Clock className="h-5 w-5 text-primary" />
               Worker Status
             </CardTitle>
           </CardHeader>
@@ -385,37 +369,33 @@ export default function DashboardPage() {
               Object.entries(workers).map(([type, info]: [string, any]) => {
                 const Icon = WORKER_ICONS[type] || Activity
                 const status = info?.status || 'idle'
+                const isRunning = status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
                 return (
-                  <div key={type} className="flex items-center gap-3 p-3 rounded-xl border hover:shadow-sm transition-shadow">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${
-                      status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
-                        ? 'bg-green-50' : 'bg-gray-50'
+                  <div key={type} className="group flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-200">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center border ${
+                      isRunning ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/[0.03] border-white/[0.04]'
                     }`}>
-                      <Icon className={`h-4.5 w-4.5 ${
-                        status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
-                          ? 'text-green-600' : 'text-gray-400'
-                      }`} />
+                      <Icon className={`h-4.5 w-4.5 ${isRunning ? 'text-emerald-400' : 'text-muted-foreground/50'}`} />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900 capitalize">{type}</p>
-                      <p className="text-xs text-gray-500">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground/90 capitalize">{type}</p>
+                      <p className="text-xs text-muted-foreground truncate">
                         {info?.last_run ? `Last: ${formatRelativeTime(info.last_run)}` : 'Not run yet'}
                         {info?.pending ? ` · ${info.pending} pending` : ''}
                         {info?.reason ? ` · ${info.reason}` : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {getWorkerIcon(type, status)}
-                      <span className={`text-xs font-medium ${
-                        status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
-                          ? 'text-green-700' : status === 'paused' ? 'text-amber-700' : 'text-gray-500'
+                      <span className={`text-xs font-bold ${
+                        isRunning ? 'text-emerald-400' : status === 'paused' ? 'text-amber-400' : 'text-muted-foreground'
                       }`}>{status}</span>
                     </div>
                   </div>
                 )
               })}
             {!workers && (
-              <div className="text-center py-8 text-gray-500 text-sm">No worker data available</div>
+              <div className="text-center py-8 text-muted-foreground text-sm">No worker data available</div>
             )}
           </CardContent>
         </Card>

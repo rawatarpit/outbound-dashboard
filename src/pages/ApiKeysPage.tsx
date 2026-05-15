@@ -22,12 +22,12 @@ interface ExternalKey {
 }
 
 const SERVICE_META: Record<string, { icon: any; color: string; url?: string }> = {
-  apollo: { icon: Globe, color: 'text-blue-600 bg-blue-50', url: 'https://apollo.io' },
-  hunter: { icon: Search, color: 'text-amber-600 bg-amber-50', url: 'https://hunter.io' },
-  apify: { icon: Database, color: 'text-green-600 bg-green-50', url: 'https://apify.com' },
-  github: { icon: Shield, color: 'text-gray-700 bg-gray-100', url: 'https://github.com/settings/tokens' },
-  llm: { icon: Bot, color: 'text-purple-600 bg-purple-50' },
-  smtp: { icon: Mail, color: 'text-red-600 bg-red-50' },
+  apollo: { icon: Globe, color: 'text-blue-400 bg-blue-500/10', url: 'https://apollo.io' },
+  hunter: { icon: Search, color: 'text-amber-400 bg-amber-500/10', url: 'https://hunter.io' },
+  apify: { icon: Database, color: 'text-green-400 bg-green-500/10', url: 'https://apify.com' },
+  github: { icon: Shield, color: 'text-foreground/80 bg-white/[0.04]', url: 'https://github.com/settings/tokens' },
+  llm: { icon: Bot, color: 'text-purple-400 bg-purple-500/10' },
+  smtp: { icon: Mail, color: 'text-red-400 bg-red-500/10' },
 }
 
 export default function ApiKeysPage() {
@@ -52,7 +52,7 @@ export default function ApiKeysPage() {
           const config = (source.config || {}) as Record<string, any>
           const apiKey = config.api_key || config.token
           if (apiKey) {
-            const meta = SERVICE_META[source.type] || { icon: Key, color: 'text-gray-600 bg-gray-50' }
+            const meta = SERVICE_META[source.type] || { icon: Key, color: 'text-muted-foreground bg-white/[0.03]' }
             const brandLabel = brand.brand_name || brand.product || ''
             allKeys.push({
               id: `src-${source.id}`,
@@ -106,7 +106,7 @@ export default function ApiKeysPage() {
       for (const type of keyTypes) {
         const hasKey = allKeys.some(k => k.service === type)
         if (!hasKey) {
-          const meta = SERVICE_META[type] || { icon: Key, color: 'text-gray-600 bg-gray-50' }
+          const meta = SERVICE_META[type] || { icon: Key, color: 'text-muted-foreground bg-white/[0.03]' }
           allKeys.push({
             id: `missing-${type}`,
             service: type,
@@ -116,7 +116,7 @@ export default function ApiKeysPage() {
             source: 'Not configured',
             status: 'missing',
             icon: meta.icon,
-            color: 'text-gray-400 bg-gray-50',
+            color: 'text-muted-foreground/50 bg-white/[0.03]',
             url: meta.url,
           })
         }
@@ -162,7 +162,10 @@ export default function ApiKeysPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -170,13 +173,13 @@ export default function ApiKeysPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">External API Keys</h1>
-        <p className="text-gray-500">API keys and tokens the engine uses to connect to third-party services</p>
+        <h1 className="text-2xl font-bold text-foreground">External API Keys</h1>
+        <p className="text-muted-foreground">API keys and tokens the engine uses to connect to third-party services</p>
       </div>
 
       {Object.entries(groupedKeys).map(([type, typeKeys]) => (
         <div key={type}>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{getTypeLabel(type)}</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{getTypeLabel(type)}</h2>
           <div className="grid gap-3 md:grid-cols-2">
             {typeKeys.map((key) => {
               const Icon = key.icon
@@ -195,12 +198,12 @@ export default function ApiKeysPage() {
                           <div className="flex items-center gap-2">
                             <CardTitle className="text-sm font-semibold">{key.label}</CardTitle>
                             {key.url && isConfigured && (
-                              <a href={key.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
+                              <a href={key.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground/50 hover:text-foreground/80">
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{key.source}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{key.source}</p>
                         </div>
                       </div>
                       <Badge variant={isConfigured ? 'success' : 'secondary'} className="shrink-0 text-xs">
@@ -215,18 +218,18 @@ export default function ApiKeysPage() {
                             readOnly
                             type={isVisible ? 'text' : 'password'}
                             value={key.keyValue}
-                            className="font-mono text-xs pr-16 bg-gray-50"
+                            className="font-mono text-xs pr-16 bg-white/[0.02]"
                           />
                           <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
                             <button
                               onClick={() => toggleVisible(key.id)}
-                              className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground/50 hover:text-foreground/80"
                             >
                               {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                             </button>
                             <button
                               onClick={() => handleCopy(key.keyValue)}
-                              className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground/50 hover:text-foreground/80"
                             >
                               <Copy className="h-3.5 w-3.5" />
                             </button>

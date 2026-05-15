@@ -43,9 +43,9 @@ import {
 } from '@/components/ui/DropdownMenu'
 
 const ROLE_COLORS: Record<string, string> = {
-  owner: 'bg-amber-100 text-amber-800',
-  admin: 'bg-purple-100 text-purple-800',
-  member: 'bg-blue-100 text-blue-800'
+  owner: 'bg-amber-500/10 text-amber-400',
+  admin: 'bg-purple-500/10 text-purple-400',
+  member: 'bg-blue-500/10 text-blue-400'
 }
 
 export default function TeamPage() {
@@ -145,7 +145,10 @@ export default function TeamPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -154,8 +157,8 @@ export default function TeamPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-          <p className="text-gray-500">Manage your team members and roles</p>
+          <h1 className="text-2xl font-bold text-foreground">Team</h1>
+          <p className="text-muted-foreground">Manage your team members and roles</p>
         </div>
         {canManage && (
           <Button onClick={() => setIsModalOpen(true)}>
@@ -196,7 +199,7 @@ export default function TeamPage() {
                       </div>
                       <div>
                         <p className="font-medium">{member.name || 'Pending'}</p>
-                        <p className="text-sm text-gray-500">{member.email}</p>
+                        <p className="text-sm text-muted-foreground">{member.email}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -212,7 +215,7 @@ export default function TeamPage() {
                       <Badge variant="secondary">Invited</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-gray-500">
+                  <TableCell className="text-muted-foreground">
                     {member.last_login_at
                       ? formatRelativeTime(member.last_login_at)
                       : member.invited_at
@@ -222,7 +225,7 @@ export default function TeamPage() {
                   <TableCell>
                     {canManage && member.id !== currentMember?.id && (
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 rounded hover:bg-gray-100">
+                        <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -302,14 +305,14 @@ export default function TeamPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-sm">
+          <div className="bg-white/[0.03] rounded-xl p-4 text-sm">
             <h4 className="font-medium mb-2">Role Permissions</h4>
-            <div className="space-y-1 text-gray-600">
+            <div className="space-y-1 text-muted-foreground/80">
               <p><strong>Admin:</strong> Can manage settings, team, and brands</p>
               <p><strong>Member:</strong> Can view dashboard and manage leads</p>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>

@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -41,11 +41,11 @@ export default function LoginPage() {
               <Rocket className="h-8 w-8" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Outbound Engine</h1>
-          <p className="mt-2 text-gray-600">Sign in to your dashboard</p>
+          <h1 className="text-2xl font-bold text-foreground">Outbound Engine</h1>
+          <p className="mt-2 text-muted-foreground">Sign in to your dashboard</p>
         </div>
 
-        <div className="rounded-xl bg-white p-8 shadow-lg border border-gray-200">
+        <div className="rounded-2xl bg-card/60 backdrop-blur-xl p-8 shadow-2xl border border-white/[0.06]">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" required>Email</Label>
@@ -75,7 +75,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Don't have an account?</span>{' '}
+            <span className="text-muted-foreground">Don't have an account?</span>{' '}
             <Link to="/signup" className="font-medium text-primary hover:underline">
               Sign up
             </Link>
