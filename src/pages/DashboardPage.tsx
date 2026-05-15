@@ -172,38 +172,39 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, gradient: 'from-indigo-500 to-indigo-600', accent: 'text-primary', barColor: 'bg-primary', progressWidth: Math.min(100, (stats?.totalLeads || 0) / 100) },
-          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2, gradient: 'from-violet-500 to-violet-600', accent: 'text-primary', barColor: 'bg-violet-500', progressWidth: 0 },
-          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, gradient: 'from-emerald-500 to-emerald-600', accent: 'text-emerald-400', barColor: 'bg-emerald-500', progressWidth: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
-          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, gradient: 'from-amber-500 to-amber-600', accent: 'text-amber-400', sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
-        ].map(({ label, value, icon: Icon, gradient, accent, barColor, progressWidth, badge, sub }) => (
+          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, accentBar: 'from-indigo-500 to-indigo-600', iconBg: 'from-indigo-500/20 to-indigo-600/20', iconColor: 'text-indigo-400', accent: 'text-indigo-400', barColor: 'bg-gradient-to-r from-indigo-500 to-indigo-600', progressWidth: Math.min(100, (stats?.totalLeads || 0) / 100) },
+          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2, accentBar: 'from-violet-500 to-violet-600', iconBg: 'from-violet-500/20 to-violet-600/20', iconColor: 'text-violet-400', accent: 'text-violet-400', barColor: 'bg-gradient-to-r from-violet-500 to-violet-600', progressWidth: 0 },
+          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, accentBar: 'from-emerald-500 to-emerald-600', iconBg: 'from-emerald-500/20 to-emerald-600/20', iconColor: 'text-emerald-400', accent: 'text-emerald-400', barColor: 'bg-gradient-to-r from-emerald-500 to-emerald-600', progressWidth: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
+          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, accentBar: 'from-amber-500 to-amber-600', iconBg: 'from-amber-500/20 to-amber-600/20', iconColor: 'text-amber-400', accent: 'text-amber-400', sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
+        ].map(({ label, value, icon: Icon, accentBar, iconBg, iconColor, accent, barColor, progressWidth, badge, sub }) => (
           <div key={label} className="group relative">
             <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/20 to-violet-500/20 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
-            <Card className="relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-2xl pointer-events-none" />
-                <CardContent className="p-5 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`rounded-xl bg-gradient-to-br ${gradient} p-3 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.15)]`}>
-                    <Icon className="h-5 w-5 text-primary-foreground" />
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-2xl border border-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.25),inset_0_1px_0_0_rgba(255,255,255,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_12px_32px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.04)] hover:border-white/[0.09] transition-all duration-300">
+              <div className={`absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b ${accentBar} rounded-l-[1px]`} />
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`rounded-xl bg-gradient-to-br ${iconBg} p-2.5 border border-white/[0.06]`}>
+                    <Icon className={`h-5 w-5 ${iconColor}`} />
                   </div>
                   {badge !== undefined && badge !== '' ? (
                     <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">{badge}</span>
                   ) : (
-                    <TrendingUp className="h-4 w-4 text-emerald-400/60" />
+                    <TrendingUp className="h-4 w-4 text-emerald-400/60 mt-1" />
                   )}
                 </div>
                 <p className={`text-3xl font-extrabold tracking-tight ${accent}`}>{value}</p>
-                <p className="text-sm text-muted-foreground mt-1.5">{label}</p>
+                <p className="text-sm text-muted-foreground mt-1">{label}</p>
                 {sub && (
                   <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>
                 )}
                 {barColor && progressWidth !== undefined && progressWidth > 0 && (
-                  <div className="mt-4 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className="mt-3 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
                     <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${Math.min(100, progressWidth)}%` }} />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         ))}
       </div>
