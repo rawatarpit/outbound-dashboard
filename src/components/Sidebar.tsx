@@ -10,7 +10,11 @@ import {
   UserCog,
   Webhook,
   Key,
-  Rocket
+  Rocket,
+  Send,
+  MessageSquare,
+  Shield,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -20,11 +24,15 @@ const navigation = [
   { name: 'Leads', href: '/leads', icon: Users },
   { name: 'Pipeline', href: '/pipeline', icon: GitBranch },
   { name: 'Discovery', href: '/discovery', icon: Search },
+  { name: 'Outreach Queue', href: '/outreach', icon: Send },
+  { name: 'Campaigns', href: '/campaigns', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ]
 
 const configNavigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'System Flags', href: '/system-flags', icon: Shield },
+  { name: 'Reputation', href: '/reputation', icon: Activity },
   { name: 'Team', href: '/team', icon: UserCog },
   { name: 'Webhooks', href: '/webhooks', icon: Webhook },
   { name: 'API Keys', href: '/api-keys', icon: Key },

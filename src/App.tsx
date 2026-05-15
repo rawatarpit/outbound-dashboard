@@ -15,6 +15,10 @@ import SettingsPage from '@/pages/SettingsPage'
 import TeamPage from '@/pages/TeamPage'
 import WebhooksPage from '@/pages/WebhooksPage'
 import ApiKeysPage from '@/pages/ApiKeysPage'
+import OutreachQueuePage from '@/pages/OutreachQueuePage'
+import CampaignsPage from '@/pages/CampaignsPage'
+import SystemFlagsPage from '@/pages/SystemFlagsPage'
+import ReputationPage from '@/pages/ReputationPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -58,6 +62,10 @@ export default function App() {
                 <Route path="/team" element={<TeamPage />} />
                 <Route path="/webhooks" element={<WebhooksPage />} />
                 <Route path="/api-keys" element={<ApiKeysPage />} />
+                <Route path="/outreach" element={<OutreachQueuePage />} />
+                <Route path="/campaigns" element={<CampaignsPage />} />
+                <Route path="/system-flags" element={<SystemFlagsPage />} />
+                <Route path="/reputation" element={<ReputationPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

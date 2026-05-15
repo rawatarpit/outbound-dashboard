@@ -82,25 +82,12 @@ export default function WebhooksPage() {
 
   const handleTestWebhook = async (webhook: ClientWebhook) => {
     try {
-      const response = await fetch(webhook.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'test',
-          timestamp: new Date().toISOString(),
-          data: { message: 'This is a test webhook payload' }
-        })
-      })
-
-      await webhooksAPI.update(webhook.id, {
-        last_triggered_at: new Date().toISOString(),
-        last_status_code: response.status
-      })
-
-      toast.success(`Test request sent (Status: ${response.status})`)
+      const { data, error } = await webhooksAPI.test(webhook.id)
+      if (error) throw error
+      toast.success(data.message || 'Test request sent')
       fetchWebhooks()
     } catch (error: any) {
-      toast.error('Failed to send test request')
+      toast.error(error.message || 'Failed to send test request')
     }
   }
 

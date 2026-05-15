@@ -11,7 +11,8 @@ import type {
   ClientSettings,
   ClientMember,
   Client,
-  LeadImportBatch
+  LeadImportBatch,
+  OutreachDraft
 } from '@/lib/supabase'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -316,8 +317,13 @@ export const companiesAPI = {
     return insertAPI('companies', data)
   },
 
-  update: async (id: string, data: Partial<Company>): Promise<{ data: any, error: any }> => {
-    return updateAPI('companies', id, data)
+  update: async (brandId: string, id: string, data: Partial<Company>): Promise<{ data: any, error: any }> => {
+    const { data: res, error } = await callEdgeFunction<{ success: boolean; company: Company }>(`pipeline/${brandId}/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+    if (error) return { data: null, error }
+    return { data: res.company, error: null }
   },
 
   delete: async (id: string): Promise<{ error: any }> => {
@@ -660,6 +666,51 @@ export const workersAPI = {
 
   resume: async (workerName: string): Promise<{ data: any; error: any }> => {
     return callEdgeFunction(`workers/${workerName}/resume`, { method: 'POST' })
+  }
+}
+
+// ─────────────────────────────────────────────
+// Outreach Drafts
+// ─────────────────────────────────────────────
+export const outreachAPI = {
+  listByCompany: async (brandId: string, companyId: string): Promise<{ data: OutreachDraft[], error: any }> => {
+    const { data, error } = await callEdgeFunction<{ outreach: OutreachDraft[] }>(`pipeline/${brandId}/${companyId}/outreach`)
+    if (error) return { data: [], error }
+    return { data: data.outreach || [], error: null }
+  },
+}
+
+// ─────────────────────────────────────────────
+// Campaigns
+// ─────────────────────────────────────────────
+export const campaignsAPI = {
+  list: async (): Promise<{ data: any[], error: any }> => {
+    return callEdgeFunction('campaigns')
+  },
+
+  get: async (id: string): Promise<{ data: any, error: any }> => {
+    return callEdgeFunction(`campaigns/${id}`)
+  },
+
+  create: async (data: any): Promise<{ data: any, error: any }> => {
+    return callEdgeFunction('campaigns', { method: 'POST', body: data })
+  },
+
+  update: async (id: string, data: any): Promise<{ data: any, error: any }> => {
+    return callEdgeFunction(`campaigns/${id}`, { method: 'PATCH', body: data })
+  },
+
+  delete: async (id: string): Promise<{ error: any }> => {
+    const { error } = await callEdgeFunction(`campaigns/${id}`, { method: 'DELETE' })
+    return { error }
+  },
+
+  launch: async (id: string): Promise<{ data: any, error: any }> => {
+    return callEdgeFunction(`campaigns/${id}/launch`, { method: 'POST' })
+  },
+
+  pause: async (id: string): Promise<{ data: any, error: any }> => {
+    return callEdgeFunction(`campaigns/${id}/pause`, { method: 'POST' })
   }
 }
 

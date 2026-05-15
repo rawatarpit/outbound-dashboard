@@ -395,6 +395,18 @@ export type ActivityLog = Database['public']['Tables']['activity_logs']['Row']
 export type DiscoveryMetric = Database['public']['Tables']['discovery_metrics']['Row']
 export type LeadImportBatch = Database['public']['Tables']['lead_import_batches']['Row']
 
+export interface OutreachDraft {
+  id: string
+  brand_id: string
+  company_id: string
+  lead_id: string | null
+  subject: string | null
+  body: string | null
+  status: 'draft' | 'draft_processing' | 'sent'
+  created_at: string
+  updated_at: string
+}
+
 export const LEAD_STATUSES = [
   'new',
   'researching',

@@ -103,7 +103,7 @@ export default function BrandDetailPage() {
   const handleTriggerDiscovery = async () => {
     if (!brand) return
     try {
-      const { error } = await brandsAPI.update(brand.id, { manual_discovery_requested: true })
+      const { error } = await brandsAPI.triggerDiscovery(brand.id)
       if (error) throw error
       toast.success('Discovery triggered')
     } catch (error: any) {
