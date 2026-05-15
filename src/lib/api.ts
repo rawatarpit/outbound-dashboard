@@ -12,7 +12,8 @@ import type {
   ClientMember,
   Client,
   LeadImportBatch,
-  OutreachDraft
+  OutreachDraft,
+  BrandIntent
 } from '@/lib/supabase'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -720,5 +721,27 @@ export const campaignsAPI = {
 export const importBatchesAPI = {
   create: async (data: Partial<LeadImportBatch>): Promise<{ data: LeadImportBatch[], error: any }> => {
     return insertAPI('lead_import_batches', data)
+  }
+}
+
+// ─────────────────────────────────────────────
+// Brand Intents
+// ─────────────────────────────────────────────
+export const brandIntentsAPI = {
+  list: async (brandId: string): Promise<{ data: BrandIntent[], error: any }> => {
+    const params: Record<string, string> = { 'brand_id': `eq.${brandId}`, 'order': 'priority.asc' }
+    return fetchAPI('brand_intents', { params })
+  },
+
+  create: async (data: Partial<BrandIntent>): Promise<{ data: BrandIntent[], error: any }> => {
+    return insertAPI('brand_intents', data)
+  },
+
+  update: async (id: string, data: Partial<BrandIntent>): Promise<{ data: any, error: any }> => {
+    return updateAPI('brand_intents', id, data)
+  },
+
+  delete: async (id: string): Promise<{ error: any }> => {
+    return deleteAPI('brand_intents', id)
   }
 }

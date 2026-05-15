@@ -822,3 +822,473 @@ SELECT * FROM match_discovery_embeddings(
 | **Enrichment** | Reads `discovered_companies` with `enrichment_status="pending"`, enriches (finds emails, company data), creates `leads` + `companies` rows | Every 5 minutes |
 | **Send** | Reads `companies` with `status="draft_ready"`, claims outreach drafts, sends via provider, records results in `sent_messages` | Continuous |
 | **Reply** | (IMAP) Reads inbox for replies, classifies (bounce/reply/complaint), updates reputation | Every 2 minutes |
+
+---
+
+## 21. Screen Map — Every UI Screen & Its Backend Wiring
+
+This section describes each screen a user sees, what data it fetches, what actions the user can take, and the exact backend calls for each.
+
+---
+
+### S1. Login
+
+| | |
+|---|---|
+| **Purpose** | Authenticate existing user |
+| **Inputs** | Email, password |
+| **Action** | `POST /login` with `{ email, password }` |
+| **On success** | Save `token` to localStorage. Store `user: { id, email, name, role, clientId, clientName }` in app state |
+| **On error** | Show error message from response |
+| **Next screen** | Dashboard |
+
+### S2. Sign Up
+
+| | |
+|---|---|
+| **Purpose** | Create new account |
+| **Inputs** | Email, password, name, company (optional) |
+| **Action** | `POST /signup` with `{ email, password, name?, company? }` |
+| **Side effects** | Creates auth user, `clients` row, `client_members` row with role `"owner"` |
+| **On success** | Navigate to Login with success message "Account created! Please log in." |
+| **Next screen** | Login |
+
+---
+
+### S3. Dashboard
+
+| | |
+|---|---|
+| **Purpose** | Top-level overview of everything — the user's home screen |
+| **Data fetch** | `GET /dashboard/overview` — loads brand info, discovery stats, send stats, pipeline counts, worker status, activity feed |
+| **Worker status indicators** | 4 tiles showing: Discovery (running/idle + last run time), Enrichment (running/idle + pending count), Send (running/paused + reason), Reply (running/idle) |
+| **Toggle workers** | On/off toggle for Discovery and Send — calls `PATCH /dashboard/:brandId/toggle` with `{ discovery: bool, outbound: bool }`. Logs to `activity_logs`. Only `owner`/`admin` can toggle. |
+| **Pipeline quick counts** | 5 numbers: researching, qualified, draft_ready, contacted, closed_won |
+| **Send stats** | Today's sent, delivered, opened, bounced — from `sent_messages` |
+| **Activity feed** | Last 20 `activity_logs` entries — scrollable list |
+| **Actions** | Click a pipeline count → navigates to Pipeline screen filtered by that status. Click a worker → navigates to Worker detail or Settings. Click "Trigger Discovery" → `POST /workers/discovery/trigger`. |
+| **Triggers** | `POST /workers/discovery/trigger` |
+| **Empty state** | If no brands exist, show "Create your first brand" CTA → navigates to Brand Setup |
+
+---
+
+### S4. Brand Setup (Create / Edit)
+
+| | |
+|---|---|
+| **Purpose** | Configure a brand profile — this is the most important setup screen |
+| **Sections** | **Basic Info**, **Intents & Signals**, **Discovery**, **Email Transport** |
+
+#### S4a. Brand Basic Info
+
+| | |
+|---|---|
+| **Action** | Create: `POST /brands` or Edit: `PATCH /brands/:id` |
+| **Inputs** | |
+| `brand_name` | Text — display name |
+| `product` | Text — what they sell |
+| `positioning` | Text area — how they position |
+| `core_offer` | Text area — what they offer |
+| `audience` | Text area — target audience |
+| `tone` | Text — brand voice |
+| **Defaults applied by backend** | `discovery_enabled: false`, `outbound_enabled: false`, `is_active: true` |
+| **Validation** | `transport_mode === "mailbox"` requires `smtp_email`; `provider === "resend"` requires `provider_api_key` |
+
+#### S4b. Brand Intents (what signals to hunt)
+
+| | |
+|---|---|
+| **Purpose** | Define search intents and signal types per intent |
+| **Data** | Direct `supabase.from("brand_intents").select("*").eq("brand_id", id)` |
+| **CRUD** | Direct table operations on `brand_intents` table |
+| **Each intent row** | `{ intent: string, signals: SignalType[], priority: number, is_active: boolean }` |
+| **Available signal types** | `hiring`, `funding`, `launch`, `pain`, `advertising`, `partnership`, `tech_usage`, `growth_activity`, `outbound_pain`, `automation_need` |
+| **UI pattern** | List of intent cards. Each card: text input for intent, multi-select checkboxes for signal types, priority number, active toggle. "Add Intent" button at bottom. |
+| **Affects** | These intents are embedded by the RAG system and used to generate context-aware search queries |
+
+#### S4c. Discovery Sources
+
+| | |
+|---|---|
+| **Purpose** | Enable/disable search sources |
+| **Data** | `GET /discovery/:brandId` → `{ sources: BrandDiscoverySource[] }` |
+| **CRUD** | `POST /discovery/:brandId`, `PATCH /discovery/:brandId/:sourceId`, `DELETE /discovery/:brandId/:sourceId` |
+| **Available sources** | `reddit`, `google` (note: `jobs` was removed — job portals no longer searched) |
+| **UI pattern** | Toggle switches for each source. User can enable/disable Reddit and Google search individually. |
+
+#### S4d. Email Transport
+
+| | |
+|---|---|
+| **Purpose** | Configure how email is sent for this brand |
+| **Transport mode selector** | Radio: `mailbox` (SMTP credentials) or `api` (Resend/SES provider key) |
+| **Mailbox fields** | `smtp_host`, `smtp_port`, `smtp_secure`, `smtp_email`, `smtp_password` |
+| **API fields** | `provider: "resend" | "ses"`, `provider_api_key`, `sending_domain` |
+| **IMAP (reply detection)** | `imap_host`, `imap_port`, `imap_secure`, `imap_email`, `imap_password`, `imap_enabled` toggle |
+| **Sending limits** | `daily_send_limit`, `hourly_send_limit` |
+| **Saves to** | `brand_profiles` via `POST /brands` or `PATCH /brands/:id` |
+
+---
+
+### S5. Discovery Results
+
+| | |
+|---|---|
+| **Purpose** | See all companies discovered by the engine |
+| **Data** | `GET /discovery/:brandId/companies` → `{ companies: DiscoveredCompany[] }` (max 100, newest first) |
+| **Table columns** | Company name, domain, signal type, relevance score (0-100), source (reddit/google), enrichment status (pending/enriched/failed), discovered at |
+| **Filters** | By brand (dropdown if multiple), by enrichment status, by signal type, date range |
+| **Search** | Client-side by name/domain |
+| **Row click** | Navigate to Company Detail screen |
+| **Empty state** | "No companies discovered yet. Trigger discovery or wait for the next cycle." With trigger button: `POST /discovery/:brandId/trigger` |
+| **Bad data visible** | Companies extracted from Reddit/Google with LLM. The RAG pipeline + prompt improvements + aggregator filters should prevent job portals from appearing here. If a portal slips through, user can reject it. |
+
+---
+
+### S6. Company Detail
+
+| | |
+|---|---|
+| **Purpose** | Full profile of a single discovered company |
+| **Data** | `GET /discovery/:brandId/companies` filtered by company id, plus `GET /pipeline/:brandId/:companyId` for pipeline info |
+
+| **Section** | **Shows** | **Source** |
+|---|---|---|
+| Header | Company name, domain, website | `discovered_companies` |
+| Signal Info | Signal type, source URL, source name, fit reason, relevance/urgency scores | `discovered_companies` |
+| Description | LLM-extracted description of the company | `discovered_companies.summary` |
+| Enrichment Status | Pending/enriched/failed, enrichment attempts count | `discovered_companies.enrichment_status`, `companies.enrichment_attempts` |
+| Pipeline Status | Current status (researching/qualified/draft_ready/contacted/closed_won/rejected), updated_at | `companies.status` |
+| Contacts | List of emails discovered for this company, with confidence scores | `leads` table filtered by `company_id` or direct join |
+| Outreach | Any existing outreach drafts or sent messages for this company | `GET /pipeline/:brandId/:companyId/outreach` |
+
+| **Actions** | **Backend call** |
+|---|---|
+| Manual enrich | Set `enrichment_status = "pending"` on discovered_companies — enrichment worker picks it up |
+| Change status | `PATCH /pipeline/:brandId/:companyId` with `{ status }` (owner/admin only) |
+| View lead | Navigate to Lead Detail |
+| View outreach | Navigate to Outreach Editor |
+| Reject | `PATCH /pipeline/:brandId/:companyId` with `{ status: "rejected" }` |
+
+---
+
+### S7. Pipeline Board (Kanban)
+
+| | |
+|---|---|
+| **Purpose** | Drag-and-drop board showing companies through the pipeline stages |
+| **Data** | `GET /pipeline/:brandId?page=1&limit=200` — load all, group by status client-side |
+
+| **Column** | **What it means** | **How companies get here** |
+|---|---|---|
+| Researching | Newly discovered, not yet evaluated | Auto-inserted by DB trigger when `discovered_companies` row created |
+| Qualified | Manually reviewed and confirmed as a good fit | Auto-moved by enrichment worker when lead is found with confidence > threshold |
+| Draft Ready | Has a lead with valid email + outreach draft generated | Enrichment worker sets this when lead confidence >= 0.5 |
+| Contacted | Email has been sent | Send worker sets this after successful `provider.send()` |
+| Closed Won | Deal closed | Manual — `PATCH /pipeline/:brandId/:companyId` |
+| Rejected | Bad fit or bounced | Manual or auto — send worker sets on hard bounce |
+
+| **UI pattern** | Horizontal kanban board. Company cards in each column. Drag card to change status. |
+|---|---|
+| **Drop action** | `PATCH /pipeline/:brandId/:companyId` with `{ status: newStatus }` |
+| **Permission** | Only `owner`/`admin` can drag between columns |
+| **Card shows** | Company name, domain, relevance score, last updated |
+| **Card click** | Navigate to Company Detail |
+| **Empty column** | Show "No companies" with discover trigger button if column is "researching" |
+
+---
+
+### S8. Outreach Drafts Queue
+
+| | |
+|---|---|
+| **Purpose** | Review and approve emails before they go out. THIS IS THE CRITICAL SCREEN where the user has final say. |
+| **Data** | `GET /pipeline/:brandId?status=draft_ready` → list of companies. For each, `GET /pipeline/:brandId/:companyId/outreach` to get drafts. |
+
+| **List Item** | **Details shown** |
+|---|---|
+| Company | Name, domain |
+| Lead | Email, full name, confidence score |
+| Draft preview | Subject line (first 80 chars), body snippet (first 150 chars) |
+| Status | `draft`, `draft_processing`, `sent` |
+| Created | How long ago |
+
+| **Actions** | **Backend call** |
+|---|---|
+| **View / Edit** | Navigate to Outreach Editor screen |
+| **Approve & Send** | Sets company status to `contacted` (send worker picks it up on next cycle). OR immediately trigger `processSendQueue(brandId)` |
+| **Skip (keep for later)** | Do nothing — stays in draft_ready |
+| **Reject** | `PATCH /pipeline/:brandId/:companyId` with `{ status: "rejected" }` |
+| **Edit & Send** | User edits draft → `PATCH /campaigns/:id`, then marks as ready to send |
+
+| **Empty state** | "No draft_ready companies. Complete discovery and enrichment first." |
+| **Batch actions** | "Send All" button for admin — calls send processor directly (or marks all as contacted) |
+
+---
+
+### S9. Outreach Editor (Edit Before Sending)
+
+| | |
+|---|---|
+| **Purpose** | **THE KEY SCREEN** — Review and edit the email before it goes to the lead |
+| **Data** | `GET /pipeline/:brandId/:companyId/outreach` → latest draft |
+| **Header** | |
+| | Company name, domain (from companies table) |
+| | Lead name, email (from leads table) |
+| **Editable Fields** | |
+| `to` | Read-only — lead email |
+| `subject` | Editable text input |
+| `body` | Rich text editor (textarea with variable inserts) |
+| **Variable inserts** | Buttons to insert template variables like `{{first_name}}`, `{{company_name}}`, `{{brand_name}}` into body/subject |
+| **Template selector** | Dropdown to pick an `email_template` — loads template's subject + body as starting point |
+| **Preview** | Rendered preview of the email (subject + body with variables resolved) |
+| **Actions** | |
+| Save Draft | `PATCH /campaigns/:id` with `{ subject, body }` |
+| Approve & Queue | `PATCH /pipeline/:brandId/:companyId` with `{ status: "contacted" }` — send worker picks it up |
+| Skip / Cancel | Go back to Queue — no changes |
+
+---
+
+### S10. Sent Campaigns / Message History
+
+| | |
+|---|---|
+| **Purpose** | Track all sent emails, their delivery status, and replies |
+| **Data** | `GET /analytics/campaigns` → all outreach records. Also `sent_messages` table for delivery tracking. |
+
+| **Table Columns** | Company, lead email, subject, sent at, status (sent/delivered/bounced/replied), opened |
+|---|---|
+| **Status mapping** | From `sent_messages.status` + `sent_messages.opened_at` + `replies` table join |
+| **Row click** | Navigate to Thread View |
+| **Filters** | By brand, by status, by date range |
+| **Search** | By subject, company name, lead email |
+
+### S11. Thread View (Conversation with Lead)
+
+| | |
+|---|---|
+| **Purpose** | Full conversation history with a single lead |
+| **Data** | `sent_messages` + `replies` tables joined by `lead_id` |
+| **Display** | Chronological conversation. Outbound messages on right, replies on left (chat UI). |
+| **Message bubble shows** | Subject, body content, timestamp, delivery status |
+| **Reply classification badge** | Each reply shows its classification: `reply` (real human reply), `out_of_office`, `hard_bounce`, `soft_bounce`, `spam_complaint` |
+| **Reply actions** | For `reply` classification: show "Mark as replied" to update pipeline. For `hard_bounce`: show bounce info, option to reject company. |
+
+---
+
+### S12. Leads List
+
+| | |
+|---|---|
+| **Purpose** | Browse all enriched leads across brands |
+| **Data** | `GET /leads?page=1&limit=25&search=&status=` |
+
+| **Columns** | Email, full name, company name, domain, confidence score, status, source, brand, created at |
+|---|---|
+| **Filters** | Status dropdown (new/contacted/replied/qualified/disqualified), search box (searches email, name, domain), page navigation |
+| **Row click** | Navigate to Lead Detail (or Company Detail) |
+| **Import** | `POST /leads/import` — upload CSV with columns mapped to lead fields |
+| **Manual add** | `POST /leads` with `{ email, full_name, company_name, domain, ... }` |
+
+---
+
+### S13. Analytics Dashboard
+
+| | |
+|---|---|
+| **Purpose** | Performance metrics and trends |
+| **Data** | `GET /analytics/overview` for summary stats, `GET /analytics/chart?days=7` for chart data, `GET /analytics/activity` for timeline |
+
+| **Widget** | **Data** | **Source** |
+|---|---|---|
+| Summary cards | Total leads, new leads, contacted leads, qualified leads | `analytics/overview` |
+| Campaign stats | Total campaigns, active campaigns | `analytics/overview` |
+| Send performance | Sent count, reply rate (%), bounce rate (%) | `analytics/overview` |
+| Send chart | Line/bar chart: sent vs replied over last N days (default 7) | `analytics/chart?days=N` |
+| Activity timeline | Latest replies + sent messages | `analytics/activity?limit=20` |
+
+---
+
+### S14. Settings — LLM Configuration
+
+| | |
+|---|---|
+| **Purpose** | Choose which LLM provider and model to use for extraction, scoring, and draft generation |
+| **Data** | `GET /settings/llm` |
+| **Update** | `PUT /settings/llm` |
+| **UI fields** | |
+
+| Field | UI control | Notes |
+|---|---|---|
+| Provider | Dropdown | Populated from `GET /settings/llm/providers` → `["ollama","groq","openai","anthropic","cloudflare"]` |
+| Model | Dropdown | Populated from `GET /settings/llm/models?provider=X` |
+| Base URL | Text input | Only for Ollama/self-hosted |
+| API Key | Password input | Only shown masked, never returned in full |
+
+| **Test connection** | Submit a small test prompt and show result — can call `generateStructured` via the engine's health endpoint |
+
+---
+
+### S15. Settings — Email Configuration
+
+| | |
+|---|---|
+| **Purpose** | Configure global SMTP/IMAP settings used across brands |
+| **Data** | `GET /settings/email` |
+| **Update** | `PUT /settings/email` |
+| **Allowed fields** | `smtp_host`, `smtp_port`, `smtp_secure`, `smtp_email`, `smtp_password`, `smtp_from_name`, `smtp_from_email`, `imap_host`, `imap_port`, `imap_secure`, `imap_email`, `imap_password`, `email_provider`, `provider_api_key`, `sending_domain`, `imap_enabled` |
+| **Test button** | Send a test email to a user-provided address — calls a test endpoint or triggers a direct SMTP send |
+
+---
+
+### S16. Settings — System Flags
+
+| | |
+|---|---|
+| **Purpose** | Master switches that control the entire system |
+| **Data** | `GET /system/flags` |
+| **Update** | `POST /system/flags/:key` with `{ value: bool }` (owner/admin only) |
+| **Flags** | |
+
+| Flag | Effect when off |
+|---|---|
+| `automation_enabled` | Discovery, enrichment, and send workers all stop. Toggling brand-level discovery/outbound will be blocked with error message. |
+| `send_enabled` | No emails are sent, but discovery and enrichment continue |
+| `discovery_enabled` | No new search queries are executed |
+| `imap_enabled` | Reply detection is disabled |
+
+| **UI pattern** | Table of toggle switches, each with label, description, current state. Owner/admin can toggle. Warning: "Turning off automation will pause all workers" |
+
+---
+
+### S17. Reputation & Domain Health
+
+| | |
+|---|---|
+| **Purpose** | Monitor sending reputation — critical for deliverability |
+| **Data** | Read `brand_profiles` fields: `deliverability_score`, `bounce_count`, `sent_count`, `complaint_count`, `auto_paused` |
+
+| **Card** | **Shows** | **Source** |
+|---|---|---|
+| Domain Health | Per-domain: health score (0-100), bounce rate, daily quota used/remaining | `checkDomainHealth()` from domain reputation module |
+| Circuit Breaker | State: open/closed/half-open, failure count, threshold | `canSend()` + `circuitBreaker` module state |
+| Backoff Status | Current delay in ms, remaining wait time | `getBackoffDelay()` from backoff engine |
+| Auto-Pause Warning | If `brand.auto_paused === true`, show warning banner with reason | `brand_profiles.auto_paused` |
+
+| **Actions** | **Backend call** |
+|---|---|
+| Reset circuit breaker | (Direct engine API — not exposed via edge functions) |
+| Un-pause brand | `PATCH /brands/:id` with `{ auto_paused: false, is_paused: false }` |
+
+---
+
+### S18. Team Management
+
+| | |
+|---|---|
+| **Purpose** | Manage team members for the client account |
+| **Data** | `GET /team` (owner/admin only) |
+| **Table columns** | Name, email, role (owner/admin/member), joined date |
+| **Invite** | `POST /team/invite` with `{ email, role }` (owner/admin only) |
+| **Change role** | `PATCH /team/:id` with `{ role }` (owner/admin only) |
+| **Remove** | `DELETE /team/:id` (owner/admin only) |
+
+---
+
+### S19. Webhooks
+
+| | |
+|---|---|
+| **Purpose** | Configure outgoing webhooks for external integrations |
+| **Data** | `GET /webhooks` |
+| **CRUD** | `POST /webhooks`, `GET /webhooks/:id`, `PATCH /webhooks/:id`, `DELETE /webhooks/:id` |
+| **Fields** | `url`, `events` (which events trigger this), `secret` (signing secret) |
+| **Test** | `POST /webhooks/:id/test` — sends sample payload, shows response |
+| **UI pattern** | Table of webhooks with url, events, last-triggered. "Add Webhook" button opens modal with form fields. "Test" button for each row. |
+
+---
+
+### S20. Profile / Client Settings
+
+| | |
+|---|---|
+| **Purpose** | View/edit client account info |
+| **Data** | `GET /clients` |
+| **Update** | `PATCH /clients/:id` |
+| **Fields** | `name` |
+
+---
+
+## Navigation Map
+
+```
+Login ──→ Sign Up
+  │
+  ▼
+Dashboard ──────────────────────────────────────────────┐
+  │                                                      │
+  ├── Brands List ──→ Brand Setup (create)              │
+  │                       ├── Edit Info                  │
+  │                       ├── Intents & Signals           │
+  │                       ├── Discovery Sources           │
+  │                       ├── Email Transport             │
+  │                       └── Trigger Discovery           │
+  │                           │                           │
+  │                           ▼                           │
+  │                      Discovery Results                │
+  │                           │                           │
+  │                           ▼                           │
+  │                      Company Detail                   │
+  │                           │                           │
+  │                           ▼                           │
+  │                      Leads List                       │
+  │                                                      │
+  ├── Pipeline Board (Kanban)                            │
+  │      ├── Drag to change status                       │
+  │      └── Click → Company Detail                      │
+  │                                                      │
+  ├── Outreach Queue ──→ Outreach Editor                 │
+  │      │                    ├── Edit subject/body       │
+  │      │                    ├── Preview                 │
+  │      │                    ├── Approve & Queue         │
+  │      │                    ├── Reject                  │
+  │      │                    └── Skip                    │
+  │      └── Sent Campaigns ──→ Thread View              │
+  │                                                      │
+  ├── Analytics                                          │
+  │      ├── Overview (summary cards)                    │
+  │      ├── Chart (sends/replies over time)             │
+  │      └── Activity (recent events)                    │
+  │                                                      │
+  ├── Settings                                           │
+  │      ├── LLM Provider & Model                        │
+  │      ├── Email SMTP/IMAP                             │
+  │      ├── System Flags                                │
+  │      ├── Reputation & Domain Health                  │
+  │      ├── Team Management                             │
+  │      └── Webhooks                                    │
+  │                                                      │
+  └── Profile / Client Settings                          │
+                                                          │
+                                                          │
+                          ┌───────────────────────────────┘
+                          ▼
+                   Background Workers (no UI)
+                   ─────────────────────────
+                   • RAG Discovery (scheduled every 6h)
+                   • Enrichment (every 5 min)
+                   • Send Queue (continuous)
+                   • Reply Detection (every 2 min)
+```
+
+### Empty States Summary
+
+| Screen | Empty State Message | Action CTA |
+|---|---|---|
+| Dashboard | "No brands yet" | "Create your first brand" → Brand Setup |
+| Discovery Results | "No companies discovered yet" | "Trigger Discovery" |
+| Pipeline Board | "No companies in pipeline" | "Run discovery first" |
+| Outreach Queue | "No draft_ready companies" | "Complete discovery and enrichment" |
+| Sent Campaigns | "No emails sent yet" | (passive — appears after sending starts) |
+| Analytics | "Insufficient data" | (passive — appears after some sends) |
+| Team | "No team members" | "Invite your first member" |

@@ -395,6 +395,29 @@ export type ActivityLog = Database['public']['Tables']['activity_logs']['Row']
 export type DiscoveryMetric = Database['public']['Tables']['discovery_metrics']['Row']
 export type LeadImportBatch = Database['public']['Tables']['lead_import_batches']['Row']
 
+export interface BrandIntent {
+  id: string
+  brand_id: string
+  intent: string
+  signals: string[]
+  priority: number
+  is_active: boolean
+  created_at: string
+}
+
+export const SIGNAL_TYPES = [
+  'hiring',
+  'funding',
+  'launch',
+  'pain',
+  'advertising',
+  'partnership',
+  'tech_usage',
+  'growth_activity',
+  'outbound_pain',
+  'automation_need',
+] as const
+
 export interface OutreachDraft {
   id: string
   brand_id: string
