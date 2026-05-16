@@ -17,7 +17,6 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Sparkles,
   Database,
   Send,
   Reply,
@@ -26,13 +25,13 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, A
 import { brandsAPI, leadsAPI, dashboardAPI } from '@/lib/api'
 
 const PIPELINE_COLORS: Record<string, string> = {
-  researching: '#6366f1',
-  qualified: '#8b5cf6',
-  draft_ready: '#a855f7',
-  contacted: '#ec4899',
-  replied: '#10b981',
-  closed_won: '#059669',
-  closed_lost: '#ef4444',
+  researching: '#a3a3a3',
+  qualified: '#808080',
+  draft_ready: '#666666',
+  contacted: '#525252',
+  replied: '#404040',
+  closed_won: '#262626',
+  closed_lost: '#d4d4d4',
 }
 
 const WORKER_ICONS: Record<string, any> = {
@@ -114,9 +113,9 @@ export default function DashboardPage() {
   }
 
   const getWorkerIcon = (_type: string, status: string) => {
-    if (status === 'running' || status === 'processing') return <Play className="h-3.5 w-3.5 text-green-600" />
-    if (status === 'paused') return <PauseCircle className="h-3.5 w-3.5 text-amber-600" />
-     return <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/50" />
+    if (status === 'running' || status === 'processing') return <Play className="h-3.5 w-3.5 text-foreground" />
+    if (status === 'paused') return <PauseCircle className="h-3.5 w-3.5 text-muted-foreground" />
+    return <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/40" />
   }
 
 
@@ -124,8 +123,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
-          <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-primary/5 blur-xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
         </div>
       </div>
     )
@@ -135,14 +133,13 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <Card className="max-w-md">
-          <div className="h-1 bg-gradient-to-r from-destructive to-rose-500" />
           <CardContent className="text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-8 w-8 text-destructive" />
+            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">Unable to load dashboard</h2>
-            <p className="text-muted-foreground mb-6">There was an error fetching your dashboard data. Please try again.</p>
-            <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-violet-500 text-primary-foreground hover:from-primary/90 hover:to-violet-500/90 shadow-lg shadow-primary/25 text-sm font-bold transition-all duration-200">
+            <h2 className="text-lg font-semibold text-foreground mb-1">Unable to load dashboard</h2>
+            <p className="text-sm text-muted-foreground mb-6">There was an error fetching your dashboard data. Please try again.</p>
+            <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity">
               Retry
             </button>
           </CardContent>
@@ -156,74 +153,68 @@ export default function DashboardPage() {
   const bounced = stats?.emailsBounced || 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Real-time overview of your outbound sales engine</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Real-time overview of your outbound sales engine</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground" />
             {stats?.activeBrands || 0} Active Brands
           </span>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, accentBar: 'from-indigo-500 to-indigo-600', iconBg: 'from-indigo-500/20 to-indigo-600/20', iconColor: 'text-indigo-400', accent: 'text-indigo-400', barColor: 'bg-gradient-to-r from-indigo-500 to-indigo-600', progressWidth: Math.min(100, (stats?.totalLeads || 0) / 100) },
-          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2, accentBar: 'from-violet-500 to-violet-600', iconBg: 'from-violet-500/20 to-violet-600/20', iconColor: 'text-violet-400', accent: 'text-violet-400', barColor: 'bg-gradient-to-r from-violet-500 to-violet-600', progressWidth: 0 },
-          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, accentBar: 'from-emerald-500 to-emerald-600', iconBg: 'from-emerald-500/20 to-emerald-600/20', iconColor: 'text-emerald-400', accent: 'text-emerald-400', barColor: 'bg-gradient-to-r from-emerald-500 to-emerald-600', progressWidth: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
-          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, accentBar: 'from-amber-500 to-amber-600', iconBg: 'from-amber-500/20 to-amber-600/20', iconColor: 'text-amber-400', accent: 'text-amber-400', sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
-        ].map(({ label, value, icon: Icon, accentBar, iconBg, iconColor, accent, barColor, progressWidth, badge, sub }) => (
-          <div key={label} className="group relative">
-            <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/20 to-violet-500/20 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-2xl border border-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.25),inset_0_1px_0_0_rgba(255,255,255,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_12px_32px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.04)] hover:border-white/[0.09] transition-all duration-300">
-              <div className={`absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b ${accentBar} rounded-l-[1px]`} />
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-3xl pointer-events-none" />
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`rounded-xl bg-gradient-to-br ${iconBg} p-2.5 border border-white/[0.06]`}>
-                    <Icon className={`h-5 w-5 ${iconColor}`} />
-                  </div>
-                  {badge !== undefined && badge !== '' ? (
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">{badge}</span>
-                  ) : (
-                    <TrendingUp className="h-4 w-4 text-emerald-400/60 mt-1" />
-                  )}
+          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, progress: Math.min(100, (stats?.totalLeads || 0) / 100) },
+          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2 },
+          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, progress: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
+          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
+        ].map(({ label, value, icon: Icon, progress, badge, sub }) => (
+          <Card key={label}>
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-3">
+                <div className="rounded-lg bg-muted p-2.5">
+                  <Icon className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <p className={`text-3xl font-extrabold tracking-tight ${accent}`}>{value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{label}</p>
-                {sub && (
-                  <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>
-                )}
-                {barColor && progressWidth !== undefined && progressWidth > 0 && (
-                  <div className="mt-3 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                    <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${Math.min(100, progressWidth)}%` }} />
-                  </div>
+                {badge ? (
+                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{badge}</span>
+                ) : (
+                  <TrendingUp className="h-4 w-4 text-muted-foreground/40 mt-1" />
                 )}
               </div>
-            </div>
-          </div>
+              <p className="text-2xl font-bold text-foreground">{value}</p>
+              <p className="text-sm text-muted-foreground mt-1">{label}</p>
+              {sub && (
+                <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>
+              )}
+              {progress !== undefined && progress > 0 && (
+                <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-foreground/20 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, progress)}%` }} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-7">
-        <Card className="lg:col-span-4 overflow-hidden">
-          <div className="h-[3px] bg-gradient-to-r from-primary via-violet-500 to-primary" />
+      <div className="grid gap-6 lg:grid-cols-7">
+        <Card className="lg:col-span-4">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 Email Performance (7 Days)
               </CardTitle>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Sent
+                  <span className="w-2.5 h-2.5 rounded-full bg-foreground/60" /> Sent
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Delivered
+                  <span className="w-2.5 h-2.5 rounded-full bg-foreground/20" /> Delivered
                 </span>
               </div>
             </div>
@@ -234,74 +225,73 @@ export default function DashboardPage() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#525252" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#525252" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorDelivered" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#a3a3a3" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#a3a3a3" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.15)" fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
+                  <XAxis dataKey="name" stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
-                      borderRadius: '12px',
-                      backgroundColor: 'rgba(20,20,40,0.95)',
-                      backdropFilter: 'blur(16px)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                      color: '#e2e2ee',
+                      borderRadius: '8px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid hsl(0 0% 90%)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      color: '#171717',
+                      fontSize: '13px',
                     }}
                   />
-                  <Area type="monotone" dataKey="sent" stroke="#818cf8" strokeWidth={2.5} fill="url(#colorSent)" />
-                  <Area type="monotone" dataKey="delivered" stroke="#34d399" strokeWidth={2.5} fill="url(#colorDelivered)" />
+                  <Area type="monotone" dataKey="sent" stroke="#525252" strokeWidth={2} fill="url(#colorSent)" />
+                  <Area type="monotone" dataKey="delivered" stroke="#a3a3a3" strokeWidth={2} fill="url(#colorDelivered)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 overflow-hidden">
-          <div className="h-[3px] bg-gradient-to-r from-violet-500 via-primary to-violet-500" />
+        <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Target className="h-4 w-4 text-muted-foreground" />
               Pipeline Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pipelineData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
-                  <Target className="h-6 w-6 text-muted-foreground/40" />
+                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                  <Target className="h-5 w-5 text-muted-foreground/40" />
                 </div>
                 <p className="text-sm text-muted-foreground">No companies in pipeline</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {pipelineData.map((item) => (
                   <div key={item.key}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-semibold text-foreground/80 capitalize">{item.name}</span>
-                      <span className="text-sm font-bold text-foreground">{item.value}</span>
+                      <span className="text-sm text-foreground capitalize">{item.name}</span>
+                      <span className="text-sm font-semibold text-foreground">{item.value}</span>
                     </div>
-                    <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: `${(item.value / Math.max(...pipelineData.map((d: any) => d.value), 1)) * 100}%`,
-                          backgroundColor: PIPELINE_COLORS[item.key] || '#818cf8',
+                          backgroundColor: PIPELINE_COLORS[item.key] || '#a3a3a3',
                         }}
                       />
                     </div>
                   </div>
                 ))}
-                <div className="pt-4 border-t border-white/[0.06] mt-4">
+                <div className="pt-4 border-t border-border mt-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total</span>
-                    <span className="font-bold text-foreground">{pipelineData.reduce((sum: number, d: any) => sum + d.value, 0)}</span>
+                    <span className="font-semibold text-foreground">{pipelineData.reduce((sum: number, d: any) => sum + d.value, 0)}</span>
                   </div>
                 </div>
               </div>
@@ -310,44 +300,43 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2 overflow-hidden">
-          <div className="h-[3px] bg-gradient-to-r from-primary via-violet-500 to-primary" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Activity className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <Activity className="h-4 w-4 text-muted-foreground" />
                 Recent Activity
               </CardTitle>
               {stats?.recentActivity?.length > 0 && (
-                <span className="text-xs text-muted-foreground bg-white/[0.03] px-2 py-1 rounded-full">{stats.recentActivity.length} events</span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">{stats.recentActivity.length} events</span>
               )}
             </div>
           </CardHeader>
           <CardContent>
             {!stats?.recentActivity?.length ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
-                  <Activity className="h-6 w-6 text-muted-foreground/40" />
+                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                  <Activity className="h-5 w-5 text-muted-foreground/40" />
                 </div>
                 <p className="text-sm text-muted-foreground">No recent activity</p>
               </div>
             ) : (
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {stats.recentActivity.slice(0, 8).map((activity: any) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/10 to-violet-500/10 flex items-center justify-center shrink-0 border border-primary/10">
-                      <Activity className="h-4 w-4 text-primary" />
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Activity className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground/90 truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {activity.description || activity.activity_type}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {formatRelativeTime(activity.created_at)}
                       </p>
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2.5 py-1 rounded-full shrink-0 capitalize">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0 capitalize">
                       {activity.activity_type?.replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -357,11 +346,10 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="h-[3px] bg-gradient-to-r from-amber-500 via-primary to-amber-500" />
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Clock className="h-4 w-4 text-muted-foreground" />
               Worker Status
             </CardTitle>
           </CardHeader>
@@ -372,14 +360,14 @@ export default function DashboardPage() {
                 const status = info?.status || 'idle'
                 const isRunning = status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
                 return (
-                  <div key={type} className="group flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-200">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center border ${
-                      isRunning ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/[0.03] border-white/[0.04]'
+                  <div key={type} className="group flex items-center gap-3 p-3.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/60 transition-all duration-200">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center border ${
+                      isRunning ? 'bg-foreground/5 border-foreground/10' : 'bg-muted border-border'
                     }`}>
-                      <Icon className={`h-[18px] w-[18px] ${isRunning ? 'text-emerald-400' : 'text-muted-foreground/50'}`} />
+                      <Icon className={`h-[16px] w-[16px] ${isRunning ? 'text-foreground' : 'text-muted-foreground/50'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground/90 capitalize">{type}</p>
+                      <p className="text-sm font-medium text-foreground capitalize">{type}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {info?.last_run ? `Last: ${formatRelativeTime(info.last_run)}` : 'Not run yet'}
                         {info?.pending ? ` · ${info.pending} pending` : ''}
@@ -388,8 +376,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {getWorkerIcon(type, status)}
-                      <span className={`text-xs font-bold ${
-                        isRunning ? 'text-emerald-400' : status === 'paused' ? 'text-amber-400' : 'text-muted-foreground'
+                      <span className={`text-xs font-medium ${
+                        isRunning ? 'text-foreground' : status === 'paused' ? 'text-muted-foreground' : 'text-muted-foreground/50'
                       }`}>{status}</span>
                     </div>
                   </div>

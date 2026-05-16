@@ -51,7 +51,7 @@ export default function Drawer({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/40" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
@@ -71,17 +71,17 @@ export default function Drawer({
             >
               <Dialog.Panel
                 className={cn(
-                  'w-full transform overflow-hidden rounded-2xl bg-gradient-to-br from-card/95 to-card/90 backdrop-blur-2xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_40px_rgba(0,0,0,0.5),0_2px_10px_rgba(0,0,0,0.35)] transition-all h-full',
+                  'w-full transform overflow-hidden rounded-xl bg-card border border-border shadow-xl transition-all h-full',
                   isVertical ? sizeClasses[size] : 'w-full',
-                  side === 'left' && 'rounded-r-2xl',
-                  side === 'right' && 'rounded-l-2xl'
+                  side === 'left' && 'rounded-r-xl',
+                  side === 'right' && 'rounded-l-xl'
                 )}
               >
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                     <div>
                       {title && (
-                        <Dialog.Title className="text-lg font-bold text-foreground">
+                        <Dialog.Title className="text-base font-semibold text-foreground">
                           {title}
                         </Dialog.Title>
                       )}
@@ -93,9 +93,9 @@ export default function Drawer({
                     </div>
                     <button
                       onClick={onClose}
-                      className="rounded-xl p-2 text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200"
+                      className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                     >
-                      <X className="h-5 w-5" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                   <div className="flex-1 overflow-auto p-5">

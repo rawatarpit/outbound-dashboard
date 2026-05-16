@@ -8,7 +8,7 @@ const Badge = React.forwardRef<
   }
 >(({ className, variant = 'default', ...props }, ref) => {
   const variantClasses = {
-    default: 'bg-primary/10 text-primary',
+    default: 'bg-foreground/10 text-foreground',
     secondary: 'bg-secondary text-secondary-foreground',
     destructive: 'bg-destructive/10 text-destructive',
     outline: 'border border-input bg-background',

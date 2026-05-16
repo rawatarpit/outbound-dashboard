@@ -14,34 +14,34 @@ export default function Header() {
   const { user, member, signOut } = useAuth()
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-white/[0.06] bg-card/40 backdrop-blur-xl px-6">
+    <header className="flex h-14 items-center justify-between border-b border-border bg-card px-8">
       <div className="flex items-center gap-4">
-        <h2 className="text-base font-semibold text-foreground/80">
+        <h2 className="text-sm font-medium text-muted-foreground">
           Welcome back, {member?.name || user?.email?.split('@')[0]}
         </h2>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className="relative rounded-xl p-2.5 text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200">
+      <div className="flex items-center gap-3">
+        <button className="relative rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200">
           <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-3 rounded-xl p-2 hover:bg-white/[0.06] transition-all duration-200">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-500 text-primary-foreground text-sm font-bold shadow-md shadow-primary/20">
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-accent transition-all duration-200">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">
               {getInitials(member?.name || user?.email || 'U')}
             </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-foreground/90">{member?.name || 'User'}</p>
+            <div className="hidden sm:block text-left">
+              <p className="text-sm font-semibold text-foreground">{member?.name || 'User'}</p>
               <p className="text-xs text-muted-foreground capitalize">{member?.role || 'Member'}</p>
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground/50" />
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="text-foreground/90">{member?.name || 'User'}</span>
+                <span className="text-foreground">{member?.name || 'User'}</span>
                 <span className="text-xs font-normal text-muted-foreground">
                   {user?.email}
                 </span>
