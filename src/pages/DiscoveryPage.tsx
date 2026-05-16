@@ -39,9 +39,9 @@ import {
 } from '@/components/ui/Select'
 
 const SOURCE_COLORS: Record<string, { bg: string; icon: string }> = {
-  apollo: { bg: 'bg-blue-500/10', icon: 'text-muted-foreground' },
-  apify: { bg: 'bg-green-500/10', icon: 'text-muted-foreground' },
-  hunter: { bg: 'bg-amber-500/10', icon: 'text-muted-foreground' },
+  apollo: { bg: 'bg-muted', icon: 'text-muted-foreground' },
+  apify: { bg: 'bg-muted', icon: 'text-muted-foreground' },
+  hunter: { bg: 'bg-muted', icon: 'text-muted-foreground' },
   default: { bg: 'bg-muted', icon: 'text-muted-foreground' }
 }
 
@@ -115,7 +115,7 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
+              <div className="p-2 bg-muted rounded-lg">
                 <Users className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
@@ -128,7 +128,7 @@ function SourceDetailView({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
+              <div className="p-2 bg-muted rounded-lg">
                 <TrendingUp className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>

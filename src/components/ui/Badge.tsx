@@ -13,7 +13,7 @@ const Badge = React.forwardRef<
     destructive: 'bg-destructive/10 text-destructive',
     outline: 'border border-input bg-background',
     success: 'bg-green-100 text-green-800',
-    warning: 'bg-amber-100 text-amber-800'
+    warning: 'bg-muted text-muted-foreground'
   }
 
   return (

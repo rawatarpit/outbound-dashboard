@@ -30,15 +30,15 @@ import { formatDate, formatRelativeTime } from '@/lib/utils'
 import { leadsAPI, brandsAPI, companiesAPI, messagesAPI } from '@/lib/api'
 
 const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-blue-500/10 text-blue-400',
-  researching: 'bg-purple-500/10 text-purple-400',
-  qualified: 'bg-indigo-500/10 text-indigo-400',
-  icp_passed: 'bg-violet-500/10 text-violet-400',
-  contacted: 'bg-pink-500/10 text-pink-400',
-  replied: 'bg-green-500/10 text-green-400',
-  negotiating: 'bg-amber-500/10 text-amber-400',
-  closed_won: 'bg-emerald-500/10 text-emerald-400',
-  closed_lost: 'bg-red-500/10 text-red-400'
+  new: 'bg-muted text-foreground',
+  researching: 'bg-muted text-foreground',
+  qualified: 'bg-muted text-foreground',
+  icp_passed: 'bg-muted text-foreground',
+  contacted: 'bg-muted text-foreground',
+  replied: 'bg-muted text-foreground',
+  negotiating: 'bg-muted text-muted-foreground',
+  closed_won: 'bg-muted text-foreground',
+  closed_lost: 'bg-muted text-foreground'
 }
 
 export default function LeadDetailPage() {

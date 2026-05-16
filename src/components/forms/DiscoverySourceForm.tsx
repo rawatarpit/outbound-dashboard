@@ -232,8 +232,8 @@ export default function DiscoverySourceForm({ brandId, source, onSuccess, onCanc
         )}
 
         {formData.type === 'hunter' && (
-          <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 space-y-4">
-            <h4 className="text-sm font-semibold text-amber-800">Hunter.io Configuration</h4>
+          <div className="rounded-xl border border-border bg-muted p-4 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">Hunter.io Configuration</h4>
             <div className="space-y-2">
               <Label htmlFor="hunter_api_key">API Key</Label>
               <Input
@@ -327,8 +327,8 @@ export default function DiscoverySourceForm({ brandId, source, onSuccess, onCanc
         )}
 
         {formData.type === 'url_scraper' && (
-          <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-4 space-y-4">
-            <h4 className="text-sm font-semibold text-purple-800">URL Scraper Configuration</h4>
+          <div className="rounded-xl border border-border bg-muted p-4 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">URL Scraper Configuration</h4>
             <div className="space-y-2">
               <Label htmlFor="url_pattern">URL Pattern</Label>
               <Input

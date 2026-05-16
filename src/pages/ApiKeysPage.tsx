@@ -22,12 +22,12 @@ interface ExternalKey {
 }
 
 const SERVICE_META: Record<string, { icon: any; color: string; url?: string }> = {
-  apollo: { icon: Globe, color: 'text-blue-400 bg-blue-500/10', url: 'https://apollo.io' },
-  hunter: { icon: Search, color: 'text-amber-400 bg-amber-500/10', url: 'https://hunter.io' },
-  apify: { icon: Database, color: 'text-green-400 bg-green-500/10', url: 'https://apify.com' },
+  apollo: { icon: Globe, color: 'text-muted-foreground bg-muted', url: 'https://apollo.io' },
+  hunter: { icon: Search, color: 'text-muted-foreground bg-muted', url: 'https://hunter.io' },
+  apify: { icon: Database, color: 'text-muted-foreground bg-muted', url: 'https://apify.com' },
   github: { icon: Shield, color: 'text-foreground/80 bg-muted', url: 'https://github.com/settings/tokens' },
-  llm: { icon: Bot, color: 'text-purple-400 bg-purple-500/10' },
-  smtp: { icon: Mail, color: 'text-red-400 bg-red-500/10' },
+  llm: { icon: Bot, color: 'text-muted-foreground bg-muted' },
+  smtp: { icon: Mail, color: 'text-muted-foreground bg-muted' },
 }
 
 export default function ApiKeysPage() {
@@ -83,7 +83,7 @@ export default function ApiKeysPage() {
             source: brandLabel,
             status: 'configured',
             icon: Mail,
-            color: 'text-red-600 bg-red-50',
+            color: 'text-muted-foreground bg-muted',
           })
         }
         if (activeBrand.provider_api_key) {
@@ -97,7 +97,7 @@ export default function ApiKeysPage() {
             source: brandLabel,
             status: 'configured',
             icon: Mail,
-            color: 'text-red-600 bg-red-50',
+            color: 'text-muted-foreground bg-muted',
           })
         }
       }

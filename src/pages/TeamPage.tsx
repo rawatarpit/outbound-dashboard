@@ -43,9 +43,9 @@ import {
 } from '@/components/ui/DropdownMenu'
 
 const ROLE_COLORS: Record<string, string> = {
-  owner: 'bg-amber-500/10 text-amber-400',
-  admin: 'bg-purple-500/10 text-purple-400',
-  member: 'bg-blue-500/10 text-blue-400'
+  owner: 'bg-muted text-muted-foreground',
+  admin: 'bg-muted text-muted-foreground',
+  member: 'bg-muted text-muted-foreground'
 }
 
 export default function TeamPage() {

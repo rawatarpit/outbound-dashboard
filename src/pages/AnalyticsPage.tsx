@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
             <p className="text-muted-foreground mb-4 text-center max-w-md">
               Create your first brand profile to start tracking analytics
             </p>
-            <Link to="/brands" className="px-4 py-2 bg-indigo-600 text-primary-foreground rounded-lg hover:bg-indigo-700">
+            <Link to="/brands" className="px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90">
               Create Brand
             </Link>
           </CardContent>
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
+              <div className="p-2 bg-muted rounded-lg">
                 <Users className="h-5 w-5 text-muted-foreground" />
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
+              <div className="p-2 bg-muted rounded-lg">
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
               </div>
             </div>

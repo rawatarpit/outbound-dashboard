@@ -214,10 +214,7 @@ export default function BrandDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-14 w-14 border-[3px] border-border border-t-indigo-400 shadow-2xl" />
-          <div className="absolute inset-0 animate-pulse rounded-full h-14 w-14 bg-indigo-500/5 blur-xl" />
-        </div>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
       </div>
     )
   }
@@ -264,23 +261,23 @@ export default function BrandDetailPage() {
                   <h1 className="text-4xl font-extrabold tracking-tight text-foreground">{brand.brand_name}</h1>
                   <div className="flex items-center gap-2">
                     {brand.is_active ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full tracking-wide uppercase">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-foreground/5 border border-foreground/10 px-3 py-1 rounded-full tracking-wide uppercase">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground" />
                         Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 bg-slate-500/10 border border-slate-500/20 px-3 py-1 rounded-full tracking-wide uppercase">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full tracking-wide uppercase">
                         Inactive
                       </span>
                     )}
                     {brand.is_paused && (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full tracking-wide uppercase">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full tracking-wide uppercase">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground animate-pulse" />
                         Paused
                       </span>
                     )}
                     {brand.auto_paused && (
-                      <span className="inline-flex items-center text-[11px] font-bold text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full tracking-wide uppercase">
+                      <span className="inline-flex items-center text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full tracking-wide uppercase">
                         Auto-Paused
                       </span>
                     )}
@@ -362,17 +359,17 @@ export default function BrandDetailPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">System Status</p>
                     <p className="text-[11px] text-muted-foreground/60 mb-3">
-                      <span className={`inline-flex items-center gap-1.5 font-semibold ${brand.is_paused ? 'text-amber-400' : 'text-emerald-400'}`}>
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${brand.is_paused ? 'bg-amber-400' : 'bg-emerald-400'} shadow-[0_0_8px_rgba(52,211,153,0.5)]`} />
+                      <span className={`inline-flex items-center gap-1.5 font-semibold ${brand.is_paused ? 'text-muted-foreground' : 'text-foreground'}`}>
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${brand.is_paused ? 'bg-muted-foreground' : 'bg-foreground'}`} />
                         {brand.is_paused ? 'Paused' : 'Active'}
                       </span>
                     </p>
                     <button
                       onClick={handleTogglePause}
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
                         brand.is_paused
-                          ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20'
-                          : 'text-amber-300 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20'
+                          ? 'text-foreground bg-foreground/5 border-foreground/10 hover:bg-foreground/10'
+                          : 'text-muted-foreground bg-muted border-border hover:bg-accent'
                       }`}
                     >
                       {brand.is_paused ? 'Resume' : 'Pause'}
@@ -453,9 +450,9 @@ export default function BrandDetailPage() {
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { label: 'Sent', value: brand.sent_count || 0, accent: 'text-foreground' },
-                        { label: 'Bounces', value: brand.bounce_count || 0, accent: 'text-rose-400' },
-                        { label: 'Complaints', value: brand.complaint_count || 0, accent: 'text-rose-400' },
-                        { label: 'Bounce Rate', value: brand.sent_count ? `${((brand.bounce_count || 0) / brand.sent_count * 100).toFixed(1)}%` : '0%', accent: (brand.bounce_count || 0) > 0 ? 'text-rose-400' : 'text-emerald-400' },
+                        { label: 'Bounces', value: brand.bounce_count || 0, accent: 'text-foreground' },
+                        { label: 'Complaints', value: brand.complaint_count || 0, accent: 'text-foreground' },
+                        { label: 'Bounce Rate', value: brand.sent_count ? `${((brand.bounce_count || 0) / brand.sent_count * 100).toFixed(1)}%` : '0%', accent: 'text-foreground' },
                       ].map(({ label, value, accent }) => (
                         <div key={label} className="rounded-xl bg-muted border border-border p-4">
                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
@@ -539,8 +536,8 @@ export default function BrandDetailPage() {
                           </div>
                           <div className="flex items-center gap-3 shrink-0 ml-4">
                             {source.is_running && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground bg-foreground/5 border border-foreground/10 px-3 py-1 rounded-full">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground animate-pulse" />
                                 Running
                               </span>
                             )}
@@ -551,17 +548,17 @@ export default function BrandDetailPage() {
                               </span>
                             )}
                             {source.last_status && (
-                              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                              <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
                                 source.last_status === 'success'
-                                  ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20'
-                                  : 'text-rose-300 bg-rose-500/10 border-rose-500/20'
+                                  ? 'text-foreground bg-foreground/5 border-foreground/10'
+                                  : 'text-muted-foreground bg-muted border-border'
                               }`}>
                                 {source.last_status}
                               </span>
                             )}
                             <button
                               onClick={() => handleDeleteSource(source)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all duration-200"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -629,14 +626,14 @@ export default function BrandDetailPage() {
                                 {idx + 1}
                               </span>
                               <p className="font-bold text-foreground truncate text-base">{intent.intent}</p>
-                              <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full shrink-0 border ${
+                              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 border ${
                                 intent.priority <= 1
-                                  ? 'text-rose-300 bg-rose-500/10 border-rose-500/20'
+                                  ? 'text-foreground bg-foreground/5 border-foreground/10'
                                   : intent.priority <= 3
-                                  ? 'text-amber-300 bg-amber-500/10 border-amber-500/20'
-                                  : 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+                                  ? 'text-muted-foreground bg-muted border-border'
+                                  : 'text-muted-foreground/50 bg-muted border-border'
                               }`}>
-                                <Sparkles className={`h-3 w-3 ${intent.priority <= 1 ? 'text-rose-400' : intent.priority <= 3 ? 'text-amber-400' : 'text-slate-500'}`} />
+                                <Sparkles className="h-3 w-3 text-muted-foreground" />
                                 P{intent.priority}
                               </span>
                               <div className="hidden sm:flex items-center ml-auto">
@@ -659,7 +656,7 @@ export default function BrandDetailPage() {
                                     }`}
                                   >
                                     {active ? (
-                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground mr-1.5 shadow-[0_0_6px_rgba(99,102,241,0.5)]" />
+                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground mr-1.5" />
                                     ) : null}
                                     {signal.replace(/_/g, ' ')}
                                   </span>
@@ -872,7 +869,7 @@ export default function BrandDetailPage() {
                 ))}
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-emerald-400 font-semibold">← Highest</span>
+                <span className="text-xs text-foreground font-semibold">← Highest</span>
                 <span className="text-xs text-muted-foreground font-medium">0 = most urgent</span>
                 <span className="text-xs text-muted-foreground font-semibold">Lowest →</span>
               </div>

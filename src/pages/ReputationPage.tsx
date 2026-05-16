@@ -85,14 +85,14 @@ export default function ReputationPage() {
   const complaintCount = brand?.complaint_count || 0
 
   const getHealthColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 50) return 'text-amber-600'
-    return 'text-red-600'
+    if (score >= 80) return 'text-foreground font-bold'
+    if (score >= 50) return 'text-foreground'
+    return 'text-muted-foreground'
   }
 
   const getHealthBg = (score: number) => {
     if (score >= 80) return 'bg-green-500/5 border-green-500/20'
-    if (score >= 50) return 'bg-amber-500/5 border-amber-500/20'
+    if (score >= 50) return 'bg-muted border-border'
     return 'bg-red-500/5 border-red-500/20'
   }
 
@@ -169,7 +169,7 @@ export default function ReputationPage() {
             <p className="text-sm text-muted-foreground mt-1">Health Score</p>
             <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${deliverabilityScore >= 80 ? 'bg-green-500' : deliverabilityScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                className="h-full rounded-full bg-foreground"
                 style={{ width: `${deliverabilityScore}%` }}
               />
             </div>
@@ -225,7 +225,7 @@ export default function ReputationPage() {
                 {deliverabilityScore >= 80 ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <AlertCircle className="h-5 w-5 text-muted-foreground" />
                 )}
                 <h3 className="font-medium">Deliverability</h3>
               </div>
@@ -264,10 +264,10 @@ export default function ReputationPage() {
           </div>
 
           {brand?.is_paused && !brand?.auto_paused && (
-            <div className="mt-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg flex items-center justify-between">
+            <div className="mt-4 p-3 bg-muted border border-border rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
-                <span className="text-sm text-amber-400">Brand is manually paused</span>
+                <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Brand is manually paused</span>
               </div>
               <Button variant="outline" size="sm" onClick={handleUnpause}>Resume</Button>
             </div>

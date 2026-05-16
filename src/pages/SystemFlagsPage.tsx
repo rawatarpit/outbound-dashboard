@@ -89,10 +89,10 @@ export default function SystemFlagsPage() {
       </div>
 
       {!canManage && (
-        <Card className="border-amber-500/20 bg-amber-500/5">
+        <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <p className="text-sm text-amber-400">Only owners and admins can modify system flags</p>
+            <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Only owners and admins can modify system flags</p>
           </CardContent>
         </Card>
       )}

@@ -26,12 +26,12 @@ import { brandsAPI, messagesAPI, analyticsAPI } from '@/lib/api'
 import { Input } from '@/components/ui/Input'
 
 const STATUS_COLORS: Record<string, string> = {
-  sent: 'bg-blue-500/10 text-blue-400',
-  delivered: 'bg-green-500/10 text-green-400',
-  opened: 'bg-purple-500/10 text-purple-400',
-  bounced: 'bg-red-500/10 text-red-400',
-  failed: 'bg-red-500/10 text-red-400',
-  replied: 'bg-emerald-500/10 text-emerald-400',
+  sent: 'bg-muted text-foreground',
+  delivered: 'bg-muted text-foreground',
+  opened: 'bg-muted text-foreground',
+  bounced: 'bg-muted text-foreground',
+  failed: 'bg-muted text-foreground',
+  replied: 'bg-muted text-foreground',
 }
 
 export default function CampaignsPage() {
