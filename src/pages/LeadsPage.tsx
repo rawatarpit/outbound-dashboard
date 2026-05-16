@@ -189,7 +189,7 @@ export default function LeadsPage() {
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="relative">
-                <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+                <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
                 <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function LeadsPage() {
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -282,7 +282,7 @@ export default function LeadsPage() {
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
                   Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, totalCount)} of {formatNumber(totalCount)} leads
                 </p>

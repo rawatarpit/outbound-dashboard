@@ -114,7 +114,7 @@ export default function LeadDetailPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -258,7 +258,7 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-white/[0.06]">
+            <div className="mt-6 pt-6 border-t border-border">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <Label className="text-muted-foreground">Status</Label>
@@ -285,14 +285,14 @@ export default function LeadDetailPage() {
             </div>
 
             {lead.notes && (
-              <div className="mt-6 pt-6 border-t border-white/[0.06]">
+              <div className="mt-6 pt-6 border-t border-border">
                 <Label className="text-muted-foreground">Notes</Label>
                 <p className="mt-1">{lead.notes}</p>
               </div>
             )}
 
             {lead.tags && lead.tags.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-white/[0.06]">
+              <div className="mt-6 pt-6 border-t border-border">
                 <Label className="text-muted-foreground">Tags</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {lead.tags.map((tag, i) => (
@@ -379,7 +379,7 @@ export default function LeadDetailPage() {
           ) : (
             <div className="space-y-4">
               {messages.map((msg) => (
-                <div key={msg.id} className="p-4 border border-white/[0.06] rounded-xl">
+                <div key={msg.id} className="p-4 border border-border rounded-xl">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-medium">{msg.subject || 'No subject'}</p>

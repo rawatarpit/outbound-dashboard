@@ -104,7 +104,7 @@ export default function PipelinePage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
             <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
           </div>
       </div>
@@ -135,7 +135,7 @@ export default function PipelinePage() {
             <button
               className={cn(
                 'px-3 py-2 text-sm font-medium',
-                viewMode === 'kanban' ? 'bg-primary text-white' : 'bg-card text-muted-foreground'
+                viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground'
               )}
               onClick={() => setViewMode('kanban')}
             >
@@ -144,7 +144,7 @@ export default function PipelinePage() {
             <button
               className={cn(
                 'px-3 py-2 text-sm font-medium',
-                viewMode === 'list' ? 'bg-primary text-white' : 'bg-card text-muted-foreground'
+                viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground'
               )}
               onClick={() => setViewMode('list')}
             >
@@ -168,7 +168,7 @@ export default function PipelinePage() {
                   <span className="text-sm opacity-80">{companiesByStage[stage.id]?.length || 0}</span>
                 </div>
               </div>
-              <div className="bg-white/[0.03] rounded-b-lg border border-white/[0.06] p-2 space-y-2 min-h-[500px]">
+              <div className="bg-muted rounded-b-lg border border-border p-2 space-y-2 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
                   <Card key={company.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-3">
@@ -180,7 +180,7 @@ export default function PipelinePage() {
                           )}
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                             <MoreHorizontal className="h-4 w-4 text-muted-foreground/50" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -226,7 +226,7 @@ export default function PipelinePage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-white/[0.03] border-b border-white/[0.06]">
+                <thead className="bg-muted border-b border-border">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Company</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
@@ -239,7 +239,7 @@ export default function PipelinePage() {
                 </thead>
                 <tbody className="divide-y">
                   {companies.map((company) => (
-                    <tr key={company.id} className="hover:bg-white/[0.02]">
+                    <tr key={company.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -276,7 +276,7 @@ export default function PipelinePage() {
                       <td className="px-4 py-3 text-sm">{company.brand?.brand_name || 'N/A'}</td>
                       <td className="px-4 py-3 text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                          <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">

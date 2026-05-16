@@ -39,10 +39,10 @@ import {
 } from '@/components/ui/Select'
 
 const SOURCE_COLORS: Record<string, { bg: string; icon: string }> = {
-  apollo: { bg: 'bg-blue-500/10', icon: 'text-blue-400' },
-  apify: { bg: 'bg-green-500/10', icon: 'text-green-400' },
-  hunter: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
-  default: { bg: 'bg-white/[0.03]', icon: 'text-muted-foreground' }
+  apollo: { bg: 'bg-blue-500/10', icon: 'text-muted-foreground' },
+  apify: { bg: 'bg-green-500/10', icon: 'text-muted-foreground' },
+  hunter: { bg: 'bg-amber-500/10', icon: 'text-muted-foreground' },
+  default: { bg: 'bg-muted', icon: 'text-muted-foreground' }
 }
 
 function SourceDetailView({ 
@@ -63,7 +63,7 @@ function SourceDetailView({
       <div className="flex items-center gap-4">
         <button 
           onClick={onClose}
-          className="p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
+          className="p-2 rounded-lg hover:bg-accent transition-colors"
         >
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </button>
@@ -90,7 +90,7 @@ function SourceDetailView({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Users className="h-5 w-5 text-blue-400" />
+                <Users className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{(source as any).total_records_fetched || 0}</p>
@@ -103,7 +103,7 @@ function SourceDetailView({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/10 rounded-lg">
-                <Building2 className="h-5 w-5 text-green-400" />
+                <Building2 className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{(source as any).total_companies_enriched || 0}</p>
@@ -116,7 +116,7 @@ function SourceDetailView({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Users className="h-5 w-5 text-purple-400" />
+                <Users className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{(source as any).total_contacts_enriched || 0}</p>
@@ -129,7 +129,7 @@ function SourceDetailView({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-500/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-amber-400" />
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">
@@ -149,19 +149,19 @@ function SourceDetailView({
           </CardHeader>
           <CardContent className="space-y-3">
             {source.brand && (
-              <div className="flex justify-between py-2 border-b border-white/[0.06]">
+              <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Brand</span>
                 <span className="font-medium">{source.brand.brand_name}</span>
               </div>
             )}
-            <div className="flex justify-between py-2 border-b border-white/[0.06]">
+            <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Rate Limit</span>
               <span className="font-medium">{source.rate_limit_per_min}/min</span>
             </div>
             {source.schedule_cron && (
-              <div className="flex justify-between py-2 border-b border-white/[0.06]">
+              <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Schedule</span>
-                <code className="text-sm bg-white/[0.06] px-2 py-1 rounded text-foreground">{source.schedule_cron}</code>
+                <code className="text-sm bg-muted px-2 py-1 rounded text-foreground">{source.schedule_cron}</code>
               </div>
             )}
             <div className="flex justify-between py-2">
@@ -304,7 +304,7 @@ export default function DiscoveryPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+            <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
             <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
           </div>
       </div>
@@ -382,7 +382,7 @@ export default function DiscoveryPage() {
                     </div>
                     <div onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                        <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                           <MoreHorizontal className="h-5 w-5 text-muted-foreground/50" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

@@ -100,7 +100,7 @@ export default function ReputationPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function ReputationPage() {
               {deliverabilityScore}
             </p>
             <p className="text-sm text-muted-foreground mt-1">Health Score</p>
-            <div className="mt-3 h-2 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${deliverabilityScore >= 80 ? 'bg-green-500' : deliverabilityScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                 style={{ width: `${deliverabilityScore}%` }}
@@ -220,7 +220,7 @@ export default function ReputationPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className={`p-4 border border-white/[0.06] rounded-xl ${getHealthBg(deliverabilityScore)}`}>
+            <div className={`p-4 border border-border rounded-xl ${getHealthBg(deliverabilityScore)}`}>
               <div className="flex items-center gap-2 mb-2">
                 {deliverabilityScore >= 80 ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
@@ -237,7 +237,7 @@ export default function ReputationPage() {
               </p>
             </div>
 
-            <div className="p-4 border border-white/[0.06] rounded-xl">
+            <div className="p-4 border border-border rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="h-5 w-5 text-muted-foreground" />
                 <h3 className="font-medium">Send Statistics</h3>

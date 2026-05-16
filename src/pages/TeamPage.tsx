@@ -146,7 +146,7 @@ export default function TeamPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function TeamPage() {
                   <TableCell>
                     {canManage && member.id !== currentMember?.id && (
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                        <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -305,14 +305,14 @@ export default function TeamPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="bg-white/[0.03] rounded-xl p-4 text-sm">
+          <div className="bg-muted rounded-xl p-4 text-sm">
             <h4 className="font-medium mb-2">Role Permissions</h4>
             <div className="space-y-1 text-muted-foreground/80">
               <p><strong>Admin:</strong> Can manage settings, team, and brands</p>
               <p><strong>Member:</strong> Can view dashboard and manage leads</p>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>

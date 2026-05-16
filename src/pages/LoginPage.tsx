@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
               <Rocket className="h-8 w-8" />
             </div>
           </div>
@@ -45,7 +45,7 @@ export default function LoginPage() {
           <p className="mt-2 text-muted-foreground">Sign in to your dashboard</p>
         </div>
 
-        <div className="rounded-2xl bg-card/60 backdrop-blur-xl p-8 shadow-2xl border border-white/[0.06]">
+        <div className="rounded-2xl bg-card p-8 shadow-xl border border-border">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" required>Email</Label>

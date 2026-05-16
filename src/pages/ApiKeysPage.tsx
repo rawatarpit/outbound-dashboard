@@ -25,7 +25,7 @@ const SERVICE_META: Record<string, { icon: any; color: string; url?: string }> =
   apollo: { icon: Globe, color: 'text-blue-400 bg-blue-500/10', url: 'https://apollo.io' },
   hunter: { icon: Search, color: 'text-amber-400 bg-amber-500/10', url: 'https://hunter.io' },
   apify: { icon: Database, color: 'text-green-400 bg-green-500/10', url: 'https://apify.com' },
-  github: { icon: Shield, color: 'text-foreground/80 bg-white/[0.04]', url: 'https://github.com/settings/tokens' },
+  github: { icon: Shield, color: 'text-foreground/80 bg-muted', url: 'https://github.com/settings/tokens' },
   llm: { icon: Bot, color: 'text-purple-400 bg-purple-500/10' },
   smtp: { icon: Mail, color: 'text-red-400 bg-red-500/10' },
 }
@@ -52,7 +52,7 @@ export default function ApiKeysPage() {
           const config = (source.config || {}) as Record<string, any>
           const apiKey = config.api_key || config.token
           if (apiKey) {
-            const meta = SERVICE_META[source.type] || { icon: Key, color: 'text-muted-foreground bg-white/[0.03]' }
+            const meta = SERVICE_META[source.type] || { icon: Key, color: 'text-muted-foreground bg-muted' }
             const brandLabel = brand.brand_name || brand.product || ''
             allKeys.push({
               id: `src-${source.id}`,
@@ -106,7 +106,7 @@ export default function ApiKeysPage() {
       for (const type of keyTypes) {
         const hasKey = allKeys.some(k => k.service === type)
         if (!hasKey) {
-          const meta = SERVICE_META[type] || { icon: Key, color: 'text-muted-foreground bg-white/[0.03]' }
+          const meta = SERVICE_META[type] || { icon: Key, color: 'text-muted-foreground bg-muted' }
           allKeys.push({
             id: `missing-${type}`,
             service: type,
@@ -116,7 +116,7 @@ export default function ApiKeysPage() {
             source: 'Not configured',
             status: 'missing',
             icon: meta.icon,
-            color: 'text-muted-foreground/50 bg-white/[0.03]',
+            color: 'text-muted-foreground/50 bg-muted',
             url: meta.url,
           })
         }
@@ -163,7 +163,7 @@ export default function ApiKeysPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -218,18 +218,18 @@ export default function ApiKeysPage() {
                             readOnly
                             type={isVisible ? 'text' : 'password'}
                             value={key.keyValue}
-                            className="font-mono text-xs pr-16 bg-white/[0.02]"
+                            className="font-mono text-xs pr-16 bg-muted/30"
                           />
                           <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
                             <button
                               onClick={() => toggleVisible(key.id)}
-                              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground/50 hover:text-foreground/80"
+                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
                             >
                               {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                             </button>
                             <button
                               onClick={() => handleCopy(key.keyValue)}
-                              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground/50 hover:text-foreground/80"
+                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
                             >
                               <Copy className="h-3.5 w-3.5" />
                             </button>

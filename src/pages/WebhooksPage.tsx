@@ -95,7 +95,7 @@ export default function WebhooksPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function WebhooksPage() {
                     </div>
                   </div>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1 rounded hover:bg-white/[0.06]">
+                    <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
                       <MoreHorizontal className="h-5 w-5 text-muted-foreground/50" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -353,7 +353,7 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
               {WEBHOOK_EVENTS.map((event) => (
                 <label
                   key={event.id}
-                  className="flex items-center gap-2 p-2 border border-white/[0.06] rounded-xl cursor-pointer hover:bg-white/[0.03]"
+                  className="flex items-center gap-2 p-2 border border-border rounded-xl cursor-pointer hover:bg-muted"
                 >
                   <input
                     type="checkbox"
@@ -392,7 +392,7 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

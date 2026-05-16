@@ -74,7 +74,7 @@ export default function SystemFlagsPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -108,9 +108,9 @@ export default function SystemFlagsPage() {
           {flags.map((flag) => {
             const Icon = flag.icon
             return (
-              <div key={flag.key} className="flex items-center justify-between p-4 border border-white/[0.06] rounded-xl hover:bg-white/[0.02] transition-colors">
+              <div key={flag.key} className="flex items-center justify-between p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${flag.value ? 'bg-primary/10' : 'bg-white/[0.03]'}`}>
+                  <div className={`p-2 rounded-lg ${flag.value ? 'bg-primary/10' : 'bg-muted'}`}>
                     <Icon className={`h-5 w-5 ${flag.value ? 'text-primary' : 'text-muted-foreground/50'}`} />
                   </div>
                   <div>

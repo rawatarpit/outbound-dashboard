@@ -213,9 +213,9 @@ export default function BrandDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="relative">
-          <div className="animate-spin rounded-full h-14 w-14 border-[3px] border-white/[0.04] border-t-indigo-400 shadow-2xl" />
+          <div className="animate-spin rounded-full h-14 w-14 border-[3px] border-border border-t-indigo-400 shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-14 w-14 bg-indigo-500/5 blur-xl" />
         </div>
       </div>
@@ -224,15 +224,15 @@ export default function BrandDetailPage() {
 
   if (!brand) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center">
-        <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6 shadow-inner">
-          <Search className="h-8 w-8 text-slate-600" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
+          <Search className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h2 className="text-xl font-bold text-slate-300 mb-2">Brand not found</h2>
-        <p className="text-slate-600 mb-8">The brand you're looking for doesn't exist or has been removed</p>
+        <h2 className="text-xl font-bold text-foreground mb-2">Brand not found</h2>
+        <p className="text-muted-foreground mb-8">The brand you're looking for doesn't exist or has been removed</p>
         <button
           onClick={() => navigate('/brands')}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-xl shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-md text-sm font-bold transition-all duration-200"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Brands
@@ -242,30 +242,26 @@ export default function BrandDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 py-10 px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-10 px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ───── Header ───── */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-900/90 to-slate-950/80 p-8 shadow-2xl shadow-indigo-500/20 border border-indigo-500/10 backdrop-blur-xl">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.2),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,92,246,0.1),transparent_50%)]" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-card p-8 shadow-lg border border-border">
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => navigate('/brands')}
-                className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.07] border border-white/[0.08] text-indigo-300/50 hover:text-white hover:bg-white/[0.12] hover:border-white/20 transition-all duration-200"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-accent border border-border text-muted-foreground hover:text-foreground hover:bg-accent hover:border-foreground/20 transition-all duration-200"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
-              <span className="text-indigo-300/30 text-[11px] font-semibold tracking-[0.25em] uppercase">Brand Profile</span>
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-muted-foreground/30 text-[11px] font-semibold tracking-[0.25em] uppercase">Brand Profile</span>
             </div>
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <h1 className="text-4xl font-extrabold tracking-tight text-white">{brand.brand_name}</h1>
+                  <h1 className="text-4xl font-extrabold tracking-tight text-foreground">{brand.brand_name}</h1>
                   <div className="flex items-center gap-2">
                     {brand.is_active ? (
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full tracking-wide uppercase">
@@ -290,12 +286,12 @@ export default function BrandDetailPage() {
                     )}
                   </div>
                 </div>
-                <p className="text-base text-indigo-300/50 font-medium">{brand.product}</p>
+                <p className="text-base text-muted-foreground font-medium">{brand.product}</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-indigo-200/70 hover:text-white hover:bg-white/[0.10] hover:border-white/20 text-sm font-semibold transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent border border-border text-muted-foreground hover:text-foreground hover:bg-accent hover:border-foreground/20 text-sm font-semibold transition-all duration-200"
                 >
                   <Settings className="h-4 w-4" />
                   Edit Brand
@@ -303,7 +299,7 @@ export default function BrandDetailPage() {
                 {brand.discovery_enabled && (
                   <button
                     onClick={handleTriggerDiscovery}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-xl shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-md text-sm font-bold transition-all duration-200"
                   >
                     <Zap className="h-4 w-4" />
                     Run Discovery
@@ -317,16 +313,15 @@ export default function BrandDetailPage() {
         {/* ───── Engine Toggle Cards ───── */}
         <div className="grid gap-5 md:grid-cols-3">
           <div className="group relative">
-            <div className="absolute -inset-[2px] bg-gradient-to-r from-indigo-500/30 to-indigo-600/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
-            <div className="relative rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-indigo-500/30 transition-all duration-300 overflow-hidden">
+            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
               <div className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 p-3 shadow-lg shadow-indigo-500/25 shrink-0">
-                    <Search className="h-5 w-5 text-white" />
+                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
+                    <Search className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-indigo-300/60 tracking-[0.15em] uppercase mb-1">Discovery Engine</p>
-                    <p className="text-[11px] text-slate-500 mb-3">Automated company discovery</p>
+                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Discovery Engine</p>
+                    <p className="text-[11px] text-muted-foreground/60 mb-3">Automated company discovery</p>
                     <Switch
                       checked={brand.discovery_enabled}
                       onCheckedChange={handleToggleDiscovery}
@@ -338,16 +333,15 @@ export default function BrandDetailPage() {
           </div>
 
           <div className="group relative">
-            <div className="absolute -inset-[2px] bg-gradient-to-r from-emerald-500/30 to-emerald-600/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
-            <div className="relative rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 overflow-hidden">
+            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
               <div className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 shadow-lg shadow-emerald-500/25 shrink-0">
-                    <Mail className="h-5 w-5 text-white" />
+                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-emerald-300/60 tracking-[0.15em] uppercase mb-1">Outbound Engine</p>
-                    <p className="text-[11px] text-slate-500 mb-3">Automated email sending</p>
+                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Outbound Engine</p>
+                    <p className="text-[11px] text-muted-foreground/60 mb-3">Automated email sending</p>
                     <Switch
                       checked={brand.outbound_enabled}
                       onCheckedChange={handleToggleOutbound}
@@ -359,16 +353,15 @@ export default function BrandDetailPage() {
           </div>
 
           <div className="group relative">
-            <div className="absolute -inset-[2px] bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
-            <div className="relative rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-amber-500/30 transition-all duration-300 overflow-hidden">
+            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
               <div className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-3 shadow-lg shadow-amber-500/25 shrink-0">
-                    <Activity className="h-5 w-5 text-white" />
+                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
+                    <Activity className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-amber-300/60 tracking-[0.15em] uppercase mb-1">System Status</p>
-                    <p className="text-[11px] text-slate-500 mb-3">
+                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">System Status</p>
+                    <p className="text-[11px] text-muted-foreground/60 mb-3">
                       <span className={`inline-flex items-center gap-1.5 font-semibold ${brand.is_paused ? 'text-amber-400' : 'text-emerald-400'}`}>
                         <span className={`inline-block h-1.5 w-1.5 rounded-full ${brand.is_paused ? 'bg-amber-400' : 'bg-emerald-400'} shadow-[0_0_8px_rgba(52,211,153,0.5)]`} />
                         {brand.is_paused ? 'Paused' : 'Active'}
@@ -393,7 +386,7 @@ export default function BrandDetailPage() {
 
         {/* ───── Tabs ───── */}
         <Tabs defaultValue="overview" className="w-full">
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-1.5 backdrop-blur-xl shadow-lg">
+          <div className="rounded-2xl bg-muted border border-border p-1.5 shadow-sm">
             <TabsList className="w-full bg-transparent gap-1">
               {[
                 { value: 'overview', label: 'Overview' },
@@ -405,7 +398,7 @@ export default function BrandDetailPage() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="flex-1 sm:flex-none rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-violet-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-indigo-500/25 text-slate-400 hover:text-slate-200 px-5 py-2.5 text-sm font-semibold transition-all duration-200"
+                  className="flex-1 sm:flex-none rounded-xl data-[state=active]:bg-foreground data-[state=active]:text-background text-muted-foreground hover:text-foreground px-5 py-2.5 text-sm font-semibold transition-all duration-200"
                 >
                   {label}
                 </TabsTrigger>
@@ -418,26 +411,25 @@ export default function BrandDetailPage() {
             <div className="grid gap-8 lg:grid-cols-2">
               <div className="space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                    <Brain className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                    <Brain className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-200">Brand Information</h3>
-                    <p className="text-xs text-slate-500">Core brand configuration</p>
+                    <h3 className="text-base font-bold text-foreground">Brand Information</h3>
+                    <p className="text-xs text-muted-foreground">Core brand configuration</p>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl overflow-hidden">
-                  <div className="h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500" />
-                  <div className="p-0 divide-y divide-white/[0.04]">
+                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                  <div className="p-0 divide-y divide-border">
                     {[
                       { label: 'Product', value: brand.product },
                       { label: 'Positioning', value: brand.positioning || 'Not set' },
                       { label: 'Tone', value: brand.tone || 'Not set', capitalize: true },
                       { label: 'Target Audience', value: brand.audience || 'Not set' },
                     ].map(({ label, value, capitalize }) => (
-                      <div key={label} className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors">
-                        <span className="text-sm font-medium text-slate-500">{label}</span>
-                        <span className={`text-sm font-bold text-slate-300 text-right max-w-[55%] truncate ${capitalize ? 'capitalize' : ''}`}>
+                      <div key={label} className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors">
+                        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+                        <span className={`text-sm font-bold text-foreground text-right max-w-[55%] truncate ${capitalize ? 'capitalize' : ''}`}>
                           {value}
                         </span>
                       </div>
@@ -448,38 +440,37 @@ export default function BrandDetailPage() {
 
               <div className="space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                    <BarChart3 className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-200">Send Statistics</h3>
-                    <p className="text-xs text-slate-500">Delivery performance metrics</p>
+                    <h3 className="text-base font-bold text-foreground">Send Statistics</h3>
+                    <p className="text-xs text-muted-foreground">Delivery performance metrics</p>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl overflow-hidden">
-                  <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
+                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                   <div className="p-6">
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { label: 'Sent', value: brand.sent_count || 0, accent: 'text-indigo-400' },
+                        { label: 'Sent', value: brand.sent_count || 0, accent: 'text-foreground' },
                         { label: 'Bounces', value: brand.bounce_count || 0, accent: 'text-rose-400' },
                         { label: 'Complaints', value: brand.complaint_count || 0, accent: 'text-rose-400' },
                         { label: 'Bounce Rate', value: brand.sent_count ? `${((brand.bounce_count || 0) / brand.sent_count * 100).toFixed(1)}%` : '0%', accent: (brand.bounce_count || 0) > 0 ? 'text-rose-400' : 'text-emerald-400' },
                       ].map(({ label, value, accent }) => (
-                        <div key={label} className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-4">
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{label}</p>
+                        <div key={label} className="rounded-xl bg-muted border border-border p-4">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
                           <p className={`text-2xl font-extrabold ${accent}`}>{value}</p>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-6 pt-5 border-t border-white/[0.06] space-y-3">
+                    <div className="mt-6 pt-5 border-t border-border space-y-3">
                       {[
                         { label: 'Daily Limit', value: brand.daily_send_limit || 'Unlimited' },
                         { label: 'Hourly Limit', value: brand.hourly_send_limit || 'Unlimited' },
                       ].map(({ label, value }) => (
                         <div key={label} className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-500">{label}</span>
-                          <span className="text-sm font-bold text-slate-300">{value}</span>
+                          <span className="text-sm font-medium text-muted-foreground">{label}</span>
+                          <span className="text-sm font-bold text-foreground">{value}</span>
                         </div>
                       ))}
                     </div>
@@ -494,17 +485,17 @@ export default function BrandDetailPage() {
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                    <Radio className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                    <Radio className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-200">Discovery Sources</h3>
-                    <p className="text-xs text-slate-500">{discoverySources.length} source{discoverySources.length !== 1 ? 's' : ''} configured</p>
+                    <h3 className="text-base font-bold text-foreground">Discovery Sources</h3>
+                    <p className="text-xs text-muted-foreground">{discoverySources.length} source{discoverySources.length !== 1 ? 's' : ''} configured</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsSourceModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-lg shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
                 >
                   <Plus className="h-4 w-4" />
                   Add Source
@@ -512,16 +503,16 @@ export default function BrandDetailPage() {
               </div>
 
               {discoverySources.length === 0 ? (
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl">
+                <div className="rounded-2xl bg-card border border-border shadow-sm">
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6 shadow-inner">
-                      <Radio className="h-8 w-8 text-slate-600" />
+                    <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
+                      <Radio className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <p className="text-base font-bold text-slate-400 mb-1">No discovery sources configured</p>
-                    <p className="text-sm text-slate-600 mb-8">Add a data source to begin discovering companies</p>
+                    <p className="text-base font-bold text-foreground mb-1">No discovery sources configured</p>
+                    <p className="text-sm text-muted-foreground mb-8">Add a data source to begin discovering companies</p>
                     <button
                       onClick={() => setIsSourceModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-lg shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
                     >
                       <Plus className="h-4 w-4" />
                       Add Your First Source
@@ -529,21 +520,21 @@ export default function BrandDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl overflow-hidden">
+                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                   <div className="p-2">
                     <div className="space-y-0.5">
                       {discoverySources.map((source) => (
                         <div
                           key={source.id}
-                          className="group flex items-center justify-between p-4 rounded-xl hover:bg-white/[0.03] transition-all duration-200"
+                          className="group flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-all duration-200"
                         >
                           <div className="flex items-center gap-4 min-w-0 flex-1">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] shrink-0">
-                              <Search className="h-4 w-4 text-violet-400" />
+                            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted border border-border shrink-0">
+                              <Search className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-slate-300 truncate">{source.name}</p>
-                              <p className="text-xs text-slate-600 capitalize mt-0.5">{source.type}</p>
+                              <p className="font-semibold text-foreground truncate">{source.name}</p>
+                              <p className="text-xs text-muted-foreground capitalize mt-0.5">{source.type}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0 ml-4">
@@ -554,7 +545,7 @@ export default function BrandDetailPage() {
                               </span>
                             )}
                             {source.last_run_at && (
-                              <span className="hidden sm:flex items-center gap-1 text-xs text-slate-500 bg-white/[0.03] px-2.5 py-1 rounded-full">
+                              <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
                                 <Clock className="h-3 w-3" />
                                 {formatRelativeTime(source.last_run_at)}
                               </span>
@@ -570,7 +561,7 @@ export default function BrandDetailPage() {
                             )}
                             <button
                               onClick={() => handleDeleteSource(source)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -589,17 +580,17 @@ export default function BrandDetailPage() {
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                    <Target className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                    <Target className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-200">Brand Intents</h3>
-                    <p className="text-xs text-slate-500">{intents.length} intent{intents.length !== 1 ? 's' : ''} · Signals define when each intent triggers</p>
+                    <h3 className="text-base font-bold text-foreground">Brand Intents</h3>
+                    <p className="text-xs text-muted-foreground">{intents.length} intent{intents.length !== 1 ? 's' : ''} · Signals define when each intent triggers</p>
                   </div>
                 </div>
                 <button
                   onClick={() => openIntentDrawer()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-lg shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
                 >
                   <Plus className="h-4 w-4" />
                   Add Intent
@@ -607,16 +598,16 @@ export default function BrandDetailPage() {
               </div>
 
               {intents.length === 0 ? (
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl">
+                <div className="rounded-2xl bg-card border border-border shadow-sm">
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6 shadow-inner">
-                      <Target className="h-8 w-8 text-slate-600" />
+                    <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
+                      <Target className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <p className="text-base font-bold text-slate-400 mb-1">No intents configured</p>
-                    <p className="text-sm text-slate-600 mb-8">Create intents to define which prospects to target</p>
+                    <p className="text-base font-bold text-foreground mb-1">No intents configured</p>
+                    <p className="text-sm text-muted-foreground mb-8">Create intents to define which prospects to target</p>
                     <button
                       onClick={() => openIntentDrawer()}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-lg shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
                     >
                       <Plus className="h-4 w-4" />
                       Create Your First Intent
@@ -628,18 +619,16 @@ export default function BrandDetailPage() {
                   {intents.map((intent, idx) => (
                     <div
                       key={intent.id}
-                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] backdrop-blur-xl shadow-xl hover:shadow-2xl hover:border-indigo-500/30 transition-all duration-300"
+                      className="group relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-300"
                     >
-                      <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-indigo-500 via-violet-500 to-indigo-500" />
-                      <div className="absolute top-4 right-4 w-48 h-48 bg-gradient-to-br from-indigo-500/[0.04] to-violet-500/[0.04] rounded-full blur-3xl pointer-events-none" />
-                      <div className="p-6 pl-7 relative">
+                      <div className="p-6 relative">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
-                              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 shrink-0">
+                              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-foreground text-primary-foreground text-xs font-bold shadow-sm shrink-0">
                                 {idx + 1}
                               </span>
-                              <p className="font-bold text-slate-200 truncate text-base">{intent.intent}</p>
+                              <p className="font-bold text-foreground truncate text-base">{intent.intent}</p>
                               <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full shrink-0 border ${
                                 intent.priority <= 1
                                   ? 'text-rose-300 bg-rose-500/10 border-rose-500/20'
@@ -665,34 +654,34 @@ export default function BrandDetailPage() {
                                     key={signal}
                                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize border transition-all duration-200 ${
                                       active
-                                        ? 'bg-gradient-to-r from-indigo-500/15 to-violet-500/15 text-indigo-300 border-indigo-500/20 shadow-sm'
-                                        : 'bg-transparent text-slate-700 border-white/[0.04]'
+                                        ? 'bg-accent text-foreground border-border shadow-sm'
+                                        : 'bg-transparent text-muted-foreground border-border'
                                     }`}
                                   >
                                     {active ? (
-                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 mr-1.5 shadow-[0_0_6px_rgba(99,102,241,0.5)]" />
+                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground mr-1.5 shadow-[0_0_6px_rgba(99,102,241,0.5)]" />
                                     ) : null}
                                     {signal.replace(/_/g, ' ')}
                                   </span>
                                 )
                               })}
                             </div>
-                            <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                            <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-border">
                               <Switch
                                 checked={intent.is_active}
                                 onCheckedChange={() => handleToggleIntentActive(intent)}
                               />
-                              <span className="text-xs text-slate-500 font-medium">Active</span>
+                              <span className="text-xs text-muted-foreground font-medium">Active</span>
                               <div className="flex-1" />
                               <button
                                 onClick={() => openIntentDrawer(intent)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent"
                               >
                                 <Settings className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteIntent(intent.id)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -701,13 +690,13 @@ export default function BrandDetailPage() {
                           <div className="hidden sm:flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => openIntentDrawer(intent)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all duration-200"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
                             >
                               <Settings className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteIntent(intent.id)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -725,16 +714,15 @@ export default function BrandDetailPage() {
           <TabsContent value="settings" className="mt-8">
             <div className="space-y-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
-                  <Mail className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-200">Email Configuration</h3>
-                  <p className="text-xs text-slate-500">SMTP and sending settings</p>
+                  <h3 className="text-base font-bold text-foreground">Email Configuration</h3>
+                  <p className="text-xs text-muted-foreground">SMTP and sending settings</p>
                 </div>
               </div>
-              <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl overflow-hidden">
-                <div className="h-[3px] bg-gradient-to-r from-sky-500 via-sky-400 to-sky-500" />
+              <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="p-6">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {[
@@ -745,9 +733,9 @@ export default function BrandDetailPage() {
                       { label: 'From Email', value: brand.smtp_email || 'Not configured' },
                       { label: 'Sending Domain', value: brand.sending_domain || 'Not configured' },
                     ].map(({ label, value, capitalize }) => (
-                      <div key={label} className="flex flex-col gap-1 p-4 rounded-xl bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.05] transition-colors">
-                        <span className="text-xs font-bold text-slate-500 tracking-wider uppercase">{label}</span>
-                        <span className={`text-sm font-bold text-slate-300 ${capitalize ? 'capitalize' : ''}`}>{value}</span>
+                      <div key={label} className="flex flex-col gap-1 p-4 rounded-xl bg-muted border border-border hover:bg-accent/50 transition-colors">
+                        <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">{label}</span>
+                        <span className={`text-sm font-bold text-foreground ${capitalize ? 'capitalize' : ''}`}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -760,25 +748,24 @@ export default function BrandDetailPage() {
           <TabsContent value="llm" className="mt-8">
             <div className="space-y-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-                  <Brain className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
+                  <Brain className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-200">LLM Configuration</h3>
-                  <p className="text-xs text-slate-500">AI model overrides for this brand</p>
+                  <h3 className="text-base font-bold text-foreground">LLM Configuration</h3>
+                  <p className="text-xs text-muted-foreground">AI model overrides for this brand</p>
                 </div>
               </div>
-              <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] backdrop-blur-xl shadow-xl overflow-hidden">
-                <div className="h-[3px] bg-gradient-to-r from-purple-500 via-purple-400 to-purple-500" />
+              <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
                 <div className="p-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     {[
                       { label: 'Model Override', value: brand.llm_model_override || 'Using default' },
                       { label: 'Temperature', value: brand.llm_temperature ?? 'Using default' },
                     ].map(({ label, value }) => (
-                      <div key={label} className="flex flex-col gap-1 p-4 rounded-xl bg-white/[0.03] border border-white/[0.04] hover:bg-white/[0.05] transition-colors">
-                        <span className="text-xs font-bold text-slate-500 tracking-wider uppercase">{label}</span>
-                        <span className="text-sm font-bold text-slate-300">{value}</span>
+                      <div key={label} className="flex flex-col gap-1 p-4 rounded-xl bg-muted border border-border hover:bg-accent/50 transition-colors">
+                        <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase">{label}</span>
+                        <span className="text-sm font-bold text-foreground">{value}</span>
                       </div>
                     ))}
                   </div>
@@ -829,21 +816,21 @@ export default function BrandDetailPage() {
         >
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">Intent Description</label>
+              <label className="block text-sm font-bold text-foreground mb-2">Intent Description</label>
               <textarea
                 value={intentForm.intent}
                 onChange={e => setIntentForm(prev => ({ ...prev, intent: e.target.value }))}
-                className="w-full rounded-xl bg-slate-900/50 border border-slate-700/50 px-4 py-3 text-sm font-medium text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 transition-all min-h-[100px] resize-none"
+                className="w-full rounded-xl bg-muted border border-border px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all min-h-[100px] resize-none"
                 placeholder="e.g., Companies hiring for senior engineering roles"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-bold text-slate-300">Signals</label>
-                <span className="text-xs font-medium text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{intentForm.signals.length} selected</span>
+                <label className="block text-sm font-bold text-foreground">Signals</label>
+                <span className="text-xs font-medium text-muted-foreground bg-accent px-2 py-0.5 rounded-full">{intentForm.signals.length} selected</span>
               </div>
-              <p className="text-xs text-slate-600 mb-4">Select which signals trigger this intent</p>
+              <p className="text-xs text-muted-foreground mb-4">Select which signals trigger this intent</p>
               <div className="flex flex-wrap gap-2">
                 {SIGNAL_TYPES.map((signal) => {
                   const selected = intentForm.signals.includes(signal)
@@ -854,8 +841,8 @@ export default function BrandDetailPage() {
                       onClick={() => toggleSignal(signal)}
                       className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 capitalize ${
                         selected
-                          ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-transparent shadow-lg shadow-indigo-500/30 scale-[1.02]'
-                          : 'bg-slate-900/50 text-slate-400 border-slate-700/50 hover:border-indigo-500/30 hover:text-indigo-300 hover:bg-slate-800/50 hover:shadow-sm'
+                          ? 'bg-foreground text-primary-foreground border-transparent shadow-sm scale-[1.02]'
+                          : 'bg-muted text-muted-foreground border-border hover:border-foreground/20 hover:text-foreground hover:bg-accent hover:shadow-sm'
                       }`}
                     >
                       {signal.replace(/_/g, ' ')}
@@ -867,7 +854,7 @@ export default function BrandDetailPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-3">Priority Level</label>
+              <label className="block text-sm font-bold text-foreground mb-3">Priority Level</label>
               <div className="grid grid-cols-6 gap-2.5">
                 {[0, 1, 2, 3, 4, 5].map(p => (
                   <button
@@ -876,8 +863,8 @@ export default function BrandDetailPage() {
                     onClick={() => setIntentForm(prev => ({ ...prev, priority: p }))}
                     className={`py-3 rounded-xl text-sm font-bold border transition-all duration-200 ${
                       intentForm.priority === p
-                        ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-transparent shadow-lg shadow-indigo-500/30 scale-105'
-                        : 'bg-slate-900/50 text-slate-400 border-slate-700/50 hover:border-indigo-500/30 hover:text-indigo-300 hover:shadow-sm'
+                        ? 'bg-foreground text-primary-foreground border-transparent shadow-sm scale-105'
+                        : 'bg-muted text-muted-foreground border-border hover:border-foreground/20 hover:text-foreground hover:shadow-sm'
                     }`}
                   >
                     {p}
@@ -886,21 +873,21 @@ export default function BrandDetailPage() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-emerald-400 font-semibold">← Highest</span>
-                <span className="text-xs text-slate-600 font-medium">0 = most urgent</span>
-                <span className="text-xs text-slate-500 font-semibold">Lowest →</span>
+                <span className="text-xs text-muted-foreground font-medium">0 = most urgent</span>
+                <span className="text-xs text-muted-foreground font-semibold">Lowest →</span>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
+            <div className="flex justify-end gap-3 pt-6 border-t border-border">
               <button
                 onClick={() => setIsIntentDrawerOpen(false)}
-                className="px-6 py-2.5 rounded-xl border border-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 text-sm font-semibold transition-all duration-200"
+                className="px-6 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-accent text-sm font-semibold transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveIntent}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-400 hover:to-violet-400 shadow-lg shadow-indigo-500/30 text-sm font-bold transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
               >
                 <Sparkles className="h-4 w-4" />
                 {editingIntent ? 'Save Changes' : 'Create Intent'}

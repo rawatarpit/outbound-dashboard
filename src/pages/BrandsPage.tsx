@@ -118,7 +118,7 @@ export default function BrandsPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-white/[0.04] border-t-primary shadow-2xl" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
           <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function BrandsPage() {
       {brands.length === 0 ? (
         <Card className="overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6 shadow-inner">
+            <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
               <Building2 className="h-8 w-8 text-muted-foreground/40" />
             </div>
             <h3 className="text-lg font-bold text-foreground mb-1">No brands yet</h3>
@@ -156,14 +156,11 @@ export default function BrandsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {brands.map((brand) => (
             <div key={brand.id} className="group relative">
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/20 to-violet-500/20 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-2xl border border-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.25),inset_0_1px_0_0_rgba(255,255,255,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_12px_32px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.04)] hover:border-white/[0.09] transition-all duration-300">
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary via-violet-500 to-primary rounded-l-[1px]" />
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-white/[0.02] to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center border border-primary/10">
+                      <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center border border-primary/10">
                         <Building2 className="h-5 w-5 text-primary" />
                       </div>
                       <div className="min-w-0">
@@ -172,7 +169,7 @@ export default function BrandsPage() {
                       </div>
                     </div>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200">
+                      <DropdownMenuTrigger className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-all duration-200">
                         <MoreHorizontal className="h-5 w-5" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -200,14 +197,14 @@ export default function BrandsPage() {
                   <div className="flex items-center gap-2 flex-wrap mb-4">
                     {getStatusBadge(brand)}
                     {brand.discovery_enabled && (
-                      <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded-full">Discovery</span>
+                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">Discovery</span>
                     )}
                     {brand.outbound_enabled && (
-                      <span className="text-xs font-medium text-muted-foreground bg-white/[0.03] border border-white/[0.04] px-2 py-0.5 rounded-full">Outbound</span>
+                      <span className="text-xs font-medium text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">Outbound</span>
                     )}
                   </div>
 
-                  <div className="bg-white/[0.02] rounded-xl p-3.5 space-y-3 border border-white/[0.04] mb-4">
+                  <div className="bg-muted/30 rounded-xl p-3.5 space-y-3 border border-border mb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm">
                         <Search className="h-3.5 w-3.5 text-muted-foreground/50" />
@@ -236,7 +233,7 @@ export default function BrandsPage() {
                         <p className="text-xs text-muted-foreground/60">Sent Today</p>
                         <p className="font-bold text-foreground">{brand.sent_count || 0}</p>
                       </div>
-                      <div className="w-px h-8 bg-white/[0.06]" />
+                      <div className="w-px h-8 bg-border" />
                       <div>
                         <p className="text-xs text-muted-foreground/60">Daily Limit</p>
                         <p className="font-bold text-foreground">{brand.daily_send_limit || 'Unlimited'}</p>
