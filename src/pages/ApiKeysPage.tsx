@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/Label'
+import { Switch } from '@/components/ui/Switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select'
 import Drawer from '@/components/Drawer'
-import { apiKeysAPI } from '@/lib/api'
+import { apiKeysAPI, brandsAPI, discoverySourcesAPI, settingsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { copyToClipboard } from '@/lib/utils'
-import { brandsAPI, discoverySourcesAPI } from '@/lib/api'
-import { Eye, EyeOff, Copy, Key, Globe, Database, Search, Bot, Mail, ExternalLink, Shield, Plus, Sparkles } from 'lucide-react'
+import { Eye, EyeOff, Copy, Key, Globe, Database, Search, Bot, Mail, ExternalLink, Shield, Plus, Sparkles, Settings } from 'lucide-react'
 
 interface ExternalKey {
   id: string
@@ -42,6 +50,7 @@ export default function ApiKeysPage() {
   const [newKeyName, setNewKeyName] = useState('')
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [centralizedConfigs, setCentralizedConfigs] = useState<any>({})
 
   useEffect(() => {
     fetchAllKeys()
@@ -51,8 +60,11 @@ export default function ApiKeysPage() {
     setIsLoading(true)
     try {
       const { data: brands } = await brandsAPI.list(client?.id)
+      const { data: settings } = await settingsAPI.get(client?.id)
+      
       const allKeys: ExternalKey[] = []
-
+      
+      // Process discovery source keys
       for (const brand of brands || []) {
         const { data: sources } = await discoverySourcesAPI.list(brand.id)
         for (const source of sources || []) {
@@ -77,6 +89,7 @@ export default function ApiKeysPage() {
         }
       }
 
+      // Process brand-specific email keys
       if (brands && brands.length > 0) {
         const activeBrand = brands[0]
         if (activeBrand.smtp_password) {
@@ -109,7 +122,25 @@ export default function ApiKeysPage() {
         }
       }
 
-      const keyTypes = ['apollo', 'hunter', 'apify', 'github', 'llm', 'smtp']
+      // Process general settings keys (LLMs, etc.)
+      if (settings) {
+        if (settings.llm_api_key) {
+          allKeys.push({
+            id: 'llm-key',
+            service: 'llm',
+            type: 'ai',
+            keyValue: settings.llm_api_key,
+            label: 'LLM API Key',
+            source: 'Global Settings',
+            status: 'configured',
+            icon: Bot,
+            color: 'text-muted-foreground bg-muted',
+          })
+        }
+      }
+
+      // Add placeholders for missing services
+      const keyTypes = ['apollo', 'hunter', 'apify', 'github', 'llm', 'smtp', 'resend']
       for (const type of keyTypes) {
         const hasKey = allKeys.some(k => k.service === type)
         if (!hasKey) {
@@ -117,7 +148,7 @@ export default function ApiKeysPage() {
           allKeys.push({
             id: `missing-${type}`,
             service: type,
-            type: type === 'smtp' ? 'email' : type === 'llm' ? 'ai' : 'discovery',
+            type: type === 'smtp' || type === 'resend' ? 'email' : type === 'llm' ? 'ai' : 'discovery',
             keyValue: '',
             label: type.charAt(0).toUpperCase() + type.slice(1),
             source: 'Not configured',
@@ -164,6 +195,7 @@ export default function ApiKeysPage() {
         setCreatedKey((data[0] as any)._rawKey)
       }
       toast.success('API key created')
+      fetchAllKeys() // Refresh the key list
     } catch (error: any) {
       toast.error(error.message || 'Failed to create API key')
     } finally {
@@ -179,10 +211,23 @@ export default function ApiKeysPage() {
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'discovery': return 'Discovery'
-      case 'email': return 'Email'
-      case 'ai': return 'AI / LLM'
+      case 'discovery': return 'Discovery Sources'
+      case 'email': return 'Email Providers'
+      case 'ai': return 'AI / LLM Services'
       default: return type
+    }
+  }
+
+  const getServiceDescription = (service: string) => {
+    switch (service) {
+      case 'apollo': return 'People and company data from Apollo.io'
+      case 'hunter': return 'Email finder for professional domains'
+      case 'apify': return 'Web scraping platform for data extraction'
+      case 'github': return 'Developer profile and repository data'
+      case 'llm': return 'Language models for AI-powered outreach'
+      case 'smtp': return 'Standard email protocol for sending'
+      case 'resend': return 'Modern email API for transactional emails'
+      default: return 'External service integration'
     }
   }
 
@@ -204,8 +249,8 @@ export default function ApiKeysPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">External API Keys</h1>
-          <p className="text-sm text-muted-foreground">API keys and tokens the engine uses to connect to third-party services</p>
+          <h1 className="text-2xl font-bold text-foreground">API Keys & Services</h1>
+          <p className="text-sm text-muted-foreground">Configure all services your outbound engine uses. Configure once, use everywhere.</p>
         </div>
         <Button onClick={() => setIsCreateDrawerOpen(true)}>
           <Plus className="h-4 w-4 mr-1.5" />
@@ -213,73 +258,119 @@ export default function ApiKeysPage() {
         </Button>
       </div>
 
-      {Object.entries(groupedKeys).map(([type, typeKeys]) => (
-        <div key={type}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{getTypeLabel(type)}</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {typeKeys.map((key) => {
-              const Icon = key.icon
-              const isVisible = visibleKeys.has(key.id)
-              const isConfigured = key.status === 'configured'
-
-              return (
-                <Card key={key.id} className={`hover:shadow-md transition-shadow ${!isConfigured ? 'opacity-60' : ''}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-xl p-2.5 ${key.color}`}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-sm font-semibold">{key.label}</CardTitle>
-                            {key.url && isConfigured && (
-                              <a href={key.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground/50 hover:text-foreground/80">
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{key.source}</p>
-                        </div>
-                      </div>
-                      <Badge variant={isConfigured ? 'success' : 'secondary'} className="shrink-0 text-xs">
-                        {isConfigured ? 'Configured' : 'Missing'}
-                      </Badge>
-                    </div>
-
-                    {isConfigured && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <div className="flex-1 relative">
-                          <Input
-                            readOnly
-                            type={isVisible ? 'text' : 'password'}
-                            value={key.keyValue}
-                            className="font-mono text-xs pr-16 bg-muted/30"
-                          />
-                          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
-                            <button
-                              onClick={() => toggleVisible(key.id)}
-                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
-                            >
-                              {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                            </button>
-                            <button
-                              onClick={() => handleCopy(key.keyValue)}
-                              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })}
+      {/* Centralized Service Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Global Service Configuration
+          </CardTitle>
+          <CardDescription>
+            Configure your service credentials here for unified access across all components
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+              <Mail className="h-5 w-5" />
+              <span className="font-medium">Email Services</span>
+              <span className="text-xs text-muted-foreground">SMTP, Resend</span>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+              <Bot className="h-5 w-5" />
+              <span className="font-medium">AI Services</span>
+              <span className="text-xs text-muted-foreground">OpenAI, Anthropic</span>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+              <Globe className="h-5 w-5" />
+              <span className="font-medium">Discovery Sources</span>
+              <span className="text-xs text-muted-foreground">Apollo, Hunter</span>
+            </Button>
           </div>
-        </div>
-      ))}
+        </CardContent>
+      </Card>
+
+      {/* Existing Keys Display */}
+      <div className="space-y-8">
+        {Object.entries(groupedKeys).map(([type, typeKeys]) => (
+          <div key={type}>
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              {getTypeLabel(type)}
+              <Badge variant="secondary">{typeKeys.length} services</Badge>
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {typeKeys.map((key) => {
+                const Icon = key.icon
+                const isVisible = visibleKeys.has(key.id)
+                const isConfigured = key.status === 'configured'
+
+                return (
+                  <Card key={key.id} className={`hover:shadow-md transition-shadow ${!isConfigured ? 'opacity-70 border-dashed' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`rounded-xl p-2.5 ${key.color}`}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-sm font-semibold">{key.label}</CardTitle>
+                              {key.url && isConfigured && (
+                                <a href={key.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground/50 hover:text-foreground/80">
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{getServiceDescription(key.service)}</p>
+                          </div>
+                        </div>
+                        <Badge variant={isConfigured ? 'success' : 'secondary'} className="shrink-0 text-xs">
+                          {isConfigured ? 'Active' : 'Not Configured'}
+                        </Badge>
+                      </div>
+
+                      {isConfigured && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <div className="flex-1 relative">
+                            <Input
+                              readOnly
+                              type={isVisible ? 'text' : 'password'}
+                              value={key.keyValue}
+                              className="font-mono text-xs pr-16 bg-muted/30"
+                            />
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
+                              <button
+                                onClick={() => toggleVisible(key.id)}
+                                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
+                              >
+                                {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                              </button>
+                              <button
+                                onClick={() => handleCopy(key.keyValue)}
+                                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground/50 hover:text-foreground/80"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!isConfigured && (
+                        <div className="mt-3">
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            Configure {key.label}
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
 
       <Drawer
         isOpen={isCreateDrawerOpen}
@@ -300,8 +391,11 @@ export default function ApiKeysPage() {
               </div>
               <Button onClick={handleCreateKey} isLoading={isCreating} className="w-full">
                 <Sparkles className="h-4 w-4 mr-1.5" />
-                Generate Key
+                Generate New Key
               </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Generated keys can be used to authenticate API requests to your outbound engine
+              </p>
             </>
           ) : (
             <div className="space-y-4">
