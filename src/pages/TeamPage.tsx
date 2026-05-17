@@ -131,9 +131,9 @@ export default function TeamPage() {
 
   const handleResendInvite = async (member: ClientMember) => {
     try {
-      const { error } = await teamAPI.updateRole(member.id, member.role)
+      const { error } = await teamAPI.invite({ email: member.email, role: member.role, clientId: '' })
       if (error) throw error
-      toast.success('Invitation resent')
+      toast.success('Invitation resent to ' + member.email)
       fetchMembers()
     } catch (error: any) {
       toast.error(error.message || 'Failed to resend invitation')

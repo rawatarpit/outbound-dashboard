@@ -11,9 +11,7 @@ const Select = React.forwardRef<
   }
 >(({ value, onValueChange, children, ...props }, _ref) => {
   const handleValueChange = (newValue: string) => {
-    if (newValue !== '') {
-      onValueChange?.(newValue)
-    }
+    onValueChange?.(newValue)
   }
 
   return (

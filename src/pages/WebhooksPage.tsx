@@ -235,8 +235,8 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
     url: webhook?.url || '',
     secret: webhook?.secret || '',
     events: webhook?.events || ['lead.created'],
-    retry_count: webhook?.retry_count || 3,
-    retry_delay_seconds: webhook?.retry_delay_seconds || 60
+    retry_count: webhook?.retry_count ?? 3,
+    retry_delay_seconds: webhook?.retry_delay_seconds ?? 60
   })
 
   useEffect(() => {

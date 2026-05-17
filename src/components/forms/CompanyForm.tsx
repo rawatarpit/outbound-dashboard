@@ -60,7 +60,7 @@ export default function CompanyForm({ brands, company, onSuccess, onCancel }: Co
       }
 
       if (company?.id) {
-        const { error } = await companiesAPI.update(company.id, payload)
+        const { error } = await companiesAPI.update(formData.brand_id, company.id, payload)
         if (error) throw error
         toast.success('Company updated')
       } else {

@@ -81,14 +81,14 @@ export default function AnalyticsPage() {
         return {
           name: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
           sent: dayEntry?.sent || 0,
-          delivered: dayEntry?.sent || 0,
-          opened: dayEntry?.replied || 0
+          delivered: dayEntry?.delivered || 0,
+          opened: dayEntry?.opened || 0
         }
       })
 
-      const total = overview.sentCount || 0
-      const replied = parseInt(overview.replyRate || '0')
-      const bounced = parseInt(overview.bounceRate || '0')
+      const total = overview.sent_count || overview.sentCount || 0
+      const replied = Math.round(parseFloat(overview.reply_rate || overview.replyRate || '0') * total)
+      const bounced = Math.round(parseFloat(overview.bounce_rate || overview.bounceRate || '0') * total)
       const delivered = total - bounced
       const opened = replied
 

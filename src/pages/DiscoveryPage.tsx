@@ -263,6 +263,9 @@ export default function DiscoveryPage() {
 
   const handleTriggerSource = async (source: BrandDiscoverySource) => {
     try {
+      if (!source.brand_id) throw new Error('Source has no brand')
+      const { error } = await brandsAPI.triggerDiscovery(source.brand_id)
+      if (error) throw error
       toast.success(`Discovery triggered for ${source.name}`)
       fetchSources()
     } catch (error: any) {

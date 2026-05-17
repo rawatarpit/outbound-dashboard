@@ -155,11 +155,12 @@ export default function LeadsPage() {
                   className="pl-10"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1) }}>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {LEAD_STATUSES.map(status => (
                     <SelectItem key={status} value={status}>
                       {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -167,11 +168,12 @@ export default function LeadsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={brandFilter} onValueChange={(v) => { setBrandFilter(v); setCurrentPage(1) }}>
+              <Select value={brandFilter || 'all'} onValueChange={(v) => { setBrandFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
                   {brands.map(brand => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.brand_name}

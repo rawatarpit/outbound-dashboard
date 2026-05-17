@@ -33,7 +33,7 @@ export default function BrandsPage() {
     try {
       const { data, error } = await brandsAPI.list(client?.id)
       if (error) throw error
-      setBrands(data)
+      setBrands(data || [])
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch brands')
     } finally {

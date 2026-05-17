@@ -42,7 +42,7 @@ export default function SystemFlagsPage() {
 
       setFlags(flagDefs.map(f => ({
         ...f,
-        value: data?.[f.key] ?? true,
+        value: data?.[f.key] ?? false,
       })))
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch flags')

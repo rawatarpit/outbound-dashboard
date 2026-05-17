@@ -51,14 +51,16 @@ export default function PipelinePage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
 
   useEffect(() => {
-    fetchBrands()
-    fetchCompanies()
+    (async () => {
+      await fetchBrands()
+      fetchCompanies()
+    })()
   }, [brandFilter])
 
   const fetchBrands = async () => {
     try {
       const { data } = await brandsAPI.list(client?.id)
-      setBrands(data)
+      setBrands(data || [])
     } catch (error) {
       console.error('Failed to fetch brands:', error)
     }
