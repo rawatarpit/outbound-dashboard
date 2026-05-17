@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { type BrandProfile, type BrandIntent, SIGNAL_TYPES } from '@/lib/supabase'
+import { type BrandProfile, type BrandIntent } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -18,7 +18,6 @@ import {
   Trash2,
   Clock,
   Target,
-  X,
   Sparkles,
   Activity,
   Brain,
@@ -89,21 +88,12 @@ export default function BrandDetailPage() {
   const openIntentDrawer = (intent?: BrandIntent) => {
     if (intent) {
       setEditingIntent(intent)
-      setIntentForm({ intent: intent.intent, signals: [...intent.signals], priority: intent.priority })
+      setIntentForm({ intent: intent.intent, signals: [...intent.signals], priority: intent.priority - 1 })
     } else {
       setEditingIntent(null)
       setIntentForm({ intent: '', signals: [], priority: 0 })
     }
     setIsIntentDrawerOpen(true)
-  }
-
-  const toggleSignal = (signal: string) => {
-    setIntentForm(prev => ({
-      ...prev,
-      signals: prev.signals.includes(signal)
-        ? prev.signals.filter(s => s !== signal)
-        : [...prev.signals, signal]
-    }))
   }
 
   const handleSaveIntent = async () => {
@@ -113,12 +103,17 @@ export default function BrandDetailPage() {
       return
     }
     try {
+      const payload = {
+        intent: intentForm.intent,
+        signals: intentForm.signals,
+        priority: intentForm.priority + 1,
+      }
       if (editingIntent) {
-        const { error } = await brandIntentsAPI.update(editingIntent.id, intentForm)
+        const { error } = await brandIntentsAPI.update(editingIntent.id, payload)
         if (error) throw error
         toast.success('Intent updated')
       } else {
-        const { error } = await brandIntentsAPI.create({ ...intentForm, brand_id: id })
+        const { error } = await brandIntentsAPI.create({ ...payload, brand_id: id })
         if (error) throw error
         toast.success('Intent created')
       }
@@ -643,26 +638,19 @@ export default function BrandDetailPage() {
                                 />
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-1.5 mt-3">
-                              {SIGNAL_TYPES.map((signal) => {
-                                const active = intent.signals.includes(signal)
-                                return (
+                            {intent.signals.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-3">
+                                {intent.signals.map((signal) => (
                                   <span
                                     key={signal}
-                                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize border transition-all duration-200 ${
-                                      active
-                                        ? 'bg-accent text-foreground border-border shadow-sm'
-                                        : 'bg-transparent text-muted-foreground border-border'
-                                    }`}
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border bg-accent text-foreground border-border shadow-sm"
                                   >
-                                    {active ? (
-                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground mr-1.5" />
-                                    ) : null}
-                                    {signal.replace(/_/g, ' ')}
+                                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground mr-1.5" />
+                                    {signal}
                                   </span>
-                                )
-                              })}
-                            </div>
+                                ))}
+                              </div>
+                            )}
                             <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-border">
                               <Switch
                                 checked={intent.is_active}
@@ -797,6 +785,12 @@ export default function BrandDetailPage() {
         >
           <DiscoverySourceForm
             brandId={brand.id}
+            existingKeys={Object.fromEntries(
+              discoverySources
+                .filter(s => s.config)
+                .map(s => [s.type, (s.config as Record<string, any>).api_key || (s.config as Record<string, any>).token || ''])
+                .filter(([, key]) => key)
+            )}
             onSuccess={() => {
               setIsSourceModalOpen(false)
               fetchDiscoverySources()
@@ -823,43 +817,27 @@ export default function BrandDetailPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-bold text-foreground">Signals</label>
-                <span className="text-xs font-medium text-muted-foreground bg-accent px-2 py-0.5 rounded-full">{intentForm.signals.length} selected</span>
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">Select which signals trigger this intent</p>
-              <div className="flex flex-wrap gap-2">
-                {SIGNAL_TYPES.map((signal) => {
-                  const selected = intentForm.signals.includes(signal)
-                  return (
-                    <button
-                      key={signal}
-                      type="button"
-                      onClick={() => toggleSignal(signal)}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 capitalize ${
-                        selected
-                          ? 'bg-foreground text-primary-foreground border-transparent shadow-sm scale-[1.02]'
-                          : 'bg-muted text-muted-foreground border-border hover:border-foreground/20 hover:text-foreground hover:bg-accent hover:shadow-sm'
-                      }`}
-                    >
-                      {signal.replace(/_/g, ' ')}
-                      {selected && <X className="h-3.5 w-3.5" />}
-                    </button>
-                  )
-                })}
-              </div>
+              <label className="block text-sm font-bold text-foreground mb-2">Signals</label>
+              <p className="text-xs text-muted-foreground mb-3">Comma-separated signals that trigger this intent (e.g. hiring, funding, tech_stack)</p>
+              <textarea
+                value={intentForm.signals.join(', ')}
+                onChange={e => setIntentForm(prev => ({ ...prev, signals: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                className="w-full rounded-xl bg-muted border border-border px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all resize-none"
+                placeholder="hiring, funding, tech_stack, partnership"
+                rows={2}
+              />
             </div>
 
             <div>
               <label className="block text-sm font-bold text-foreground mb-3">Priority Level</label>
               <div className="grid grid-cols-6 gap-2.5">
-                {[0, 1, 2, 3, 4, 5].map(p => (
+                {[1, 2, 3, 4, 5, 6].map(p => (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setIntentForm(prev => ({ ...prev, priority: p }))}
+                    onClick={() => setIntentForm(prev => ({ ...prev, priority: p - 1 }))}
                     className={`py-3 rounded-xl text-sm font-bold border transition-all duration-200 ${
-                      intentForm.priority === p
+                      intentForm.priority === p - 1
                         ? 'bg-foreground text-primary-foreground border-transparent shadow-sm scale-105'
                         : 'bg-muted text-muted-foreground border-border hover:border-foreground/20 hover:text-foreground hover:shadow-sm'
                     }`}
@@ -870,7 +848,7 @@ export default function BrandDetailPage() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-foreground font-semibold">← Highest</span>
-                <span className="text-xs text-muted-foreground font-medium">0 = most urgent</span>
+                <span className="text-xs text-muted-foreground font-medium">1 = most urgent</span>
                 <span className="text-xs text-muted-foreground font-semibold">Lowest →</span>
               </div>
             </div>

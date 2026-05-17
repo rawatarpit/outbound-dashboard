@@ -3,10 +3,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import Drawer from '@/components/Drawer'
+import { apiKeysAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { copyToClipboard } from '@/lib/utils'
 import { brandsAPI, discoverySourcesAPI } from '@/lib/api'
-import { Eye, EyeOff, Copy, Key, Globe, Database, Search, Bot, Mail, ExternalLink, Shield } from 'lucide-react'
+import { Eye, EyeOff, Copy, Key, Globe, Database, Search, Bot, Mail, ExternalLink, Shield, Plus, Sparkles } from 'lucide-react'
 
 interface ExternalKey {
   id: string
@@ -35,6 +38,10 @@ export default function ApiKeysPage() {
   const [keys, setKeys] = useState<ExternalKey[]>([])
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
+  const [newKeyName, setNewKeyName] = useState('')
+  const [createdKey, setCreatedKey] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     fetchAllKeys()
@@ -144,6 +151,32 @@ export default function ApiKeysPage() {
     toast.success('Copied to clipboard')
   }
 
+  const handleCreateKey = async () => {
+    if (!newKeyName.trim()) {
+      toast.error('Key name is required')
+      return
+    }
+    setIsCreating(true)
+    try {
+      const { data, error } = await apiKeysAPI.create({ name: newKeyName })
+      if (error) throw error
+      if (data && data[0] && (data[0] as any)._rawKey) {
+        setCreatedKey((data[0] as any)._rawKey)
+      }
+      toast.success('API key created')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create API key')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleCloseCreate = () => {
+    setIsCreateDrawerOpen(false)
+    setNewKeyName('')
+    setCreatedKey(null)
+  }
+
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'discovery': return 'Discovery'
@@ -162,19 +195,22 @@ export default function ApiKeysPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
-          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
-        </div>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">External API Keys</h1>
-        <p className="text-muted-foreground">API keys and tokens the engine uses to connect to third-party services</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">External API Keys</h1>
+          <p className="text-sm text-muted-foreground">API keys and tokens the engine uses to connect to third-party services</p>
+        </div>
+        <Button onClick={() => setIsCreateDrawerOpen(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Create API Key
+        </Button>
       </div>
 
       {Object.entries(groupedKeys).map(([type, typeKeys]) => (
@@ -244,6 +280,56 @@ export default function ApiKeysPage() {
           </div>
         </div>
       ))}
+
+      <Drawer
+        isOpen={isCreateDrawerOpen}
+        onClose={handleCloseCreate}
+        title="Create API Key"
+        size="sm"
+      >
+        <div className="space-y-6">
+          {!createdKey ? (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">Key Name</label>
+                <Input
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  placeholder="e.g. Production API Key"
+                />
+              </div>
+              <Button onClick={handleCreateKey} isLoading={isCreating} className="w-full">
+                <Sparkles className="h-4 w-4 mr-1.5" />
+                Generate Key
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+                <p className="text-sm font-semibold text-foreground mb-1">Your API Key</p>
+                <p className="text-xs text-muted-foreground mb-3">Copy this key now. You won't be able to see it again.</p>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={createdKey}
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCopy(createdKey)}
+                    className="shrink-0"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <Button variant="outline" onClick={handleCloseCreate} className="w-full">
+                Done
+              </Button>
+            </div>
+          )}
+        </div>
+      </Drawer>
     </div>
   )
 }

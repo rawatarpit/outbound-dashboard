@@ -14,6 +14,7 @@ interface DiscoverySourceFormProps {
   source?: any
   onSuccess: () => void
   onCancel: () => void
+  existingKeys?: Record<string, string>
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -25,7 +26,7 @@ const TYPE_ICONS: Record<string, string> = {
   url_scraper: '🔗',
 }
 
-export default function DiscoverySourceForm({ brandId, source, onSuccess, onCancel }: DiscoverySourceFormProps) {
+export default function DiscoverySourceForm({ brandId, source, onSuccess, onCancel, existingKeys = {} }: DiscoverySourceFormProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const config = source?.config || {}
@@ -58,6 +59,20 @@ export default function DiscoverySourceForm({ brandId, source, onSuccess, onCanc
 
   const [urlPattern, setUrlPattern] = useState(config.url_pattern || '')
   const [urlMaxDepth, setUrlMaxDepth] = useState(config.max_depth || '1')
+
+  useEffect(() => {
+    if (!source) {
+      const key = existingKeys[formData.type]
+      if (key) {
+        switch (formData.type) {
+          case 'apollo': setApolloApiKey(key); break
+          case 'hunter': setHunterApiKey(key); break
+          case 'apify': setApifyApiKey(key); break
+          case 'github': setGithubToken(key); break
+        }
+      }
+    }
+  }, [formData.type, source?.id])
 
   useEffect(() => {
     setApolloApiKey(config.api_key || '')
