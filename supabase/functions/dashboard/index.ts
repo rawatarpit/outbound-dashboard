@@ -127,11 +127,11 @@ Deno.serve(async (req)=>{
         const contactsTotal = discoveredContacts?.length || 0;
         // Send stats - sent_messages
         const today = new Date().toISOString().split("T")[0];
-        const { data: sentMessages } = await supabase.from("sent_messages").select("id, status, opened_at, bounced").in("brand_id", brandIds.length > 0 ? brandIds : emptyBrandList).gte("created_at", `${today}T00:00:00Z`);
+        const { data: sentMessages } = await supabase.from("sent_messages").select("id, status, opened_at, bounced_at").in("brand_id", brandIds.length > 0 ? brandIds : emptyBrandList).gte("created_at", `${today}T00:00:00Z`);
         const sentToday = sentMessages?.length || 0;
         const delivered = sentMessages?.filter((m)=>m.status === "delivered").length || 0;
         const opened = sentMessages?.filter((m)=>m.opened_at !== null).length || 0;
-        const bounced = sentMessages?.filter((m)=>m.bounced).length || 0;
+        const bounced = sentMessages?.filter((m)=>m.bounced_at !== null).length || 0;
         // Pipeline stages - companies table
         const { data: companies } = await supabase.from("companies").select("status").in("brand_id", brandIds.length > 0 ? brandIds : emptyBrandList);
         const pipelineStages = {
@@ -183,7 +183,7 @@ Deno.serve(async (req)=>{
           workers: {
             discovery: {
               status: discoveryEnabled ? "running" : "idle",
-              last_run: activeBrand.last_discovery_run_at
+              last_run: activeBrand.last_discovery_date
             },
             enrichment: {
               status: enrichmentPending && enrichmentPending.length > 0 ? "running" : "idle",

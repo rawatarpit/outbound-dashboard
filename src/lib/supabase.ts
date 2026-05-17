@@ -107,108 +107,112 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['client_settings']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['client_settings']['Insert']>
       }
-      brand_profiles: {
-        Row: {
-          id: string
-          client_id: string | null
-          product: string
-          brand_name: string
-          positioning: string | null
-          core_offer: string | null
-          tone: string | null
-          audience: string | null
-          objection_guidelines: string | null
-          negotiation_style: string | null
-          smtp_host: string | null
-          smtp_port: number | null
-          smtp_secure: boolean
-          smtp_email: string | null
-          smtp_password: string | null
-          imap_host: string | null
-          imap_port: number | null
-          imap_secure: boolean
-          imap_email: string | null
-          imap_password: string | null
-          provider: string
-          provider_api_key: string | null
-          sending_domain: string | null
-          webhook_secret: string | null
-          transport_mode: string
-          reply_to_email: string | null
-          signature_block: string | null
-          daily_send_limit: number | null
-          hourly_send_limit: number | null
-          llm_model_override: string | null
-          llm_temperature: number | null
-          is_active: boolean
-          is_paused: boolean
-          auto_paused: boolean
-          imap_enabled: boolean
-          send_enabled: boolean
-          bounce_count: number
-          sent_count: number
-          complaint_count: number
-          deliverability_score: number | null
-          last_deliverability_check: string | null
-          discovery_enabled: boolean
-          discovery_daily_limit: number
-          discovery_count_today: number
-          last_discovery_date: string | null
-          outbound_enabled: boolean
-          manual_discovery_requested: boolean
-          qualification_threshold: number
-          created_at: string
-          updated_at: string
-          email_signature: string | null
-          auto_reply_enabled: boolean
-          warmup_enabled: boolean
-        }
-        Insert: Omit<Database['public']['Tables']['brand_profiles']['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['brand_profiles']['Insert']>
-      }
-      leads: {
-        Row: {
-          id: string
-          first_name: string | null
-          last_name: string | null
-          full_name: string | null
-          email: string | null
-          domain: string | null
-          title: string | null
-          linkedin_url: string | null
-          source: string
-          source_id: string | null
-          raw_payload: Record<string, unknown> | null
-          status: string
-          created_at: string
-          updated_at: string
-          lead_score: number | null
-          confidence_score: number | null
-          rejection_reason: string | null
-          score_breakdown: Record<string, unknown> | null
-          conversion_value: number
-          deal_value: number | null
-          closed_at: string | null
-          icp_version: string | null
-          scoring_version: string | null
-          company_id: string | null
-          scoring_version_id: string | null
-          brand_id: string
-          retry_count: number
-          next_attempt_at: string | null
-          last_error: string | null
-          next_retry_at: string | null
-          state_updated_at: string
-          bounce_count: number
-          reply_count: number
-          last_outcome_at: string | null
-          client_id: string | null
-          notes: string | null
-          tags: string[]
-        }
-        Insert: Omit<Database['public']['Tables']['leads']['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['leads']['Insert']>
-      }
+       brand_profiles: {
+         Row: {
+           id: string
+           client_id: string | null
+           product: string
+           brand_name: string
+           positioning: string | null
+           core_offer: string | null
+           tone: string | null
+           audience: string | null
+           objection_guidelines: string | null
+           negotiation_style: string | null
+           smtp_host: string | null
+           smtp_port: number | null
+           smtp_secure: boolean
+           smtp_email: string | null
+           smtp_password: string | null
+           imap_host: string | null
+           imap_port: number | null
+           imap_secure: boolean
+           imap_email: string | null
+           imap_password: string | null
+           provider: string
+           provider_api_key: string | null
+           sending_domain: string | null
+           webhook_secret: string | null
+           transport_mode: string
+           reply_to_email: string | null
+           signature_block: string | null
+           daily_send_limit: number | null
+           hourly_send_limit: number | null
+           llm_model_override: string | null
+           llm_temperature: number | null
+           is_active: boolean
+           is_paused: boolean
+           auto_paused: boolean
+           imap_enabled: boolean
+           send_enabled: boolean
+           bounce_count: number
+           sent_count: number
+           complaint_count: number
+           deliverability_score: number | null
+           last_deliverability_check: string | null
+           discovery_enabled: boolean
+           discovery_daily_limit: number
+           discovery_count_today: number
+           last_discovery_date: string | null
+           outbound_enabled: boolean
+           manual_discovery_requested: boolean
+           qualification_threshold: number
+           created_at: string
+           updated_at: string
+           email_signature: string | null
+           auto_reply_enabled: boolean
+           warmup_enabled: boolean
+           discovery_api_key: string | null
+           scraper_api_key: string | null
+           apify_api_key: string | null
+         }
+         Insert: Omit<Database['public']['Tables']['brand_profiles']['Row'], 'id' | 'created_at' | 'updated_at'>
+         Update: Partial<Database['public']['Tables']['brand_profiles']['Insert']>
+       }
+       leads: {
+         Row: {
+           id: string
+           first_name: string | null
+           last_name: string | null
+           full_name: string | null
+           email: string | null
+           domain: string | null
+           title: string | null
+           linkedin_url: string | null
+           source: string
+           source_id: string | null
+           raw_payload: Record<string, unknown> | null
+           status: string
+           created_at: string
+           updated_at: string
+           lead_score: number | null
+           confidence_score: number | null
+           rejection_reason: string | null
+           score_breakdown: Record<string, unknown> | null
+           conversion_value: number
+           deal_value: number | null
+           closed_at: string | null
+           icp_version: string | null
+           scoring_version: string | null
+           company_id: string | null
+           scoring_version_id: string | null
+           brand_id: string
+           retry_count: number
+           next_attempt_at: string | null
+           last_error: string | null
+           next_retry_at: string | null
+           state_updated_at: string
+           bounce_count: number
+           reply_count: number
+           last_outcome_at: string | null
+           contacted_at: string | null
+           client_id: string | null
+           notes: string | null
+           tags: string[]
+         }
+         Insert: Omit<Database['public']['Tables']['leads']['Row'], 'id' | 'created_at' | 'updated_at'>
+         Update: Partial<Database['public']['Tables']['leads']['Insert']>
+       }
       companies: {
         Row: {
           id: string
@@ -312,29 +316,146 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['client_api_keys']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['client_api_keys']['Insert']>
       }
-      brand_discovery_sources: {
-        Row: {
-          id: string
-          brand_id: string
-          name: string
-          type: string
-          config: Record<string, unknown> | null
-          is_active: boolean
-          rate_limit_per_min: number
-          last_run_at: string | null
-          last_status: string | null
-          created_at: string
-          execution_mode: string
-          schedule_cron: string | null
-          retry_count: number
-          next_attempt_at: string | null
-          is_running: boolean
-          last_error: string | null
-          client_id: string | null
-        }
-        Insert: Omit<Database['public']['Tables']['brand_discovery_sources']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['brand_discovery_sources']['Insert']>
-      }
+       brand_discovery_sources: {
+         Row: {
+           id: string
+           brand_id: string
+           name: string
+           type: string
+           config: Record<string, unknown> | null
+           is_active: boolean
+           rate_limit_per_min: number
+           last_run_at: string | null
+           last_status: string | null
+           created_at: string
+           execution_mode: string
+           schedule_cron: string | null
+           retry_count: number
+           next_attempt_at: string | null
+           is_running: boolean
+           last_error: string | null
+           client_id: string | null
+         }
+         Insert: Omit<Database['public']['Tables']['brand_discovery_sources']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['brand_discovery_sources']['Insert']>
+       }
+       brand_intents: {
+         Row: {
+           id: string
+           brand_id: string
+           intent: string
+           signals: string[]
+           priority: number
+           is_active: boolean
+           created_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['brand_intents']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['brand_intents']['Insert']>
+       }
+       discovered_companies: {
+         Row: {
+           id: string
+           brand_id: string
+           enrichment_status: string
+           created_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['discovered_companies']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['discovered_companies']['Insert']>
+       }
+       discovered_contacts: {
+         Row: {
+           id: string
+           brand_id: string
+           created_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['discovered_contacts']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['discovered_contacts']['Insert']>
+       }
+       system_flags: {
+         Row: {
+           id: string
+           client_id: string
+           smtp_enabled: boolean
+           imap_enabled: boolean
+           created_at: string
+           updated_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['system_flags']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['system_flags']['Insert']>
+       }
+       replies: {
+         Row: {
+           id: string
+           company_id: string
+           message_id: string | null
+           raw_message: string | null
+           intent: string | null
+           sentiment: string | null
+           objection_detected: boolean | null
+           meeting_requested: boolean | null
+           summary: string | null
+           created_at: string
+           confidence: number | null
+           analyzed_at: string | null
+           brand_id: string
+           client_id: string
+         }
+         Insert: Omit<Database['public']['Tables']['replies']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['replies']['Insert']>
+       }
+       opportunities: {
+         Row: {
+           id: string
+           brand_id: string
+           intent_id: string | null
+           entity_type: string
+           name: string
+           domain: string | null
+           signal: string
+           sub_signal: string | null
+           source: string
+           confidence: number | null
+           score: number | null
+           metadata: Record<string, unknown> | null
+           ingested: boolean
+           dead_letter: boolean
+           qualification_status: string
+           created_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['opportunities']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['opportunities']['Insert']>
+       }
+       outbound_events: {
+         Row: {
+           id: string
+           brand_id: string
+           company_id: string
+           event_type: string
+           message_id: string | null
+           metadata: Record<string, unknown> | null
+           created_at: string
+         }
+         Insert: Omit<Database['public']['Tables']['outbound_events']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['outbound_events']['Insert']>
+       }
+       outreach: {
+         Row: {
+           id: string
+           brand_id: string
+           company_id: string
+           subject: string | null
+           body: string | null
+           status: string
+           sent_at: string | null
+           message_id: string | null
+           created_at: string
+           updated_at: string
+           client_id: string | null
+           state_updated_at: string | null
+         }
+         Insert: Omit<Database['public']['Tables']['outreach']['Row'], 'id' | 'created_at'>
+         Update: Partial<Database['public']['Tables']['outreach']['Insert']>
+       }
       activity_logs: {
         Row: {
           id: string
@@ -377,9 +498,466 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['lead_import_batches']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['lead_import_batches']['Insert']>
       }
-    }
-  }
-}
+     }
+   }
+   api_quota_counters: {
+     Row: {
+       id: string
+       client_id: string
+       quota_type: string
+       count: number
+       reset_at: string
+       created_at: string
+       updated_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['api_quota_counters']['Row'], 'id' | 'created_at' | 'updated_at'>
+     Update: Partial<Database['public']['Tables']['api_quota_counters']['Insert']>
+   }
+   api_rate_limit: {
+     Row: {
+       id: string
+       client_id: string
+       endpoint: string
+       requests_per_minute: number
+       burst: number
+       created_at: string
+       updated_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['api_rate_limit']['Row'], 'id' | 'created_at' | 'updated_at'>
+     Update: Partial<Database['public']['Tables']['api_rate_limit']['Insert']>
+   }
+   api_usage_logs: {
+     Row: {
+       id: string
+       client_id: string
+       endpoint: string
+       method: string
+       status_code: number | null
+       response_time_ms: number | null
+       timestamp: string
+     }
+     Insert: Omit<Database['public']['Tables']['api_usage_logs']['Row'], 'id' | 'timestamp'>
+     Update: Partial<Database['public']['Tables']['api_usage_logs']['Insert']>
+   }
+   audit_logs: {
+     Row: {
+       id: string
+       user_id: string | null
+       action: string
+       table_name: string | null
+       record_id: string | null
+       changes: Record<string, unknown> | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['audit_logs']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>
+   }
+   blacklist: {
+     Row: {
+       id: string
+       client_id: string
+       email: string
+       reason: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['blacklist']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['blacklist']['Insert']>
+   }
+   brand_profiles_backup: {
+     Row: {
+       id: string
+       product: string
+       brand_name: string
+       positioning: string | null
+       core_offer: string | null
+       tone: string | null
+       audience: string | null
+       objection_guidelines: string | null
+       negotiation_style: string | null
+       smtp_host: string | null
+       smtp_port: number | null
+       smtp_secure: boolean
+       smtp_email: string | null
+       smtp_password: string | null
+       imap_host: string | null
+       imap_port: number | null
+       imap_secure: boolean
+       imap_email: string | null
+       imap_password: string | null
+       provider: string
+       provider_api_key: string | null
+       sending_domain: string | null
+       webhook_secret: string | null
+       transport_mode: string
+       reply_to_email: string | null
+       signature_block: string | null
+       daily_send_limit: number | null
+       hourly_send_limit: number | null
+       llm_model_override: string | null
+       llm_temperature: number | null
+       is_active: boolean
+       is_paused: boolean
+       auto_paused: boolean
+       imap_enabled: boolean
+       send_enabled: boolean
+       bounce_count: number
+       sent_count: number
+       complaint_count: number
+       deliverability_score: number | null
+       last_deliverability_check: string | null
+       discovery_enabled: boolean
+       discovery_daily_limit: number
+       discovery_count_today: number
+       last_discovery_date: string | null
+       outbound_enabled: boolean
+       manual_discovery_requested: boolean
+       qualification_threshold: number
+       created_at: string
+       updated_at: string
+       email_signature: string | null
+       auto_reply_enabled: boolean
+       warmup_enabled: boolean
+       discovery_api_key: string | null
+       scraper_api_key: string | null
+       apify_api_key: string | null
+     }
+     Insert: Omit<Database['public']['Tables']['brand_profiles_backup']['Row'], 'id' | 'created_at' | 'updated_at'>
+     Update: Partial<Database['public']['Tables']['brand_profiles_backup']['Insert']>
+   }
+   campaign_analytics: {
+     Row: {
+       id: string
+       brand_id: string
+       date: string
+       emails_sent: number
+       emails_opened: number
+       emails_clicked: number
+       replies_received: number
+       meetings_booked: number
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['campaign_analytics']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['campaign_analytics']['Insert']>
+   }
+   circuit_breaker_state: {
+     Row: {
+       id: string
+       service_name: string
+       failure_count: number
+       last_failure_time: string | null
+       state: string
+       created_at: string
+       updated_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['circuit_breaker_state']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['circuit_breaker_state']['Insert']>
+   }
+   client_daily_send: {
+     Row: {
+       id: string
+       client_id: string
+       date: string
+       count: number
+     }
+     Insert: Omit<Database['public']['Tables']['client_daily_send']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['client_daily_send']['Insert']>
+   }
+   client_hourly_send: {
+     Row: {
+       id: string
+       client_id: string
+       date: string
+       hour: number
+       count: number
+     }
+     Insert: Omit<Database['public']['Tables']['client_hourly_send']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['client_hourly_send']['Insert']>
+   }
+   daily_send_limits: {
+     Row: {
+       id: string
+       client_id: string
+       date: string
+       max_emails: number
+     }
+     Insert: Omit<Database['public']['Tables']['daily_send_limits']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['daily_send_limits']['Insert']>
+   }
+   daily_send_tracker: {
+     Row: {
+       id: string
+       client_id: string
+       date: string
+       sent_count: number
+     }
+     Insert: Omit<Database['public']['Tables']['daily_send_tracker']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['daily_send_tracker']['Insert']>
+   }
+   dead_letter_queue: {
+     Row: {
+       id: string
+       failed_at: string
+       payload: Record<string, unknown> | null
+       error_message: string | null
+       retries: number
+     }
+     Insert: Omit<Database['public']['Tables']['dead_letter_queue']['Row'], 'id' | 'failed_at'>
+     Update: Partial<Database['public']['Tables']['dead_letter_queue']['Insert']>
+   }
+   dead_letters: {
+     Row: {
+       id: string
+       original_table: string
+       original_id: string
+       attempted_at: string
+       error_message: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['dead_letters']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['dead_letters']['Insert']>
+   }
+   discovery_dead_letters: {
+     Row: {
+       id: string
+       source_id: string
+       failed_at: string
+       error_message: string | null
+       raw_payload: Record<string, unknown> | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['discovery_dead_letters']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['discovery_dead_letters']['Insert']>
+   }
+   discovery_embeddings: {
+     Row: {
+       id: string
+       source_id: string
+       chunk_id: string
+       embedding: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['discovery_embeddings']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['discovery_embeddings']['Insert']>
+   }
+   discovery_sources: {
+     Row: {
+       id: string
+       name: string
+       type: string
+       is_active: boolean
+       last_used_at: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['discovery_sources']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['discovery_sources']['Insert']>
+   }
+   edge_function_secrets: {
+     Row: {
+       id: string
+       function_name: string
+       key: string
+       value: string | null
+       created_at: string
+       updated_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['edge_function_secrets']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['edge_function_secrets']['Insert']>
+   }
+   email_events: {
+     Row: {
+       id: string
+       client_id: string
+       message_id: string | null
+       event_type: string
+       timestamp: string
+     }
+     Insert: Omit<Database['public']['Tables']['email_events']['Row'], 'id' | 'timestamp'>
+     Update: Partial<Database['public']['Tables']['email_events']['Insert']>
+   }
+   enrichment_metrics: {
+     Row: {
+       id: string
+       company_id: string
+       enriched_at: string
+       fields_enriched: number
+       success: boolean
+     }
+     Insert: Omit<Database['public']['Tables']['enrichment_metrics']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['enrichment_metrics']['Insert']>
+   }
+   inbound_events: {
+     Row: {
+       id: string
+       brand_id: string
+       type: string
+       payload: Record<string, unknown> | null
+       processed_at: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['inbound_events']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['inbound_events']['Insert']>
+   }
+   inbound_message_claims: {
+     Row: {
+       id: string
+       message_id: string
+       claimed_by: string | null
+       claimed_at: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['inbound_message_claims']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['inbound_message_claims']['Insert']>
+   }
+   lead_company_map: {
+     Row: {
+       id: string
+       lead_id: string
+       company_id: string
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['lead_company_map']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['lead_company_map']['Insert']>
+   }
+   messages: {
+     Row: {
+       id: string
+       lead_id: string | null
+       subject: string | null
+       body: string | null
+       message_id: string | null
+       direction: string
+       from_email: string | null
+       to_email: string | null
+       status: string
+       sent_at: string | null
+       error: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['messages']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['messages']['Insert']>
+   }
+   negotiation_drafts: {
+     Row: {
+       id: string
+       lead_id: string | null
+       brand_id: string | null
+       subject: string | null
+       body: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['negotiation_drafts']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['negotiation_drafts']['Insert']>
+   }
+   notification_preferences: {
+     Row: {
+       id: string
+       client_id: string
+       email_notifications: boolean
+       sms_notifications: boolean
+       in_app_notifications: boolean
+       created_at: string
+       updated_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['notification_preferences']['Row'], 'id' | 'created_at' | 'updated_at'>
+     Update: Partial<Database['public']['Tables']['notification_preferences']['Insert']>
+   }
+   qualification: {
+     Row: {
+       id: string
+       company_id: string
+       fit_score: number | null
+       recommended_product: string | null
+       reasoning: string | null
+       confidence: number | null
+       created_at: string
+       brand_id: string
+       client_id: string
+     }
+     Insert: Omit<Database['public']['Tables']['qualification']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['qualification']['Insert']>
+   }
+   research: {
+     Row: {
+       id: string
+       brand_id: string
+       query: string
+       result: Record<string, unknown> | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['research']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['research']['Insert']>
+   }
+   send_counters: {
+     Row: {
+       id: string
+       product: string
+       counter_type: string
+       bucket_start: string
+       send_count: number
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['send_counters']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['send_counters']['Insert']>
+   }
+   sending_domains: {
+     Row: {
+       id: string
+       domain: string
+       is_verified: boolean
+       verification_token: string | null
+       verification_expires_at: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['sending_domains']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['sending_domains']['Insert']>
+   }
+   signal_performance: {
+     Row: {
+       id: string
+       signal_type: string
+       success_rate: number | null
+       total_used: number
+       successful_uses: number
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['signal_performance']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['signal_performance']['Insert']>
+   }
+   signal_source_performance: {
+     Row: {
+       id: string
+       signal_type: string
+       source: string
+       success_rate: number | null
+       total_used: number
+       successful_uses: number
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['signal_source_performance']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['signal_source_performance']['Insert']>
+   }
+   suppression_list: {
+     Row: {
+       id: string
+       email: string
+       reason: string | null
+       created_at: string
+     }
+     Insert: Omit<Database['public']['Tables']['suppression_list']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['suppression_list']['Insert']>
+   }
+   system_health: {
+     Row: {
+       id: string
+       check_name: string
+       status: string
+       message: string | null
+       check_time: string
+     }
+     Insert: Omit<Database['public']['Tables']['system_health']['Row'], 'id' | 'created_at'>
+     Update: Partial<Database['public']['Tables']['system_health']['Insert']>
+   }
+ }
 
 export type Client = Database['public']['Tables']['clients']['Row']
 export type ClientMember = Database['public']['Tables']['client_members']['Row']
@@ -422,10 +1000,9 @@ export interface OutreachDraft {
   id: string
   brand_id: string
   company_id: string
-  lead_id: string | null
   subject: string | null
   body: string | null
-  status: 'draft' | 'draft_processing' | 'sent'
+  status: 'draft' | 'draft_processing' | 'approved' | 'sent' | 'failed'
   created_at: string
   updated_at: string
 }

@@ -54,19 +54,18 @@ Deno.serve(async (req)=>{
     // GET /workers/status - Get worker status
     if (path === "/status" || path === "/status/") {
       if (req.method === "GET") {
-        const { data: brandProfiles } = await supabase.from("brand_profiles").select("id, brand_name, product, discovery_enabled, outbound_enabled, execution_state").eq("client_id", clientId);
+        const { data: brandProfiles } = await supabase.from("brand_profiles").select("id, brand_name, product, discovery_enabled, outbound_enabled").eq("client_id", clientId);
         const workers = (brandProfiles || []).map((brand)=>({
             brand_id: brand.id,
             brand_name: brand.brand_name || brand.product,
             discovery: {
               is_running: brand.discovery_enabled || false,
               is_paused: !brand.discovery_enabled,
-              last_run: brand.last_discovery_run_at
+              last_run: brand.last_discovery_date
             },
             outbound: {
               is_running: brand.outbound_enabled || false,
-              is_paused: !brand.outbound_enabled,
-              state: brand.execution_state
+              is_paused: !brand.outbound_enabled
             }
           }));
         return new Response(JSON.stringify({
@@ -151,7 +150,6 @@ Deno.serve(async (req)=>{
         updates.discovery_enabled = false;
       } else if (workerName === "outbound" || workerName === "send") {
         updates.outbound_enabled = false;
-        updates.execution_state = "paused";
       }
       if (Object.keys(updates).length > 0) {
         await supabase.from("brand_profiles").update({
@@ -181,7 +179,6 @@ Deno.serve(async (req)=>{
         updates.manual_discovery_requested = true;
       } else if (workerName === "outbound" || workerName === "send") {
         updates.outbound_enabled = true;
-        updates.execution_state = "running";
       }
       if (Object.keys(updates).length > 0) {
         await supabase.from("brand_profiles").update({

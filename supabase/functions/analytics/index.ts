@@ -104,7 +104,7 @@ Deno.serve(async (req)=>{
         const emptyBrandList = brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ];
-        const { data: recentReplies } = await supabase.from("replies").select("id, received_at, body, intent").in("brand_id", emptyBrandList).order("received_at", {
+        const { data: recentReplies } = await supabase.from("replies").select("id, created_at, raw_message, intent").in("brand_id", emptyBrandList).order("created_at", {
           ascending: false
         }).limit(limit);
         const { data: recentSends } = await supabase.from("sent_messages").select("id, sent_at, subject").in("brand_id", emptyBrandList).order("sent_at", {
@@ -132,7 +132,7 @@ Deno.serve(async (req)=>{
           "00000000-0000-0000-0000-000000000000"
         ];
         const { data: sends } = await supabase.from("sent_messages").select("sent_at").in("brand_id", emptyBrandList).gte("sent_at", since).eq("status", "sent");
-        const { data: replies } = await supabase.from("replies").select("received_at").in("brand_id", emptyBrandList).gte("received_at", since);
+        const { data: replies } = await supabase.from("replies").select("created_at").in("brand_id", emptyBrandList).gte("created_at", since);
         const chartData = {};
         for(let i = 0; i < days; i++){
           const date = new Date(Date.now() - i * 86400000).toISOString().split("T")[0];
@@ -146,7 +146,7 @@ Deno.serve(async (req)=>{
           if (date && chartData[date]) chartData[date].sent++;
         });
         replies?.forEach((r)=>{
-          const date = r.received_at?.toString().split("T")[0];
+          const date = r.created_at?.toString().split("T")[0];
           if (date && chartData[date]) chartData[date].replied++;
         });
         const result = Object.entries(chartData).map(([date, data])=>({
