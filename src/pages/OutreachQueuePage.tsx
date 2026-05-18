@@ -86,8 +86,12 @@ export default function OutreachQueuePage() {
 
       await Promise.all(
         companyIds.map(async (cid) => {
-          const { data } = await companiesAPI.get(cid)
-          companyMap[cid] = data
+          try {
+            const { data } = await companiesAPI.get(cid)
+            companyMap[cid] = data
+          } catch {
+            companyMap[cid] = null
+          }
         })
       )
 
@@ -230,7 +234,9 @@ export default function OutreachQueuePage() {
                       <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{entry.company?.name || 'Unknown Company'}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {entry.company?.name || entry.company_id ? `Company (${entry.company_id.substring(0, 8)}...)` : 'Unknown Company'}
+                      </CardTitle>
                       <CardDescription>{entry.company?.domain || entry.company_id}</CardDescription>
                     </div>
                   </div>
@@ -274,7 +280,7 @@ export default function OutreachQueuePage() {
         isOpen={!!editingEntry}
         onClose={() => setEditingEntry(null)}
         title="Edit Outreach Draft"
-        description={editingEntry?.company?.name || ''}
+        description={editingEntry?.company?.name || editingEntry?.company_id || 'Unknown Company'}
         size="lg"
       >
         {editingEntry && (
