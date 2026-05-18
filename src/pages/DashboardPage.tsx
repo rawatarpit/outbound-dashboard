@@ -55,13 +55,22 @@ export default function DashboardPage() {
   }, [])
 
   const fetchDashboardData = async () => {
+    setHasError(false)
     try {
       const clientId = client?.id
-      const [brandsRes, leadsRes, dashboardRes] = await Promise.all([
-        brandsAPI.list(clientId),
-        leadsAPI.list({ clientId }),
-        dashboardAPI.overview(),
-      ])
+      let dashboardRes = { data: null as any, error: null as any }
+      let brandsRes = { data: [] as any[], error: null as any }
+      let leadsRes = { data: [] as any[], total: 0, error: null as any }
+
+      try {
+        ;[dashboardRes, brandsRes, leadsRes] = await Promise.all([
+          dashboardAPI.overview().catch(() => ({ data: null, error: { message: 'Dashboard API unavailable' } })),
+          brandsAPI.list(clientId).catch(() => ({ data: [], error: { message: 'Brands API unavailable' } })),
+          leadsAPI.list({ clientId }).catch(() => ({ data: [], total: 0, error: { message: 'Leads API unavailable' } }))
+        ])
+      } catch (apiError) {
+        console.warn('Some API calls failed, continuing with partial data:', apiError)
+      }
 
       const dash = dashboardRes.data || {}
       const sendStats = dash.send_stats || {}
@@ -70,7 +79,7 @@ export default function DashboardPage() {
       const activityFeed = dash.activity_feed || []
 
       setStats({
-        totalLeads: leadsRes.total || 0,
+        totalLeads: leadsRes.total || leadsRes.data?.length || 0,
         totalCompanies: discoveryStats.companies_total || 0,
         contactsTotal: discoveryStats.contacts_total || 0,
         emailsSentToday: sendStats.sent_today || 0,
@@ -80,7 +89,7 @@ export default function DashboardPage() {
         dailyLimit: sendStats.daily_limit || 50,
         hourlyLimit: sendStats.hourly_limit || 20,
         replyRate: sendStats.sent_today > 0 ? (sendStats.opened || 0) / sendStats.sent_today : 0,
-        activeBrands: brandsRes.data.filter((b: any) => b.is_active).length,
+        activeBrands: brandsRes.data?.filter((b: any) => b.is_active).length || 0,
         recentActivity: activityFeed,
       })
 

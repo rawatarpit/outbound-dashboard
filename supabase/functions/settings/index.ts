@@ -76,7 +76,7 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    const { data: member } = await supabase.from("client_members").select("*, clients!inner(name)").eq("user_id", user.id).maybeSingle();
+    const { data: member } = await supabase.from("client_members").select("client_id, role").eq("user_id", user.id).maybeSingle();
     if (!member || !member.client_id) {
       return new Response(JSON.stringify({
         error: "No client associated"

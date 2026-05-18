@@ -168,10 +168,17 @@ Deno.serve(async (req)=>{
       });
     }
     console.log("Login success, token:", session.access_token.substring(0, 20) + "...");
-    // Find member
-    let member = await supabase.from("client_members").select("*, clients!inner(name)").eq("user_id", session.user.id).maybeSingle();
+    // Find member - try with user_id first, then email
+    let member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("user_id", session.user.id).maybeSingle();
     if (!member) {
-      member = await supabase.from("client_members").select("*, clients!inner(name)").eq("email", email).maybeSingle();
+      member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("email", email).maybeSingle();
+    }
+    // If still no member but we have user, check if they own a client directly
+    if (!member && session.user.email) {
+      const { data: client } = await supabase.from("clients").select("id, name").eq("owner_email", session.user.email).maybeSingle();
+      if (client) {
+        member = { client_id: client.id, email: session.user.email, name: session.user.user_metadata?.name || email.split("@")[0], role: "owner" }
+      }
     }
     return new Response(JSON.stringify({
       token: session.access_token,
@@ -181,7 +188,7 @@ Deno.serve(async (req)=>{
         name: member?.name || session.user.user_metadata?.name || email.split("@")[0],
         role: member?.role || "owner",
         clientId: member?.client_id,
-        clientName: member?.clients?.name
+        clientName: (member as any)?.clients?.name
       }
     }), {
       status: 200,

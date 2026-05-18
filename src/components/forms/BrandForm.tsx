@@ -55,6 +55,8 @@ export default function BrandForm({ brand, onSuccess, onCancel }: BrandFormProps
     imap_secure: brand?.imap_secure || true,
     imap_email: brand?.imap_email || '',
     imap_password: brand?.imap_password || '',
+    imap_enabled: brand?.imap_enabled || false,
+    provider_api_key: brand?.provider_api_key || '',
     sending_domain: brand?.sending_domain || '',
     reply_to_email: brand?.reply_to_email || '',
     daily_send_limit: brand?.daily_send_limit?.toString() || '',
@@ -97,6 +99,8 @@ export default function BrandForm({ brand, onSuccess, onCancel }: BrandFormProps
         imap_secure: formData.imap_secure,
         imap_email: formData.imap_email || null,
         imap_password: formData.imap_password || null,
+        imap_enabled: formData.imap_enabled,
+        provider_api_key: formData.provider_api_key || null,
         sending_domain: formData.sending_domain || null,
         reply_to_email: formData.reply_to_email || null,
         daily_send_limit: formData.daily_send_limit ? parseInt(formData.daily_send_limit) : null,
@@ -250,50 +254,138 @@ export default function BrandForm({ brand, onSuccess, onCancel }: BrandFormProps
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="smtp_host">SMTP Host</Label>
-            <Input
-              id="smtp_host"
-              value={formData.smtp_host}
-              onChange={(e) => handleChange('smtp_host', e.target.value)}
-              placeholder="smtp.gmail.com"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="smtp_port">SMTP Port</Label>
-            <Input
-              id="smtp_port"
-              type="number"
-              value={formData.smtp_port}
-              onChange={(e) => handleChange('smtp_port', e.target.value)}
-              placeholder="587"
-            />
-          </div>
-        </div>
+        {formData.provider === 'smtp' && (
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="smtp_host">SMTP Host</Label>
+                <Input
+                  id="smtp_host"
+                  value={formData.smtp_host}
+                  onChange={(e) => handleChange('smtp_host', e.target.value)}
+                  placeholder="smtp.gmail.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="smtp_port">SMTP Port</Label>
+                <Input
+                  id="smtp_port"
+                  type="number"
+                  value={formData.smtp_port}
+                  onChange={(e) => handleChange('smtp_port', e.target.value)}
+                  placeholder="587"
+                />
+              </div>
+            </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="smtp_email">SMTP Email</Label>
-            <Input
-              id="smtp_email"
-              type="email"
-              value={formData.smtp_email}
-              onChange={(e) => handleChange('smtp_email', e.target.value)}
-              placeholder="sender@example.com"
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="smtp_email">SMTP Email</Label>
+                <Input
+                  id="smtp_email"
+                  type="email"
+                  value={formData.smtp_email}
+                  onChange={(e) => handleChange('smtp_email', e.target.value)}
+                  placeholder="sender@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="smtp_password">SMTP Password</Label>
+                <Input
+                  id="smtp_password"
+                  type="password"
+                  value={formData.smtp_password}
+                  onChange={(e) => handleChange('smtp_password', e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border p-4 space-y-4">
+              <h4 className="text-sm font-medium text-foreground">IMAP Settings (Reply Tracking)</h4>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Enable Reply Tracking</Label>
+                  <p className="text-xs text-gray-500">Track replies to your sent emails</p>
+                </div>
+                <Switch
+                  checked={formData.imap_enabled || false}
+                  onCheckedChange={(checked) => {
+                    handleChange('imap_enabled', checked)
+                    if (!checked) {
+                      handleChange('imap_host', '')
+                      handleChange('imap_email', '')
+                      handleChange('imap_password', '')
+                    }
+                  }}
+                />
+              </div>
+              {formData.imap_enabled && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="imap_host">IMAP Host</Label>
+                    <Input
+                      id="imap_host"
+                      value={formData.imap_host}
+                      onChange={(e) => handleChange('imap_host', e.target.value)}
+                      placeholder="imap.gmail.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="imap_port">IMAP Port</Label>
+                    <Input
+                      id="imap_port"
+                      type="number"
+                      value={formData.imap_port}
+                      onChange={(e) => handleChange('imap_port', e.target.value)}
+                      placeholder="993"
+                    />
+                  </div>
+                </div>
+              )}
+              {formData.imap_enabled && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="imap_email">IMAP Email</Label>
+                    <Input
+                      id="imap_email"
+                      type="email"
+                      value={formData.imap_email}
+                      onChange={(e) => handleChange('imap_email', e.target.value)}
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="imap_password">IMAP Password</Label>
+                    <Input
+                      id="imap_password"
+                      type="password"
+                      value={formData.imap_password}
+                      onChange={(e) => handleChange('imap_password', e.target.value)}
+                      placeholder="App password"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {formData.provider === 'resend' && (
+          <div className="rounded-lg border border-border p-4 space-y-4">
+            <h4 className="text-sm font-medium text-foreground">Resend API Configuration</h4>
+            <div className="space-y-2">
+              <Label htmlFor="provider_api_key">Resend API Key</Label>
+              <Input
+                id="provider_api_key"
+                type="password"
+                value={formData.provider_api_key || ''}
+                onChange={(e) => handleChange('provider_api_key', e.target.value)}
+                placeholder="re_xxxxxxxxxxxxxxxxxxxxx"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="smtp_password">SMTP Password</Label>
-            <Input
-              id="smtp_password"
-              type="password"
-              value={formData.smtp_password}
-              onChange={(e) => handleChange('smtp_password', e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">

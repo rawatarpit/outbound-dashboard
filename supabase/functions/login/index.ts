@@ -24,9 +24,8 @@ Deno.serve(async (req)=>{
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    // Create client with anon key but pass the JWT for RLS
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    // Create client with service role key for privileged queries
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false
@@ -97,13 +96,13 @@ Deno.serve(async (req)=>{
       });
     }
     console.log("Login successful, finding member...", authSession.user.id);
-    // Find member using anon client with the session JWT
+    // Find member using service role client for privileged queries
     console.log("Query 1: Looking for member with user_id =", authSession.user.id);
-    let member = await supabase.from("client_members").select("*, clients!inner(name)").eq("user_id", authSession.user.id).maybeSingle();
+    let member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("user_id", authSession.user.id).maybeSingle();
     console.log("Query 1 result:", member);
     if (!member) {
       console.log("Query 2: Looking for member with email =", email);
-      member = await supabase.from("client_members").select("*, clients!inner(name)").eq("email", email).maybeSingle();
+      member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("email", email).maybeSingle();
       console.log("Query 2 result:", member);
     }
     // If still no member, check if user owns a client
@@ -112,7 +111,7 @@ Deno.serve(async (req)=>{
       const { data: client } = await supabase.from("clients").select("id, name").eq("owner_email", email).maybeSingle();
       console.log("Query 3 result:", client);
       if (client) {
-        member = await supabase.from("client_members").select("*, clients!inner(name)").eq("client_id", client.id).maybeSingle();
+        member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("client_id", client.id).maybeSingle();
       }
     }
     console.log("Final member found:", member?.email, member?.client_id);
@@ -124,7 +123,7 @@ Deno.serve(async (req)=>{
         name: member?.name || authSession.user.user_metadata?.name || email.split("@")[0],
         role: member?.role || "owner",
         clientId: member?.client_id,
-        clientName: member?.clients?.name
+        clientName: (member as any)?.clients?.name
       }
     }), {
       status: 200,

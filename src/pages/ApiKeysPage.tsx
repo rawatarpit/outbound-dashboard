@@ -265,10 +265,6 @@ export default function ApiKeysPage() {
           <h1 className="text-2xl font-bold text-foreground">API Keys & Services</h1>
           <p className="text-sm text-muted-foreground">Configure all services your outbound engine uses. Configure once, use everywhere.</p>
         </div>
-        <Button onClick={() => setIsCreateDrawerOpen(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Create API Key
-        </Button>
       </div>
 
       {/* Centralized Service Configuration */}
@@ -276,10 +272,10 @@ export default function ApiKeysPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Global Service Configuration
+            Service Integrations
           </CardTitle>
           <CardDescription>
-            Configure your service credentials here for unified access across all components
+            Connect your email, AI, and data providers to power your outbound engine
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -300,6 +296,32 @@ export default function ApiKeysPage() {
               <span className="text-xs text-muted-foreground">Apollo, Hunter</span>
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Personal API Keys - for programmatic access */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Personal API Keys
+              </CardTitle>
+              <CardDescription>
+                Create API keys for programmatic access to your account
+              </CardDescription>
+            </div>
+            <Button size="sm" onClick={() => setIsCreateDrawerOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Create Key
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            API keys allow external applications and integrations to access your outbound engine programmatically. Use them to build custom workflows or connect with third-party tools.
+          </p>
         </CardContent>
       </Card>
 
