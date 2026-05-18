@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type BrandProfile, type Company } from '@/lib/supabase'
+import { type BrandProfile } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -19,7 +19,7 @@ import Drawer from '@/components/Drawer'
 import { Mail, Send, XCircle, Eye, Building2, Edit3, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
-import { brandsAPI, companiesAPI, campaignsAPI } from '@/lib/api'
+import { brandsAPI, campaignsAPI } from '@/lib/api'
 
 interface OutreachEntry {
   id: string
@@ -30,7 +30,8 @@ interface OutreachEntry {
   status: string
   created_at: string
   updated_at: string
-  company?: Company | null
+  company_name: string | null
+  company_domain: string | null
   brand?: BrandProfile | null
 }
 
@@ -81,23 +82,8 @@ export default function OutreachQueuePage() {
       const brandMap: Record<string, BrandProfile> = {}
       for (const b of brands) brandMap[b.id] = b
 
-      const companyIds = [...new Set(items.map(e => e.company_id).filter(Boolean))]
-      const companyMap: Record<string, Company | null> = {}
-
-      await Promise.all(
-        companyIds.map(async (cid) => {
-          try {
-            const { data } = await companiesAPI.get(cid)
-            companyMap[cid] = data
-          } catch {
-            companyMap[cid] = null
-          }
-        })
-      )
-
       items = items.map(e => ({
         ...e,
-        company: e.company_id ? companyMap[e.company_id] : null,
         brand: e.brand_id ? brandMap[e.brand_id] : null,
       }))
 
@@ -112,13 +98,13 @@ export default function OutreachQueuePage() {
   }
 
   const handleApproveSend = async (entry: OutreachEntry) => {
-    if (!entry.company) {
+    if (!entry.company_domain) {
       toast.error('No associated company found')
       return
     }
     setIsSending(entry.id)
     try {
-      const { error } = await companiesAPI.update(entry.brand_id, entry.company_id, { status: 'contacted' })
+      const { error } = await campaignsAPI.update(entry.id, { status: 'sent' })
       if (error) throw error
       toast.success('Queued for sending')
       fetchOutreachEntries()
@@ -130,12 +116,12 @@ export default function OutreachQueuePage() {
   }
 
   const handleReject = async (entry: OutreachEntry) => {
-    if (!entry.company) {
+    if (!entry.company_domain) {
       toast.error('No associated company found')
       return
     }
     try {
-      const { error } = await companiesAPI.update(entry.brand_id, entry.company_id, { status: 'rejected' })
+      const { error } = await campaignsAPI.update(entry.id, { status: 'rejected' })
       if (error) throw error
       toast.success('Rejected')
       fetchOutreachEntries()
@@ -171,10 +157,8 @@ export default function OutreachQueuePage() {
     setIsSavingEdit(true)
     try {
       await campaignsAPI.update(editingEntry.id, { subject: editSubject, body: editBody })
-      if (editingEntry.company) {
-        const { error } = await companiesAPI.update(editingEntry.brand_id, editingEntry.company_id, { status: 'contacted' })
-        if (error) throw error
-      }
+      const { error } = await campaignsAPI.update(editingEntry.id, { status: 'sent' })
+      if (error) throw error
       toast.success('Saved and queued for sending')
       setEditingEntry(null)
       fetchOutreachEntries()
@@ -234,10 +218,8 @@ export default function OutreachQueuePage() {
                       <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">
-                        {entry.company?.name || entry.company_id ? `Company (${entry.company_id.substring(0, 8)}...)` : 'Unknown Company'}
-                      </CardTitle>
-                      <CardDescription>{entry.company?.domain || entry.company_id}</CardDescription>
+                      <CardTitle className="text-lg">{entry.company_name || 'No Company'}</CardTitle>
+                      <CardDescription>{entry.company_domain || entry.company_id}</CardDescription>
                     </div>
                   </div>
                   <Badge className="bg-primary/10 text-primary border border-border">Draft</Badge>
@@ -280,14 +262,14 @@ export default function OutreachQueuePage() {
         isOpen={!!editingEntry}
         onClose={() => setEditingEntry(null)}
         title="Edit Outreach Draft"
-        description={editingEntry?.company?.name || editingEntry?.company_id || 'Unknown Company'}
+        description={editingEntry?.company_name || editingEntry?.company_domain || 'Unknown'}
         size="lg"
       >
         {editingEntry && (
           <div className="space-y-6">
             <div className="space-y-2">
               <Label>To</Label>
-              <p className="text-sm text-muted-foreground">{editingEntry.company?.domain || 'Unknown'}</p>
+              <p className="text-sm text-muted-foreground">{editingEntry.company_domain || editingEntry.company_name || 'Unknown'}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_subject">Subject</Label>

@@ -58,9 +58,20 @@ Deno.serve(async (req)=>{
       if (req.method === "GET") {
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        const { data, error } = await supabase.from("outreach").select("*").in("brand_id", brandIdList.length > 0 ? brandIdList : [
-          "00000000-0000-0000-0000-000000000000"
-        ]).order("created_at", {
+        if (brandIdList.length === 0) {
+          return new Response(JSON.stringify([]), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+        // Get outreach with company data via join
+        const { data, error } = await supabase.from("outreach").select(`
+          *,
+          companies:company_id (id, name, domain)
+        `).in("brand_id", brandIdList).order("created_at", {
           ascending: false
         });
         if (error) return new Response(JSON.stringify({
@@ -72,7 +83,13 @@ Deno.serve(async (req)=>{
             "Content-Type": "application/json"
           }
         });
-        return new Response(JSON.stringify(data), {
+        // Transform to flatten company data
+        const transformed = (data || []).map((item: any) => ({
+          ...item,
+          company_name: item.companies?.name || null,
+          company_domain: item.companies?.domain || null
+        }));
+        return new Response(JSON.stringify(transformed), {
           status: 200,
           headers: {
             ...corsHeaders,
