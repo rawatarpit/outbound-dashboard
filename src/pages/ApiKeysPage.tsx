@@ -4,16 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
-import { Switch } from '@/components/ui/Switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
 import Drawer from '@/components/Drawer'
+import EmailConfigForm from '@/components/forms/EmailConfigForm'
+import LLMConfigForm from '@/components/forms/LLMConfigForm'
+import DiscoveryConfigForm from '@/components/forms/DiscoveryConfigForm'
 import { apiKeysAPI, brandsAPI, discoverySourcesAPI, settingsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { copyToClipboard } from '@/lib/utils'
@@ -50,7 +44,9 @@ export default function ApiKeysPage() {
   const [newKeyName, setNewKeyName] = useState('')
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [centralizedConfigs, setCentralizedConfigs] = useState<any>({})
+  const [isEmailConfigDrawerOpen, setIsEmailConfigDrawerOpen] = useState(false)
+  const [isAIConfigDrawerOpen, setIsAIConfigDrawerOpen] = useState(false)
+  const [isDiscoveryConfigDrawerOpen, setIsDiscoveryConfigDrawerOpen] = useState(false)
 
   useEffect(() => {
     fetchAllKeys()
@@ -59,8 +55,8 @@ export default function ApiKeysPage() {
   const fetchAllKeys = async () => {
     setIsLoading(true)
     try {
-      const { data: brands } = await brandsAPI.list(client?.id)
-      const { data: settings } = await settingsAPI.get(client?.id)
+      const { data: brands } = await brandsAPI.list(client?.id || '')
+      const { data: settings } = await settingsAPI.get(client?.id || '')
       
       const allKeys: ExternalKey[] = []
       
@@ -209,6 +205,23 @@ export default function ApiKeysPage() {
     setCreatedKey(null)
   }
 
+  const handleConfigSuccess = () => {
+    setIsEmailConfigDrawerOpen(false)
+    setIsAIConfigDrawerOpen(false)
+    setIsDiscoveryConfigDrawerOpen(false)
+    fetchAllKeys()
+  }
+
+  const handleConfigureService = (service: string) => {
+    if (service === 'smtp' || service === 'resend') {
+      setIsEmailConfigDrawerOpen(true)
+    } else if (service === 'llm' || service === 'openai' || service === 'anthropic' || service === 'groq' || service === 'ollama') {
+      setIsAIConfigDrawerOpen(true)
+    } else {
+      setIsDiscoveryConfigDrawerOpen(true)
+    }
+  }
+
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'discovery': return 'Discovery Sources'
@@ -271,17 +284,17 @@ export default function ApiKeysPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2" onClick={() => setIsEmailConfigDrawerOpen(true)}>
               <Mail className="h-5 w-5" />
               <span className="font-medium">Email Services</span>
               <span className="text-xs text-muted-foreground">SMTP, Resend</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2" onClick={() => setIsAIConfigDrawerOpen(true)}>
               <Bot className="h-5 w-5" />
               <span className="font-medium">AI Services</span>
               <span className="text-xs text-muted-foreground">OpenAI, Anthropic</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col items-center justify-center gap-2" onClick={() => setIsDiscoveryConfigDrawerOpen(true)}>
               <Globe className="h-5 w-5" />
               <span className="font-medium">Discovery Sources</span>
               <span className="text-xs text-muted-foreground">Apollo, Hunter</span>
@@ -358,7 +371,7 @@ export default function ApiKeysPage() {
 
                       {!isConfigured && (
                         <div className="mt-3">
-                          <Button variant="outline" size="sm" className="w-full text-xs">
+                          <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => handleConfigureService(key.service)}>
                             Configure {key.label}
                           </Button>
                         </div>
@@ -423,6 +436,45 @@ export default function ApiKeysPage() {
             </div>
           )}
         </div>
+      </Drawer>
+
+      <Drawer
+        isOpen={isEmailConfigDrawerOpen}
+        onClose={() => setIsEmailConfigDrawerOpen(false)}
+        title="Email Services Configuration"
+        description="Configure SMTP or Resend for email delivery"
+        size="lg"
+      >
+        <EmailConfigForm
+          onSuccess={handleConfigSuccess}
+          onCancel={() => setIsEmailConfigDrawerOpen(false)}
+        />
+      </Drawer>
+
+      <Drawer
+        isOpen={isAIConfigDrawerOpen}
+        onClose={() => setIsAIConfigDrawerOpen(false)}
+        title="AI Services Configuration"
+        description="Configure your LLM provider and model settings"
+        size="lg"
+      >
+        <LLMConfigForm
+          onSuccess={handleConfigSuccess}
+          onCancel={() => setIsAIConfigDrawerOpen(false)}
+        />
+      </Drawer>
+
+      <Drawer
+        isOpen={isDiscoveryConfigDrawerOpen}
+        onClose={() => setIsDiscoveryConfigDrawerOpen(false)}
+        title="Discovery Sources Configuration"
+        description="Update API keys for your discovery sources"
+        size="lg"
+      >
+        <DiscoveryConfigForm
+          onSuccess={handleConfigSuccess}
+          onCancel={() => setIsDiscoveryConfigDrawerOpen(false)}
+        />
       </Drawer>
     </div>
   )
