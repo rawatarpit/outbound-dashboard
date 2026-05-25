@@ -244,6 +244,7 @@ export const leadsAPI = {
     perPage?: number
   } = {}): Promise<{ data: Lead[], total: number, error: any }> => {
     const params: Record<string, string> = {}
+    if (options.brandId) params['brand_id'] = options.brandId
     if (options.status) params['status'] = options.status
     if (options.search) params['search'] = options.search
     if (options.page) params['page'] = String(options.page)
