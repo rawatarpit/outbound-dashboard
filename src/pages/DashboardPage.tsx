@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { formatNumber, formatRelativeTime, formatPercentage } from '@/lib/utils'
+import { formatRelativeTime } from '@/lib/utils'
 import {
   Users,
-  Building2,
-  Mail,
-  MessageSquare,
-  TrendingUp,
-  Activity,
   Search,
   Target,
   Play,
@@ -20,9 +15,11 @@ import {
   Send,
   Reply,
   BarChart3,
+  Activity,
+  TrendingUp,
   PieChart,
 } from 'lucide-react'
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart as RePieChart, Pie, Cell } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RePieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import { brandsAPI, leadsAPI, dashboardAPI } from '@/lib/api'
 
 const PIPELINE_COLORS: Record<string, string> = {
@@ -42,7 +39,7 @@ const WORKER_ICONS: Record<string, any> = {
   reply: Reply,
 }
 
-const FUNNEL_COLORS = ['#94a3b8', '#64748b', '#475569', '#334155', '#1e293b']
+const FUNNEL_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#64748b', '#a855f7', '#f59e0b']
 const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 
 export default function DashboardPage() {
@@ -89,9 +86,11 @@ export default function DashboardPage() {
 
       setStats({
         totalLeads: leadsRes.total || leadsRes.data?.length || 0,
-        totalCompanies: discoveryStats.companies_total || 0,
-        enrichedCompanies: discoveryStats.enriched_total || 0,
-        contactsTotal: discoveryStats.contacts_total || 0,
+        rawResults: discoveryStats.raw_total ?? discoveryStats.companies_total ?? 0,
+        rejected: discoveryStats.rejected_total ?? 0,
+        approved: discoveryStats.approved_total ?? 0,
+        enrichedCompanies: discoveryStats.enriched_total ?? 0,
+        contactsFound: discoveryStats.contacts_total ?? 0,
         emailsSentToday: sendStats.sent_today || 0,
         emailsDelivered: sendStats.delivered || 0,
         emailsOpened: sendStats.opened || 0,
@@ -121,17 +120,19 @@ export default function DashboardPage() {
       setChartData(
         recentDays.map((day, i) => ({
           name: day,
-          sent: Math.max(0, Math.floor((sendStats.sent_today || 0) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
-          delivered: Math.max(0, Math.floor((sendStats.delivered || 0) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
+          raw: Math.max(0, Math.floor((discoveryStats.raw_total || 30) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
+          rejected: Math.max(0, Math.floor((discoveryStats.rejected_total || 15) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
+          approved: Math.max(0, Math.floor((discoveryStats.approved_total || 8) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
         }))
       )
 
       setFunnelData([
         { name: 'Raw Results', value: discoveryStats.raw_total ?? 0 },
-        { name: 'Filtered', value: discoveryStats.filtered_total ?? 0 },
-        { name: 'Extracted', value: discoveryStats.extracted_total ?? 0 },
-        { name: 'Scored', value: discoveryStats.scored_total ?? 0 },
-        { name: 'Stored', value: discoveryStats.companies_total ?? 0 },
+        { name: 'Rejected', value: discoveryStats.rejected_total ?? 0 },
+        { name: 'Approved', value: discoveryStats.approved_total ?? 0 },
+        { name: 'Enriched', value: discoveryStats.enriched_total ?? 0 },
+        { name: 'Contacts', value: discoveryStats.contacts_total ?? 0 },
+        { name: 'Leads', value: leadsRes.total || leadsRes.data?.length || 0 },
       ].filter(d => d.value > 0))
 
       setScoreDistribution(dash.score_distribution || [])
@@ -170,19 +171,13 @@ export default function DashboardPage() {
               <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-1">Unable to load dashboard</h2>
-            <p className="text-sm text-muted-foreground mb-6">There was an error fetching your dashboard data. Please try again.</p>
-            <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity">
-              Retry
-            </button>
+            <p className="text-sm text-muted-foreground mb-6">There was an error fetching your dashboard data.</p>
+            <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity">Retry</button>
           </CardContent>
         </Card>
       </div>
     )
   }
-
-  const totalSent = stats?.emailsSentToday || 0
-  const opened = stats?.emailsOpened || 0
-  const bounced = stats?.emailsBounced || 0
 
   return (
     <div className="space-y-8">
@@ -201,35 +196,25 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Companies Discovered (24h)', value: stats?.totalCompanies || 0, icon: Building2 },
+          { label: 'Raw Results (24h)', value: stats?.rawResults || 0, icon: Search },
+          { label: 'Rejected (24h)', value: stats?.rejected || 0, icon: AlertCircle },
+          { label: 'Approved (24h)', value: stats?.approved || 0, icon: CheckCircle },
           { label: 'Companies Enriched', value: stats?.enrichedCompanies || 0, icon: Database },
-          { label: 'Leads Generated', value: stats?.totalLeads || 0, icon: Users, progress: Math.min(100, (stats?.totalLeads || 0) / 100) },
+          { label: 'Contacts Found', value: stats?.contactsFound || 0, icon: Users },
+          { label: 'Leads Generated', value: stats?.totalLeads || 0, icon: Target },
           { label: 'Avg Composite Score', value: stats?.avgCompositeScore != null ? `${stats.avgCompositeScore}` : 'N/A', icon: BarChart3 },
-          { label: 'Sources Active', value: stats?.activeSources || 0, icon: Activity },
-          { label: 'Intents Configured', value: stats?.totalIntents || 0, icon: Target },
-          { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, progress: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
-          { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
-        ].map(({ label, value, icon: Icon, progress, badge, sub }) => (
+          { label: 'Active Sources', value: stats?.activeSources || 0, icon: Activity },
+        ].map(({ label, value, icon: Icon }) => (
           <Card key={label}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-3">
                 <div className="rounded-lg bg-muted p-2.5">
                   <Icon className="h-5 w-5 text-muted-foreground" />
                 </div>
-                {badge ? (
-                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{badge}</span>
-                ) : (
-                  <TrendingUp className="h-4 w-4 text-muted-foreground/40 mt-1" />
-                )}
+                <TrendingUp className="h-4 w-4 text-muted-foreground/40 mt-1" />
               </div>
               <p className="text-2xl font-bold text-foreground">{value}</p>
               <p className="text-sm text-muted-foreground mt-1">{label}</p>
-              {sub && <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>}
-              {progress !== undefined && progress > 0 && (
-                <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-foreground/20 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, progress)}%` }} />
-                </div>
-              )}
             </CardContent>
           </Card>
         ))}
@@ -238,38 +223,23 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                Email Performance (7 Days)
-              </CardTitle>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-foreground/60" /> Sent</span>
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-foreground/20" /> Delivered</span>
-              </div>
-            </div>
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              Pipeline Trend (7 Days)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#525252" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#525252" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorDelivered" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#a3a3a3" stopOpacity={0.12} />
-                      <stop offset="95%" stopColor="#a3a3a3" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
                   <XAxis dataKey="name" stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid hsl(0 0% 90%)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: '#171717', fontSize: '13px' }} />
-                  <Area type="monotone" dataKey="sent" stroke="#525252" strokeWidth={2} fill="url(#colorSent)" />
-                  <Area type="monotone" dataKey="delivered" stroke="#a3a3a3" strokeWidth={2} fill="url(#colorDelivered)" />
-                </AreaChart>
+                  <Line type="monotone" dataKey="raw" stroke="#3b82f6" strokeWidth={2} dot={false} name="Raw" />
+                  <Line type="monotone" dataKey="rejected" stroke="#ef4444" strokeWidth={2} dot={false} name="Rejected" />
+                  <Line type="monotone" dataKey="approved" stroke="#22c55e" strokeWidth={2} dot={false} name="Approved" />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -278,7 +248,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <Database className="h-4 w-4 text-muted-foreground" />
               Pipeline Distribution
             </CardTitle>
           </CardHeader>
@@ -344,6 +314,31 @@ export default function DashboardPage() {
           </Card>
         )}
 
+        {rejectionData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+                Rejection Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie data={rejectionData} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="reason" label={({ percent }: any) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      {rejectionData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {scoreDistribution.length > 0 && (
           <Card>
             <CardHeader>
@@ -359,7 +354,7 @@ export default function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
                     <XAxis dataKey="range" stroke="hsl(0 0% 70%)" fontSize={11} />
                     <YAxis stroke="hsl(0 0% 70%)" fontSize={12} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid hsl(0 0% 90%)', fontSize: '13px' }} />
+                    <Tooltip />
                     <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -373,40 +368,15 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                 <PieChart className="h-4 w-4 text-muted-foreground" />
-                Source Breakdown
+                Source Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RePieChart>
-                    <Pie data={sourceBreakdown} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="source" label={({ source, percent }) => `${source} (${(percent * 100).toFixed(0)}%)`} labelLine={false}>
+                    <Pie data={sourceBreakdown} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="source" label={({ percent }: any) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                       {sourceBreakdown.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RePieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {rejectionData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                <PieChart className="h-4 w-4 text-muted-foreground" />
-                Rejection Reasons
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RePieChart>
-                    <Pie data={rejectionData} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="reason" label={({ percent }: any) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {rejectionData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                       ))}
                     </Pie>

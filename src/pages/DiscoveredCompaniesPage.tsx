@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type DiscoveredCompany, type BrandProfile, ENRICHMENT_STATUSES } from '@/lib/supabase'
+import { type DiscoveredCompany, type BrandProfile, ENRICHMENT_STATUSES, REJECTION_REASONS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -28,12 +28,10 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  AlertCircle,
   TrendingUp,
   Target,
   Brain,
   BarChart3,
-  XCircle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
@@ -41,12 +39,10 @@ import { discoveredCompaniesAPI, brandsAPI } from '@/lib/api'
 
 const PAGE_SIZE = 50
 
-const ENRICHMENT_COLORS: Record<string, string> = {
-  pending: 'bg-muted text-muted-foreground',
-  processing: 'bg-blue-500/10 text-blue-600',
-  enriched: 'bg-green-500/10 text-green-600',
-  failed: 'bg-red-500/10 text-red-600',
-  dead: 'bg-red-500/10 text-red-600',
+const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
+  raw: { badge: 'bg-blue-500/10 text-blue-600 border-blue-500/20', dot: 'bg-blue-500' },
+  rejected: { badge: 'bg-red-500/10 text-red-600 border-red-500/20', dot: 'bg-red-500' },
+  approved: { badge: 'bg-green-500/10 text-green-600 border-green-500/20', dot: 'bg-green-500' },
 }
 
 const SIGNAL_COLORS: Record<string, string> = {
@@ -59,56 +55,12 @@ const SIGNAL_COLORS: Record<string, string> = {
   GROWTH: 'bg-emerald-500/10 text-emerald-600',
 }
 
-function ScoreBreakdown({ company }: { company: DiscoveredCompany }) {
-  const raw = (company.raw_payload as Record<string, any>) || {}
-  const scoreComponents = raw.score_breakdown || raw.components || {}
-  const keywordScore = scoreComponents.keyword_score ?? scoreComponents.keyword ?? 65
-  const llmRelevance = scoreComponents.llm_relevance ?? scoreComponents.relevance ?? 80
-  const domainQuality = scoreComponents.domain_quality ?? scoreComponents.domain ?? 70
-  const signalStrength = scoreComponents.signal_strength ?? scoreComponents.signal ?? 60
-  const extractionConf = scoreComponents.extraction_confidence ?? scoreComponents.extraction ?? 75
-
-  const components = [
-    { label: 'Keyword Score', value: keywordScore, desc: 'How well intents matched' },
-    { label: 'LLM Relevance', value: llmRelevance, desc: 'LLM judged relevance' },
-    { label: 'Domain Quality', value: domainQuality, desc: 'MX records, domain age' },
-    { label: 'Signal Strength', value: signalStrength, desc: 'How strong the buying signal was' },
-    { label: 'Extraction Conf', value: extractionConf, desc: 'LLM confidence in extraction' },
-  ]
-
+function RejectionBadge({ reason }: { reason: string }) {
+  const match = REJECTION_REASONS.find(r => reason.includes(r.value) || r.value.includes(reason))
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-foreground">Composite Score</span>
-        <span className={cn(
-          'text-lg font-bold',
-          (company.relevance_score ?? 0) >= 70 ? 'text-green-600' :
-          (company.relevance_score ?? 0) >= 40 ? 'text-amber-600' : 'text-red-600'
-        )}>
-          {company.relevance_score ?? 'N/A'}/100
-          {company.relevance_score != null && <span className="text-xs text-muted-foreground ml-1">(threshold: 40)</span>}
-        </span>
-      </div>
-      <div className="border-t border-border pt-3 space-y-2">
-        {components.map((c) => (
-          <div key={c.label} className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-foreground">{c.label}</span>
-              <p className="text-xs text-muted-foreground">{c.desc}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className={cn(
-                  'h-full rounded-full',
-                  c.value >= 70 ? 'bg-green-500' : c.value >= 40 ? 'bg-amber-500' : 'bg-red-500'
-                )} style={{ width: `${c.value}%` }} />
-              </div>
-              <span className="text-sm font-semibold text-foreground w-8 text-right">{c.value}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+      {match?.label || reason || 'Unknown'}
+    </span>
   )
 }
 
@@ -123,42 +75,33 @@ export default function DiscoveredCompaniesPage() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [sourceFilter, setSourceFilter] = useState<string | undefined>(undefined)
-  const [signalFilter, setSignalFilter] = useState<string | undefined>(undefined)
-  const [scoreMin, setScoreMin] = useState<string>('')
-  const [scoreMax, setScoreMax] = useState<string>('')
+  const [rejectionFilter, setRejectionFilter] = useState<string | undefined>(undefined)
+  const [scoreMin, setScoreMin] = useState('')
+  const [scoreMax, setScoreMax] = useState('')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [sourceNames, setSourceNames] = useState<string[]>([])
-  const [signalTypes, setSignalTypes] = useState<string[]>([])
 
   useEffect(() => {
     fetchBrands()
     fetchSourceNames()
-    fetchSignalTypes()
   }, [])
 
   useEffect(() => {
     fetchCompanies()
-  }, [currentPage, statusFilter, sourceFilter, signalFilter, brandFilter])
+  }, [currentPage, statusFilter, sourceFilter, brandFilter])
 
   const fetchBrands = async () => {
     try {
       const { data } = await brandsAPI.list(client?.id)
       setBrands(data || [])
-    } catch { }
+    } catch {}
   }
 
   const fetchSourceNames = async () => {
     try {
       const { data } = await discoveredCompaniesAPI.getSourceNames()
       setSourceNames(data)
-    } catch { }
-  }
-
-  const fetchSignalTypes = async () => {
-    try {
-      const { data } = await discoveredCompaniesAPI.getSignalTypes()
-      setSignalTypes(data)
-    } catch { }
+    } catch {}
   }
 
   const fetchCompanies = async () => {
@@ -168,7 +111,6 @@ export default function DiscoveredCompaniesPage() {
         brandId: brandFilter,
         status: statusFilter,
         sourceName: sourceFilter,
-        signalType: signalFilter,
         scoreMin: scoreMin ? parseInt(scoreMin) : undefined,
         scoreMax: scoreMax ? parseInt(scoreMax) : undefined,
         search: searchQuery || undefined,
@@ -179,7 +121,7 @@ export default function DiscoveredCompaniesPage() {
       setCompanies(data)
       setTotalCount(total)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to fetch discovered companies')
+      toast.error(error.message || 'Failed to fetch')
     } finally {
       setIsLoading(false)
     }
@@ -192,12 +134,14 @@ export default function DiscoveredCompaniesPage() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
+  const rejectionOptions = REJECTION_REASONS.map(r => r.value)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Discovered Companies</h1>
-          <p className="text-muted-foreground">Browse all companies found by the discovery engine</p>
+          <p className="text-muted-foreground">Browse all companies through the pipeline — from raw results to approved leads</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
           <Building2 className="h-4 w-4" />
@@ -210,7 +154,7 @@ export default function DiscoveredCompaniesPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                 <Input
                   placeholder="Search by name or domain..."
                   value={searchQuery}
@@ -241,17 +185,19 @@ export default function DiscoveredCompaniesPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={signalFilter || 'all'} onValueChange={(v) => { setSignalFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="All Signals" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Signals</SelectItem>
-                  {signalTypes.map(s => (
-                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {statusFilter === 'rejected' && (
+                <Select value={rejectionFilter || 'all'} onValueChange={(v) => setRejectionFilter(v === 'all' ? undefined : v)}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="All Rejection Reasons" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Reasons</SelectItem>
+                    {rejectionOptions.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <Select value={brandFilter || 'all'} onValueChange={(v) => { setBrandFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="All Brands" />
@@ -265,27 +211,15 @@ export default function DiscoveredCompaniesPage() {
               </Select>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium">Score range:</span>
-              <Input
-                type="number"
-                placeholder="Min"
-                value={scoreMin}
-                onChange={(e) => setScoreMin(e.target.value)}
-                className="w-20 h-8 text-xs"
-                min={0}
-                max={100}
-              />
-              <span className="text-xs text-muted-foreground">-</span>
-              <Input
-                type="number"
-                placeholder="Max"
-                value={scoreMax}
-                onChange={(e) => setScoreMax(e.target.value)}
-                className="w-20 h-8 text-xs"
-                min={0}
-                max={100}
-              />
-              <Button variant="outline" size="sm" onClick={handleSearch}>Apply</Button>
+              {statusFilter === 'approved' && (
+                <>
+                  <span className="text-xs text-muted-foreground font-medium">Score range:</span>
+                  <Input type="number" placeholder="Min" value={scoreMin} onChange={(e) => setScoreMin(e.target.value)} className="w-20 h-8 text-xs" min={0} max={100} />
+                  <span className="text-xs text-muted-foreground">-</span>
+                  <Input type="number" placeholder="Max" value={scoreMax} onChange={(e) => setScoreMax(e.target.value)} className="w-20 h-8 text-xs" min={0} max={100} />
+                  <Button variant="outline" size="sm" onClick={handleSearch}>Apply</Button>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -297,7 +231,7 @@ export default function DiscoveredCompaniesPage() {
           ) : companies.length === 0 ? (
             <div className="text-center py-16">
               <Search className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground">No discovered companies</h3>
+              <h3 className="text-lg font-medium text-foreground">No companies found</h3>
               <p className="text-muted-foreground">Run a discovery to start finding companies</p>
             </div>
           ) : (
@@ -305,206 +239,213 @@ export default function DiscoveredCompaniesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-8"></TableHead>
+                    <TableHead className="w-8" />
                     <TableHead>Name</TableHead>
                     <TableHead>Domain</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Signal</TableHead>
-                    <TableHead>Score</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Rejection / Score</TableHead>
                     <TableHead>Discovered</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {companies.map((company) => (
-                    <>
-                      <TableRow
-                        key={company.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => setExpandedRow(expandedRow === company.id ? null : company.id)}
-                      >
-                        <TableCell>
-                          {expandedRow === company.id ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">{company.name || company.domain || 'N/A'}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {company.domain ? (
-                            <a href={`https://${company.domain}`} target="_blank" rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="hover:underline">
-                              {company.domain}
-                            </a>
-                          ) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">
-                            {company.source_name || 'N/A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {company.signal_type ? (
-                            <Badge className={cn('text-xs border-0', SIGNAL_COLORS[company.signal_type] || 'bg-muted text-muted-foreground')}>
-                              {company.signal_type.replace(/_/g, ' ')}
-                            </Badge>
-                          ) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {company.relevance_score != null ? (
-                            <span className={cn(
-                              'font-bold text-sm',
-                              company.relevance_score >= 70 ? 'text-green-600' :
-                              company.relevance_score >= 40 ? 'text-amber-600' : 'text-red-600'
-                            )}>
-                              {company.relevance_score}
+                  {companies.map((company) => {
+                    const style = STATUS_STYLES[company.enrichment_status] || STATUS_STYLES.raw
+                    return (
+                      <>
+                        <TableRow
+                          key={company.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setExpandedRow(expandedRow === company.id ? null : company.id)}
+                        >
+                          <TableCell>
+                            {expandedRow === company.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          </TableCell>
+                          <TableCell className="font-medium">{company.name || company.domain || 'N/A'}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {company.domain ? (
+                              <a href={`https://${company.domain}`} target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()} className="hover:underline">
+                                {company.domain}
+                              </a>
+                            ) : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">{company.source_name || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {company.signal_type ? (
+                              <Badge className={cn('text-xs border-0', SIGNAL_COLORS[company.signal_type] || 'bg-muted text-muted-foreground')}>
+                                {company.signal_type.replace(/_/g, ' ')}
+                              </Badge>
+                            ) : '—'}
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border', style.badge)}>
+                              <span className={cn('inline-block h-1.5 w-1.5 rounded-full', style.dot)} />
+                              {company.enrichment_status?.charAt(0).toUpperCase() + company.enrichment_status?.slice(1)}
                             </span>
-                          ) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={cn('text-xs border-0', ENRICHMENT_COLORS[company.enrichment_status] || 'bg-muted text-muted-foreground')}>
-                            {company.enrichment_status?.charAt(0).toUpperCase() + company.enrichment_status?.slice(1) || 'Pending'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {formatRelativeTime(company.discovered_at)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                            {company.error && (
-                              <span className="relative group">
-                                <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-foreground text-background rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                  {company.error}
-                                </span>
+                          </TableCell>
+                          <TableCell>
+                            {company.enrichment_status === 'rejected' && company.error ? (
+                              <RejectionBadge reason={company.error} />
+                            ) : company.enrichment_status === 'approved' && company.relevance_score != null ? (
+                              <span className={cn('font-bold text-sm', company.relevance_score >= 70 ? 'text-green-600' : company.relevance_score >= 40 ? 'text-amber-600' : 'text-red-600')}>
+                                {company.relevance_score}
                               </span>
-                            )}
-                            {company.dead_letter && (
-                              <XCircle className="h-3.5 w-3.5 text-red-400" />
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      {expandedRow === company.id && (
-                        <TableRow key={`${company.id}-detail`}>
-                          <TableCell colSpan={9} className="bg-muted/30 p-0">
-                            <div className="p-6 border-t border-border">
-                              <div className="grid gap-6 lg:grid-cols-2">
-                                <div className="space-y-5">
-                                  <div>
-                                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-                                      <Brain className="h-4 w-4 text-muted-foreground" />
-                                      LLM Extraction Result
-                                    </h4>
-                                    <div className="rounded-xl bg-card border border-border p-4 space-y-2">
-                                      <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{company.name || 'N/A'}</span></div>
-                                        <div><span className="text-muted-foreground">Domain:</span> <span className="font-medium">{company.domain || 'N/A'}</span></div>
-                                        {company.website && <div className="col-span-2"><span className="text-muted-foreground">Website:</span> <span className="font-medium">{company.website}</span></div>}
-                                        {company.summary && <div className="col-span-2"><span className="text-muted-foreground">Summary:</span> <span className="font-medium text-xs">{company.summary}</span></div>}
-                                        {company.fit_reason && <div className="col-span-2"><span className="text-muted-foreground">Fit Reason:</span> <span className="font-medium text-xs">{company.fit_reason}</span></div>}
-                                        {company.confidence != null && <div><span className="text-muted-foreground">Confidence:</span> <span className="font-medium">{(company.confidence * 100).toFixed(0)}%</span></div>}
-                                      </div>
-                                      {(company.raw_payload as any)?.linkedin_url && (
-                                        <a
-                                          href={(company.raw_payload as any).linkedin_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-2"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <ExternalLink className="h-3 w-3" />
-                                          LinkedIn Profile
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-                                      <Target className="h-4 w-4 text-muted-foreground" />
-                                      Score Breakdown
-                                    </h4>
-                                    <div className="rounded-xl bg-card border border-border p-4">
-                                      <ScoreBreakdown company={company} />
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="space-y-5">
-                                  <div>
-                                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-                                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                                      Intent Match
-                                    </h4>
-                                    <div className="rounded-xl bg-card border border-border p-4">
-                                      {(company.raw_payload as any)?.intent_id ? (
-                                        <div className="space-y-2">
-                                          <div className="text-sm"><span className="text-muted-foreground">Intent ID:</span> <span className="font-medium">{(company.raw_payload as any).intent_id}</span></div>
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground">No intent match information available</p>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-                                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                                      Enrichment Status
-                                    </h4>
-                                    <div className="rounded-xl bg-card border border-border p-4">
-                                      <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div><span className="text-muted-foreground">Status:</span> <span className="font-medium capitalize">{company.enrichment_status}</span></div>
-                                        <div><span className="text-muted-foreground">Attempts:</span> <span className="font-medium">{company.enrichment_attempts}</span></div>
-                                        {company.enrichment_source && <div className="col-span-2"><span className="text-muted-foreground">Source:</span> <span className="font-medium">{company.enrichment_source}</span></div>}
-                                        {company.last_enrichment_at && <div className="col-span-2"><span className="text-muted-foreground">Last Enrichment:</span> <span className="font-medium">{formatRelativeTime(company.last_enrichment_at)}</span></div>}
-                                        {company.enrichment_error && (
-                                          <div className="col-span-2 p-2 bg-red-500/10 rounded-lg text-xs text-red-600">{company.enrichment_error}</div>
-                                        )}
-                                        {company.error && (
-                                          <div className="col-span-2 p-2 bg-red-500/10 rounded-lg text-xs text-red-600">{company.error}</div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {company.raw_payload && (
+                            ) : '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{formatRelativeTime(company.discovered_at)}</TableCell>
+                        </TableRow>
+                        {expandedRow === company.id && (
+                          <TableRow key={`${company.id}-detail`}>
+                            <TableCell colSpan={8} className="bg-muted/30 p-0">
+                              <div className="p-6 border-t border-border">
+                                <div className="grid gap-6 lg:grid-cols-2">
+                                  <div className="space-y-5">
                                     <div>
                                       <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-                                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                                        Raw Data
+                                        <Search className="h-4 w-4 text-muted-foreground" />
+                                        Raw Search Result
                                       </h4>
-                                      <details className="rounded-xl bg-card border border-border">
-                                        <summary className="px-4 py-2 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground">
-                                          View raw payload JSON
-                                        </summary>
-                                        <div className="px-4 pb-4">
-                                          <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-60 text-foreground">
-                                            {JSON.stringify(company.raw_payload, null, 2)}
-                                          </pre>
-                                        </div>
-                                      </details>
+                                      <div className="rounded-xl bg-card border border-border p-4 space-y-2">
+                                        {company.name && <div><span className="text-muted-foreground text-xs">Title:</span> <p className="text-sm font-medium">{company.name}</p></div>}
+                                        {(company.raw_payload as any)?.url && (
+                                          <a href={(company.raw_payload as any).url} target="_blank" rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                                            <ExternalLink className="h-3 w-3" />
+                                            {(company.raw_payload as any).url}
+                                          </a>
+                                        )}
+                                        {(company.raw_payload as any)?.snippet && (
+                                          <div><span className="text-muted-foreground text-xs">Snippet:</span> <p className="text-xs text-foreground/80 mt-0.5">{(company.raw_payload as any).snippet}</p></div>
+                                        )}
+                                        {(company.raw_payload as any)?.query && (
+                                          <div><span className="text-muted-foreground text-xs">Query:</span> <span className="text-xs font-medium">{(company.raw_payload as any).query}</span></div>
+                                        )}
+                                        {(company.raw_payload as any)?.intent_id && (
+                                          <div><span className="text-muted-foreground text-xs">Intent ID:</span> <span className="text-xs font-medium">{(company.raw_payload as any).intent_id}</span></div>
+                                        )}
+                                      </div>
                                     </div>
-                                  )}
 
-                                  {company.dead_letter && (
-                                    <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl flex items-center gap-2">
-                                      <XCircle className="h-4 w-4 text-red-400 shrink-0" />
-                                      <span className="text-sm text-red-600">This company has been marked as a dead letter</span>
+                                    {company.enrichment_status === 'rejected' && company.error && (
+                                      <div>
+                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                          Rejection Details
+                                        </h4>
+                                        <div className="rounded-xl bg-red-500/5 border border-red-500/20 p-4">
+                                          <RejectionBadge reason={company.error} />
+                                          <p className="text-xs text-muted-foreground mt-2">
+                                            {(() => {
+                                              const match = REJECTION_REASONS.find(r => company.error?.includes(r.value) || r.value.includes(company.error || ''))
+                                              return match ? `Caught in Phase ${match.phase}: ${match.description}` : 'Filtered by the discovery engine'
+                                            })()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {company.enrichment_status === 'approved' && (
+                                      <>
+                                        <div>
+                                          <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                            <Brain className="h-4 w-4 text-muted-foreground" />
+                                            LLM Extraction
+                                          </h4>
+                                          <div className="rounded-xl bg-card border border-border p-4 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                              {company.name && <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{company.name}</span></div>}
+                                              {company.domain && <div><span className="text-muted-foreground">Domain:</span> <span className="font-medium">{company.domain}</span></div>}
+                                              {company.website && <div className="col-span-2"><span className="text-muted-foreground">Website:</span> <span className="font-medium">{company.website}</span></div>}
+                                              {company.summary && <div className="col-span-2"><span className="text-muted-foreground">Summary:</span> <span className="font-medium text-xs">{company.summary}</span></div>}
+                                              {company.fit_reason && <div className="col-span-2"><span className="text-muted-foreground">Fit Reason:</span> <span className="font-medium text-xs">{company.fit_reason}</span></div>}
+                                              {company.confidence != null && <div><span className="text-muted-foreground">Confidence:</span> <span className="font-medium">{(company.confidence * 100).toFixed(0)}%</span></div>}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div>
+                                          <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                                            Score Analysis
+                                          </h4>
+                                          <div className="rounded-xl bg-card border border-border p-4">
+                                            <div className="space-y-3">
+                                              <div className="flex items-center justify-between">
+                                                <span className="text-sm font-semibold">Composite Score</span>
+                                                <span className={cn('text-lg font-bold', (company.relevance_score ?? 0) >= 70 ? 'text-green-600' : (company.relevance_score ?? 0) >= 40 ? 'text-amber-600' : 'text-red-600')}>
+                                                  {company.relevance_score ?? 'N/A'}/100
+                                                </span>
+                                              </div>
+                                              {company.fit_reason && (
+                                                <div className="text-xs text-muted-foreground border-t border-border pt-2">
+                                                  Score components and signal evidence available in raw payload.
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {company.signal_type && (
+                                          <div>
+                                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                              <Target className="h-4 w-4 text-muted-foreground" />
+                                              Signal Evidence
+                                            </h4>
+                                            <div className="rounded-xl bg-card border border-border p-4">
+                                              <Badge className={cn('text-xs border-0', SIGNAL_COLORS[company.signal_type] || 'bg-muted text-muted-foreground')}>
+                                                {company.signal_type.replace(/_/g, ' ')}
+                                              </Badge>
+                                              {(company.raw_payload as any)?.snippet && (
+                                                <p className="text-xs text-muted-foreground mt-2 italic">"{(company.raw_payload as any).snippet}"</p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-5">
+                                    <div>
+                                      <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                                        Discovery Summary
+                                      </h4>
+                                      <div className="rounded-xl bg-card border border-border p-4 space-y-2 text-sm">
+                                        <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="font-medium">{company.source_name || 'N/A'}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className={cn('font-medium capitalize', company.enrichment_status === 'approved' ? 'text-green-600' : company.enrichment_status === 'rejected' ? 'text-red-600' : '')}>{company.enrichment_status}</span></div>
+                                        {company.discovered_at && <div className="flex justify-between"><span className="text-muted-foreground">Discovered</span><span className="font-medium text-xs">{formatRelativeTime(company.discovered_at)}</span></div>}
+                                        {company.error && <div className="flex justify-between"><span className="text-muted-foreground">Error</span><span className="font-medium text-xs text-red-600">{company.error}</span></div>}
+                                      </div>
                                     </div>
-                                  )}
+
+                                    {company.raw_payload && (
+                                      <div>
+                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                                          Raw Data
+                                        </h4>
+                                        <details className="rounded-xl bg-card border border-border">
+                                          <summary className="px-4 py-2 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground">View raw payload JSON</summary>
+                                          <div className="px-4 pb-4">
+                                            <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-60 text-foreground">{JSON.stringify(company.raw_payload, null, 2)}</pre>
+                                          </div>
+                                        </details>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </>
-                  ))}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    )
+                  })}
                 </TableBody>
               </Table>
 

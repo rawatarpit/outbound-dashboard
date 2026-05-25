@@ -765,7 +765,11 @@ export const discoveredCompaniesAPI = {
   } = {}): Promise<{ data: DiscoveredCompany[], total: number, error: any }> => {
     const params: Record<string, string> = { 'order': 'discovered_at.desc' }
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
-    if (options.status) params['enrichment_status'] = `eq.${options.status}`
+    if (options.status) {
+      if (options.status === 'raw') params['enrichment_status'] = `eq.raw`
+      else if (options.status === 'rejected') params['enrichment_status'] = `eq.rejected`
+      else if (options.status === 'approved') params['enrichment_status'] = `eq.approved`
+    }
     if (options.sourceName) params['source_name'] = `eq.${options.sourceName}`
     if (options.signalType) params['signal_type'] = `eq.${options.signalType}`
     if (options.scoreMin) params['relevance_score'] = `gte.${options.scoreMin}`

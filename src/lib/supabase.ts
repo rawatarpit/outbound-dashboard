@@ -1076,26 +1076,21 @@ export const LEAD_STATUSES = [
   'closed_lost'
 ] as const
 
-export const ENRICHMENT_STATUSES = ['pending', 'processing', 'enriched', 'failed', 'dead'] as const
+export const ENRICHMENT_STATUSES = ['raw', 'rejected', 'approved'] as const
 
 export const REJECTION_REASONS = [
-  { value: 'enterprise_domain', label: 'Enterprise Domain', phase: 'P2', description: 'Domain in enterprise blocklist' },
-  { value: 'media_domain', label: 'Media/Social Domain', phase: 'P2', description: 'Domain in media blocklist' },
-  { value: 'job_board', label: 'Job Board', phase: 'P2', description: 'Recruiter pattern matched' },
-  { value: 'aggregator_name', label: 'Listicle/Aggregator', phase: 'P2', description: 'Title contains list pattern' },
-  { value: 'no_mx', label: 'No MX Records', phase: 'P2', description: 'Domain has no email infrastructure' },
-  { value: 'no_dns', label: 'No DNS Resolution', phase: 'P2', description: 'Domain does not resolve' },
-  { value: 'fake_name', label: 'Fake Company Name', phase: 'P2', description: 'Name does not look real' },
-  { value: 'llm_non_company', label: 'Not a Real Company (LLM)', phase: 'P3', description: 'LLM classified as non-company' },
-  { value: 'news_no_domain', label: 'News Article (no domain)', phase: 'P3', description: 'No explicit company domain' },
-  { value: 'llm_no_name', label: 'No Company Name (LLM)', phase: 'P3', description: 'LLM could not extract name' },
-  { value: 'listicle_name', label: 'Listicle Name Pattern', phase: 'P3', description: 'Name matches listicle pattern' },
-  { value: 'low_score', label: 'Score Too Low', phase: 'P4', description: 'Composite score below threshold' },
-  { value: 'enterprise_desc', label: 'Enterprise Description', phase: 'P4', description: 'Enterprise keywords in description' },
-  { value: 'llm_zero_score', label: 'LLM Zero Relevance', phase: 'P4', description: 'LLM judged as 0 relevance' },
-  { value: 'max_retries', label: 'Max Retries Reached', phase: 'Enrich', description: 'Enrichment exhausted retries' },
-  { value: 'enrichment_failed', label: 'Enrichment Failed', phase: 'Enrich', description: 'No strategy found contacts' },
-  { value: 'low_confidence', label: 'Low Confidence', phase: 'Enrich', description: 'Contact confidence below 0.3' },
+  { value: 'Enterprise domain', label: 'Enterprise Domain', phase: 'P2', description: 'Domain in enterprise blocklist' },
+  { value: 'Media/publisher domain', label: 'Media/Publisher Domain', phase: 'P2', description: 'Domain in media blocklist' },
+  { value: 'Job board / recruiter domain', label: 'Job Board / Recruiter', phase: 'P2', description: 'Recruiter pattern matched' },
+  { value: 'Aggregator name match', label: 'Aggregator by Name', phase: 'P2', description: 'Title contains list pattern' },
+  { value: 'Aggregator domain match', label: 'Aggregator by Domain', phase: 'P2', description: 'Domain in aggregator blocklist' },
+  { value: 'Not a likely real company name', label: 'Fake Company Name', phase: 'P2', description: 'Name does not look real' },
+  { value: 'Keyword relevance too low', label: 'Keyword Relevance Too Low', phase: 'P2', description: 'Keyword score below 30' },
+  { value: 'LLM classified as non-company', label: 'Not a Real Company (LLM)', phase: 'P3', description: 'LLM classified as non-company' },
+  { value: 'News article without domain', label: 'News Article (no domain)', phase: 'P3', description: 'No explicit company domain' },
+  { value: 'Enterprise description', label: 'Enterprise Description', phase: 'P4', description: 'Enterprise keywords in description' },
+  { value: 'LLM scored 0 relevance', label: 'LLM Zero Relevance', phase: 'P4', description: 'LLM judged as 0 relevance' },
+  { value: 'Composite score < 40', label: 'Score Too Low', phase: 'P4', description: 'Composite score below threshold' },
 ] as const
 
 export const COMPANY_STATUSES = [
