@@ -352,25 +352,80 @@ export type Database = {
          Insert: Omit<Database['public']['Tables']['brand_intents']['Row'], 'id' | 'created_at'>
          Update: Partial<Database['public']['Tables']['brand_intents']['Insert']>
        }
-       discovered_companies: {
-         Row: {
-           id: string
-           brand_id: string
-           enrichment_status: string
-           created_at: string
-         }
-         Insert: Omit<Database['public']['Tables']['discovered_companies']['Row'], 'id' | 'created_at'>
-         Update: Partial<Database['public']['Tables']['discovered_companies']['Insert']>
-       }
-       discovered_contacts: {
-         Row: {
-           id: string
-           brand_id: string
-           created_at: string
-         }
-         Insert: Omit<Database['public']['Tables']['discovered_contacts']['Row'], 'id' | 'created_at'>
-         Update: Partial<Database['public']['Tables']['discovered_contacts']['Insert']>
-       }
+        discovered_companies: {
+          Row: {
+            id: string
+            brand_id: string
+            source_id: string | null
+            name: string | null
+            website: string | null
+            domain: string
+            raw_payload: Record<string, unknown> | null
+            processed: boolean
+            ingested: boolean
+            error: string | null
+            discovered_at: string
+            retry_count: number
+            next_attempt_at: string | null
+            risk: string | null
+            confidence: number | null
+            intent_score: number | null
+            requires_enrichment: boolean
+            enrichment_status: string
+            enrichment_attempts: number
+            last_enrichment_at: string | null
+            enrichment_source: string | null
+            enrichment_reasoning: Record<string, unknown> | null
+            enrichment_error: string | null
+            dead_letter: boolean
+            updated_at: string
+            client_id: string | null
+            signal_type: string | null
+            relevance_score: number | null
+            urgency_score: number | null
+            fit_reason: string | null
+            summary: string | null
+            source_name: string | null
+          }
+          Insert: Omit<Database['public']['Tables']['discovered_companies']['Row'], 'id' | 'discovered_at' | 'updated_at'>
+          Update: Partial<Database['public']['Tables']['discovered_companies']['Insert']>
+        }
+        discovered_contacts: {
+          Row: {
+            id: string
+            brand_id: string
+            discovered_company_id: string | null
+            first_name: string | null
+            last_name: string | null
+            full_name: string | null
+            email: string | null
+            title: string | null
+            processed: boolean
+            ingested: boolean
+            error: string | null
+            created_at: string
+            retry_count: number
+            next_attempt_at: string | null
+            risk: string | null
+            confidence: number | null
+            intent_score: number | null
+            requires_enrichment: boolean
+            enrichment_status: string
+            enrichment_attempts: number
+            last_enrichment_at: string | null
+            enrichment_source: string | null
+            enrichment_reasoning: Record<string, unknown> | null
+            enrichment_error: string | null
+            linkedin_url: string | null
+            raw_payload: Record<string, unknown> | null
+            dead_letter: boolean
+            source_id: string | null
+            client_id: string | null
+            domain: string | null
+          }
+          Insert: Omit<Database['public']['Tables']['discovered_contacts']['Row'], 'id' | 'created_at'>
+          Update: Partial<Database['public']['Tables']['discovered_contacts']['Insert']>
+        }
        system_flags: {
          Row: {
            id: string
@@ -972,6 +1027,8 @@ export type BrandDiscoverySource = Database['public']['Tables']['brand_discovery
 export type ActivityLog = Database['public']['Tables']['activity_logs']['Row']
 export type DiscoveryMetric = Database['public']['Tables']['discovery_metrics']['Row']
 export type LeadImportBatch = Database['public']['Tables']['lead_import_batches']['Row']
+export type DiscoveredCompany = Database['public']['Tables']['discovered_companies']['Row']
+export type DiscoveredContact = Database['public']['Tables']['discovered_contacts']['Row']
 
 export interface BrandIntent {
   id: string
@@ -1017,6 +1074,28 @@ export const LEAD_STATUSES = [
   'negotiating',
   'closed_won',
   'closed_lost'
+] as const
+
+export const ENRICHMENT_STATUSES = ['pending', 'processing', 'enriched', 'failed', 'dead'] as const
+
+export const REJECTION_REASONS = [
+  { value: 'enterprise_domain', label: 'Enterprise Domain', phase: 'P2', description: 'Domain in enterprise blocklist' },
+  { value: 'media_domain', label: 'Media/Social Domain', phase: 'P2', description: 'Domain in media blocklist' },
+  { value: 'job_board', label: 'Job Board', phase: 'P2', description: 'Recruiter pattern matched' },
+  { value: 'aggregator_name', label: 'Listicle/Aggregator', phase: 'P2', description: 'Title contains list pattern' },
+  { value: 'no_mx', label: 'No MX Records', phase: 'P2', description: 'Domain has no email infrastructure' },
+  { value: 'no_dns', label: 'No DNS Resolution', phase: 'P2', description: 'Domain does not resolve' },
+  { value: 'fake_name', label: 'Fake Company Name', phase: 'P2', description: 'Name does not look real' },
+  { value: 'llm_non_company', label: 'Not a Real Company (LLM)', phase: 'P3', description: 'LLM classified as non-company' },
+  { value: 'news_no_domain', label: 'News Article (no domain)', phase: 'P3', description: 'No explicit company domain' },
+  { value: 'llm_no_name', label: 'No Company Name (LLM)', phase: 'P3', description: 'LLM could not extract name' },
+  { value: 'listicle_name', label: 'Listicle Name Pattern', phase: 'P3', description: 'Name matches listicle pattern' },
+  { value: 'low_score', label: 'Score Too Low', phase: 'P4', description: 'Composite score below threshold' },
+  { value: 'enterprise_desc', label: 'Enterprise Description', phase: 'P4', description: 'Enterprise keywords in description' },
+  { value: 'llm_zero_score', label: 'LLM Zero Relevance', phase: 'P4', description: 'LLM judged as 0 relevance' },
+  { value: 'max_retries', label: 'Max Retries Reached', phase: 'Enrich', description: 'Enrichment exhausted retries' },
+  { value: 'enrichment_failed', label: 'Enrichment Failed', phase: 'Enrich', description: 'No strategy found contacts' },
+  { value: 'low_confidence', label: 'Low Confidence', phase: 'Enrich', description: 'Contact confidence below 0.3' },
 ] as const
 
 export const COMPANY_STATUSES = [

@@ -13,7 +13,8 @@ import type {
   Client,
   LeadImportBatch,
   OutreachDraft,
-  BrandIntent
+  BrandIntent,
+  DiscoveredCompany
 } from '@/lib/supabase'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -744,5 +745,72 @@ export const brandIntentsAPI = {
 
   delete: async (id: string): Promise<{ error: any }> => {
     return deleteAPI('brand_intents', id)
+  }
+}
+
+// ─────────────────────────────────────────────
+// Discovered Companies
+// ─────────────────────────────────────────────
+export const discoveredCompaniesAPI = {
+  list: async (options: {
+    brandId?: string
+    status?: string
+    sourceName?: string
+    signalType?: string
+    scoreMin?: number
+    scoreMax?: number
+    search?: string
+    page?: number
+    perPage?: number
+  } = {}): Promise<{ data: DiscoveredCompany[], total: number, error: any }> => {
+    const params: Record<string, string> = { 'order': 'discovered_at.desc' }
+    if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
+    if (options.status) params['enrichment_status'] = `eq.${options.status}`
+    if (options.sourceName) params['source_name'] = `eq.${options.sourceName}`
+    if (options.signalType) params['signal_type'] = `eq.${options.signalType}`
+    if (options.scoreMin) params['relevance_score'] = `gte.${options.scoreMin}`
+    if (options.scoreMax) params['relevance_score'] = `lte.${options.scoreMax}`
+    if (options.search) params['name'] = `ilike.*${options.search}*`
+    const range: [number, number] = [
+      ((options.page || 1) - 1) * (options.perPage || 50),
+      (options.page || 1) * (options.perPage || 50) - 1
+    ]
+    const result = await fetchAPI('discovered_companies', { params, range })
+    return {
+      data: result.data as DiscoveredCompany[],
+      total: parseInt(result.count || '0'),
+      error: result.error
+    }
+  },
+
+  get: async (id: string): Promise<{ data: DiscoveredCompany | null, error: any }> => {
+    const params: Record<string, string> = { 'id': `eq.${id}` }
+    const { data, error } = await fetchAPI('discovered_companies', { params })
+    if (error) return { data: null, error }
+    return { data: data[0] || null, error: null }
+  },
+
+  update: async (id: string, data: Partial<DiscoveredCompany>): Promise<{ data: any, error: any }> => {
+    return updateAPI('discovered_companies', id, data)
+  },
+
+  delete: async (id: string): Promise<{ error: any }> => {
+    return deleteAPI('discovered_companies', id)
+  },
+
+  getSourceNames: async (): Promise<{ data: string[], error: any }> => {
+    const params: Record<string, string> = { 'select': 'source_name', 'source_name': 'not.is.null' }
+    const { data, error } = await fetchAPI('discovered_companies', { params })
+    if (error) return { data: [], error }
+    const names = [...new Set(data.map((d: any) => d.source_name).filter(Boolean))] as string[]
+    return { data: names, error: null }
+  },
+
+  getSignalTypes: async (): Promise<{ data: string[], error: any }> => {
+    const params: Record<string, string> = { 'select': 'signal_type', 'signal_type': 'not.is.null' }
+    const { data, error } = await fetchAPI('discovered_companies', { params })
+    if (error) return { data: [], error }
+    const types = [...new Set(data.map((d: any) => d.signal_type).filter(Boolean))] as string[]
+    return { data: types, error: null }
   }
 }

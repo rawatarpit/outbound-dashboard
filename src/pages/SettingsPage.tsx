@@ -14,9 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
-import { Settings, Mail, Bot, Server, Save } from 'lucide-react'
-import { settingsAPI } from '@/lib/api'
+import { Settings, Mail, Bot, Server, Save, Building2 } from 'lucide-react'
+import { settingsAPI, clientAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
+import type { Client } from '@/lib/supabase'
 
 export default function SettingsPage() {
   const { client, user } = useAuth()
@@ -25,14 +26,28 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<Partial<ClientSettings>>({})
+  const [clientData, setClientData] = useState<Client | null>(null)
+  const [clientForm, setClientForm] = useState<Partial<Client>>({})
 
   useEffect(() => {
     if (clientId) {
       fetchSettings()
+      fetchClient()
     } else {
       setIsLoading(false)
     }
   }, [clientId])
+
+  const fetchClient = async () => {
+    if (!clientId) return
+    try {
+      const { data } = await clientAPI.get(clientId)
+      if (data) {
+        setClientData(data)
+        setClientForm(data)
+      }
+    } catch {} // client fetch is best-effort
+  }
 
   const fetchSettings = async () => {
     if (!clientId) return
@@ -122,6 +137,10 @@ export default function SettingsPage() {
           <TabsTrigger value="general">
             <Settings className="h-4 w-4 mr-2" />
             General
+          </TabsTrigger>
+          <TabsTrigger value="clients">
+            <Building2 className="h-4 w-4 mr-2" />
+            Client Profile
           </TabsTrigger>
         </TabsList>
 
@@ -440,6 +459,126 @@ export default function SettingsPage() {
                   placeholder="Used for signature verification"
                 />
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="clients">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Client Profile
+              </CardTitle>
+              <CardDescription>
+                Manage your organization profile and settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="client_name">Organization Name</Label>
+                  <Input
+                    id="client_name"
+                    value={clientForm.name || ''}
+                    onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+                    placeholder="My Company"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client_slug">Slug</Label>
+                  <Input
+                    id="client_slug"
+                    value={clientForm.slug || ''}
+                    onChange={(e) => setClientForm({ ...clientForm, slug: e.target.value })}
+                    placeholder="my-company"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="client_website">Website</Label>
+                  <Input
+                    id="client_website"
+                    value={clientForm.website || ''}
+                    onChange={(e) => setClientForm({ ...clientForm, website: e.target.value })}
+                    placeholder="https://example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client_plan">Plan</Label>
+                  <Input
+                    id="client_plan"
+                    value={clientForm.plan || ''}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="client_seats">Seats</Label>
+                  <Input
+                    id="client_seats"
+                    type="number"
+                    value={clientForm.seats || 1}
+                    onChange={(e) => setClientForm({ ...clientForm, seats: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client_daily_limit">Daily Send Limit</Label>
+                  <Input
+                    id="client_daily_limit"
+                    type="number"
+                    value={clientForm.daily_send_limit || 50}
+                    onChange={(e) => setClientForm({ ...clientForm, daily_send_limit: parseInt(e.target.value) || 50 })}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-6 pt-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="client_active"
+                    checked={clientForm.is_active ?? true}
+                    onCheckedChange={(v) => setClientForm({ ...clientForm, is_active: v })}
+                  />
+                  <Label htmlFor="client_active">Active</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="client_discovery"
+                    checked={clientForm.discovery_enabled ?? true}
+                    onCheckedChange={(v) => setClientForm({ ...clientForm, discovery_enabled: v })}
+                  />
+                  <Label htmlFor="client_discovery">Discovery Enabled</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="client_enrichment"
+                    checked={clientForm.enrichment_enabled ?? true}
+                    onCheckedChange={(v) => setClientForm({ ...clientForm, enrichment_enabled: v })}
+                  />
+                  <Label htmlFor="client_enrichment">Enrichment Enabled</Label>
+                </div>
+              </div>
+              {clientData?.id && (
+                <div className="flex justify-end pt-4 border-t border-border">
+                  <Button
+                    onClick={async () => {
+                      if (!clientData?.id) return
+                      try {
+                        await clientAPI.update(clientData.id, clientForm)
+                        toast.success('Client profile updated')
+                      } catch (error: any) {
+                        toast.error(error.message || 'Failed to update client')
+                      }
+                    }}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Client Profile
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

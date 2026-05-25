@@ -8,6 +8,7 @@ import BrandsPage from '@/pages/BrandsPage'
 import BrandDetailPage from '@/pages/BrandDetailPage'
 import LeadsPage from '@/pages/LeadsPage'
 import LeadDetailPage from '@/pages/LeadDetailPage'
+import DiscoveredCompaniesPage from '@/pages/DiscoveredCompaniesPage'
 import PipelinePage from '@/pages/PipelinePage'
 import DiscoveryPage from '@/pages/DiscoveryPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="/brands/:id" element={<BrandDetailPage />} />
                 <Route path="/leads" element={<LeadsPage />} />
                 <Route path="/leads/:id" element={<LeadDetailPage />} />
+                <Route path="/discovered-companies" element={<DiscoveredCompaniesPage />} />
                 <Route path="/pipeline" element={<PipelinePage />} />
                 <Route path="/discovery" element={<DiscoveryPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />

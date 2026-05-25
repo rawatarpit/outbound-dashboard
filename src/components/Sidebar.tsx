@@ -21,9 +21,10 @@ import { cn } from '@/lib/utils'
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Brands', href: '/brands', icon: Building2 },
+  { name: 'Discovered', href: '/discovered-companies', icon: Search },
   { name: 'Leads', href: '/leads', icon: Users },
   { name: 'Pipeline', href: '/pipeline', icon: GitBranch },
-  { name: 'Discovery', href: '/discovery', icon: Search },
+  { name: 'Discovery', href: '/discovery', icon: Activity },
   { name: 'Outreach Queue', href: '/outreach', icon: Send },
   { name: 'Campaigns', href: '/campaigns', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },

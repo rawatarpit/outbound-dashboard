@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { formatNumber, formatRelativeTime, formatPercentage } from '@/lib/utils'
 import {
   Users,
@@ -20,8 +19,10 @@ import {
   Database,
   Send,
   Reply,
+  BarChart3,
+  PieChart,
 } from 'lucide-react'
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart as RePieChart, Pie, Cell } from 'recharts'
 import { brandsAPI, leadsAPI, dashboardAPI } from '@/lib/api'
 
 const PIPELINE_COLORS: Record<string, string> = {
@@ -41,12 +42,19 @@ const WORKER_ICONS: Record<string, any> = {
   reply: Reply,
 }
 
+const FUNNEL_COLORS = ['#94a3b8', '#64748b', '#475569', '#334155', '#1e293b']
+const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
 export default function DashboardPage() {
   const { client } = useAuth()
   const [stats, setStats] = useState<any>(null)
   const [workers, setWorkers] = useState<any>(null)
   const [pipelineData, setPipelineData] = useState<any[]>([])
   const [chartData, setChartData] = useState<any[]>([])
+  const [funnelData, setFunnelData] = useState<any[]>([])
+  const [scoreDistribution, setScoreDistribution] = useState<any[]>([])
+  const [sourceBreakdown, setSourceBreakdown] = useState<any[]>([])
+  const [rejectionData, setRejectionData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
@@ -77,10 +85,12 @@ export default function DashboardPage() {
       const discoveryStats = dash.discovery_stats || {}
       const pipelineStages = dash.pipeline || {}
       const activityFeed = dash.activity_feed || []
+      const avgScore = dash.avg_composite_score ?? discoveryStats.avg_composite_score
 
       setStats({
         totalLeads: leadsRes.total || leadsRes.data?.length || 0,
         totalCompanies: discoveryStats.companies_total || 0,
+        enrichedCompanies: discoveryStats.enriched_total || 0,
         contactsTotal: discoveryStats.contacts_total || 0,
         emailsSentToday: sendStats.sent_today || 0,
         emailsDelivered: sendStats.delivered || 0,
@@ -91,6 +101,9 @@ export default function DashboardPage() {
         replyRate: sendStats.sent_today > 0 ? (sendStats.opened || 0) / sendStats.sent_today : 0,
         activeBrands: brandsRes.data?.filter((b: any) => b.is_active).length || 0,
         recentActivity: activityFeed,
+        avgCompositeScore: avgScore ?? null,
+        activeSources: discoveryStats.active_sources ?? 0,
+        totalIntents: discoveryStats.total_intents ?? 0,
       })
 
       setWorkers(dash.workers || {})
@@ -105,7 +118,6 @@ export default function DashboardPage() {
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       const today = new Date().getDay()
       const recentDays = [...days.slice(today === 0 ? 6 : today - 1), ...days.slice(0, today === 0 ? 6 : today - 1)].slice(0, 7)
-
       setChartData(
         recentDays.map((day, i) => ({
           name: day,
@@ -113,6 +125,18 @@ export default function DashboardPage() {
           delivered: Math.max(0, Math.floor((sendStats.delivered || 0) * (0.3 + Math.random() * 0.7) * (1 - i * 0.05))),
         }))
       )
+
+      setFunnelData([
+        { name: 'Raw Results', value: discoveryStats.raw_total ?? 0 },
+        { name: 'Filtered', value: discoveryStats.filtered_total ?? 0 },
+        { name: 'Extracted', value: discoveryStats.extracted_total ?? 0 },
+        { name: 'Scored', value: discoveryStats.scored_total ?? 0 },
+        { name: 'Stored', value: discoveryStats.companies_total ?? 0 },
+      ].filter(d => d.value > 0))
+
+      setScoreDistribution(dash.score_distribution || [])
+      setSourceBreakdown(dash.source_breakdown || [])
+      setRejectionData(dash.rejection_reasons || [])
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       setHasError(true)
@@ -126,7 +150,6 @@ export default function DashboardPage() {
     if (status === 'paused') return <PauseCircle className="h-3.5 w-3.5 text-muted-foreground" />
     return <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/40" />
   }
-
 
   if (isLoading) {
     return (
@@ -178,8 +201,12 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total Leads in Pipeline', value: stats?.totalLeads || 0, icon: Users, progress: Math.min(100, (stats?.totalLeads || 0) / 100) },
-          { label: 'Discovered Companies', value: stats?.totalCompanies || 0, icon: Building2 },
+          { label: 'Companies Discovered (24h)', value: stats?.totalCompanies || 0, icon: Building2 },
+          { label: 'Companies Enriched', value: stats?.enrichedCompanies || 0, icon: Database },
+          { label: 'Leads Generated', value: stats?.totalLeads || 0, icon: Users, progress: Math.min(100, (stats?.totalLeads || 0) / 100) },
+          { label: 'Avg Composite Score', value: stats?.avgCompositeScore != null ? `${stats.avgCompositeScore}` : 'N/A', icon: BarChart3 },
+          { label: 'Sources Active', value: stats?.activeSources || 0, icon: Activity },
+          { label: 'Intents Configured', value: stats?.totalIntents || 0, icon: Target },
           { label: 'Emails Sent Today', value: formatNumber(totalSent), icon: Mail, progress: stats?.dailyLimit ? (totalSent / stats.dailyLimit) * 100 : 0, badge: stats?.dailyLimit ? `${Math.round((totalSent / stats.dailyLimit) * 100)}%` : '' },
           { label: 'Open Rate', value: formatPercentage(stats?.replyRate || 0), icon: MessageSquare, sub: `${formatNumber(opened)} opened · ${formatNumber(bounced)} bounced` },
         ].map(({ label, value, icon: Icon, progress, badge, sub }) => (
@@ -197,9 +224,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-2xl font-bold text-foreground">{value}</p>
               <p className="text-sm text-muted-foreground mt-1">{label}</p>
-              {sub && (
-                <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>
-              )}
+              {sub && <p className="text-xs text-muted-foreground/60 mt-2">{sub}</p>}
               {progress !== undefined && progress > 0 && (
                 <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-foreground/20 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, progress)}%` }} />
@@ -219,12 +244,8 @@ export default function DashboardPage() {
                 Email Performance (7 Days)
               </CardTitle>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-foreground/60" /> Sent
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-foreground/20" /> Delivered
-                </span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-foreground/60" /> Sent</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-foreground/20" /> Delivered</span>
               </div>
             </div>
           </CardHeader>
@@ -245,16 +266,7 @@ export default function DashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
                   <XAxis dataKey="name" stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="hsl(0 0% 70%)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: '8px',
-                      backgroundColor: '#ffffff',
-                      border: '1px solid hsl(0 0% 90%)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                      color: '#171717',
-                      fontSize: '13px',
-                    }}
-                  />
+                  <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid hsl(0 0% 90%)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: '#171717', fontSize: '13px' }} />
                   <Area type="monotone" dataKey="sent" stroke="#525252" strokeWidth={2} fill="url(#colorSent)" />
                   <Area type="monotone" dataKey="delivered" stroke="#a3a3a3" strokeWidth={2} fill="url(#colorDelivered)" />
                 </AreaChart>
@@ -287,13 +299,7 @@ export default function DashboardPage() {
                       <span className="text-sm font-semibold text-foreground">{item.value}</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: `${(item.value / Math.max(...pipelineData.map((d: any) => d.value), 1)) * 100}%`,
-                          backgroundColor: PIPELINE_COLORS[item.key] || '#a3a3a3',
-                        }}
-                      />
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(item.value / Math.max(...pipelineData.map((d: any) => d.value), 1)) * 100}%`, backgroundColor: PIPELINE_COLORS[item.key] || '#a3a3a3' }} />
                     </div>
                   </div>
                 ))}
@@ -307,6 +313,110 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+        {funnelData.length > 0 && (
+          <Card className="xl:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                Discovery Funnel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={funnelData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
+                    <XAxis type="number" stroke="hsl(0 0% 70%)" fontSize={12} />
+                    <YAxis dataKey="name" type="category" stroke="hsl(0 0% 70%)" fontSize={12} width={90} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid hsl(0 0% 90%)', fontSize: '13px' }} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      {funnelData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index % FUNNEL_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {scoreDistribution.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                Score Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scoreDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
+                    <XAxis dataKey="range" stroke="hsl(0 0% 70%)" fontSize={11} />
+                    <YAxis stroke="hsl(0 0% 70%)" fontSize={12} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid hsl(0 0% 90%)', fontSize: '13px' }} />
+                    <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {sourceBreakdown.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+                Source Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie data={sourceBreakdown} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="source" label={({ source, percent }) => `${source} (${(percent * 100).toFixed(0)}%)`} labelLine={false}>
+                      {sourceBreakdown.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {rejectionData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+                Rejection Reasons
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie data={rejectionData} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="reason" label={({ percent }: any) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      {rejectionData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -338,16 +448,10 @@ export default function DashboardPage() {
                       <Activity className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {activity.description || activity.activity_type}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatRelativeTime(activity.created_at)}
-                      </p>
+                      <p className="text-sm font-medium text-foreground truncate">{activity.description || activity.activity_type}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTime(activity.created_at)}</p>
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0 capitalize">
-                      {activity.activity_type?.replace(/_/g, ' ')}
-                    </span>
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0 capitalize">{activity.activity_type?.replace(/_/g, ' ')}</span>
                   </div>
                 ))}
               </div>
@@ -363,38 +467,31 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {workers &&
-              Object.entries(workers).map(([type, info]: [string, any]) => {
-                const Icon = WORKER_ICONS[type] || Activity
-                const status = info?.status || 'idle'
-                const isRunning = status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
-                return (
-                  <div key={type} className="group flex items-center gap-3 p-3.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/60 transition-all duration-200">
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center border ${
-                      isRunning ? 'bg-foreground/5 border-foreground/10' : 'bg-muted border-border'
-                    }`}>
-                      <Icon className={`h-[16px] w-[16px] ${isRunning ? 'text-foreground' : 'text-muted-foreground/50'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground capitalize">{type}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {info?.last_run ? `Last: ${formatRelativeTime(info.last_run)}` : 'Not run yet'}
-                        {info?.pending ? ` · ${info.pending} pending` : ''}
-                        {info?.reason ? ` · ${info.reason}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {getWorkerIcon(type, status)}
-                      <span className={`text-xs font-medium ${
-                        isRunning ? 'text-foreground' : status === 'paused' ? 'text-muted-foreground' : 'text-muted-foreground/50'
-                      }`}>{status}</span>
-                    </div>
+            {workers && Object.entries(workers).map(([type, info]: [string, any]) => {
+              const Icon = WORKER_ICONS[type] || Activity
+              const status = info?.status || 'idle'
+              const isRunning = status === 'running' || status === 'processing' || status === 'sending' || status === 'monitoring'
+              return (
+                <div key={type} className="group flex items-center gap-3 p-3.5 rounded-lg bg-muted/30 border border-border hover:bg-muted/60 transition-all duration-200">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center border ${isRunning ? 'bg-foreground/5 border-foreground/10' : 'bg-muted border-border'}`}>
+                    <Icon className={`h-[16px] w-[16px] ${isRunning ? 'text-foreground' : 'text-muted-foreground/50'}`} />
                   </div>
-                )
-              })}
-            {!workers && (
-              <div className="text-center py-8 text-muted-foreground text-sm">No worker data available</div>
-            )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground capitalize">{type}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {info?.last_run ? `Last: ${formatRelativeTime(info.last_run)}` : 'Not run yet'}
+                      {info?.pending ? ` · ${info.pending} pending` : ''}
+                      {info?.reason ? ` · ${info.reason}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {getWorkerIcon(type, status)}
+                    <span className={`text-xs font-medium ${isRunning ? 'text-foreground' : status === 'paused' ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>{status}</span>
+                  </div>
+                </div>
+              )
+            })}
+            {!workers && <div className="text-center py-8 text-muted-foreground text-sm">No worker data available</div>}
           </CardContent>
         </Card>
       </div>
