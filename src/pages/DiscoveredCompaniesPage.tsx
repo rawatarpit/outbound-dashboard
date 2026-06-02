@@ -65,7 +65,8 @@ function RejectionBadge({ reason }: { reason: string }) {
 }
 
 export default function DiscoveredCompaniesPage() {
-  const { client } = useAuth()
+  const { client, user } = useAuth()
+  const effectiveClientId = user?.clientId ?? client?.id
   const [companies, setCompanies] = useState<DiscoveredCompany[]>([])
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -82,24 +83,26 @@ export default function DiscoveredCompaniesPage() {
   const [sourceNames, setSourceNames] = useState<string[]>([])
 
   useEffect(() => {
+    if (!effectiveClientId) return
     fetchBrands()
     fetchSourceNames()
-  }, [])
+  }, [effectiveClientId])
 
   useEffect(() => {
+    if (!effectiveClientId) return
     fetchCompanies()
-  }, [currentPage, statusFilter, sourceFilter, brandFilter])
+  }, [effectiveClientId, currentPage, statusFilter, sourceFilter, brandFilter])
 
   const fetchBrands = async () => {
     try {
-      const { data } = await brandsAPI.list(client?.id)
+      const { data } = await brandsAPI.list(effectiveClientId)
       setBrands(data || [])
     } catch {}
   }
 
   const fetchSourceNames = async () => {
     try {
-      const { data } = await discoveredCompaniesAPI.getSourceNames(client?.id)
+      const { data } = await discoveredCompaniesAPI.getSourceNames(effectiveClientId)
       setSourceNames(data)
     } catch {}
   }
@@ -108,7 +111,7 @@ export default function DiscoveredCompaniesPage() {
     setIsLoading(true)
     try {
       const { data, total, error } = await discoveredCompaniesAPI.list({
-        clientId: client?.id,
+        clientId: effectiveClientId,
         brandId: brandFilter,
         status: statusFilter,
         sourceName: sourceFilter,
