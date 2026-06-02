@@ -110,19 +110,18 @@ async function fetchAPI(
   }
 
   let data: any
+  const method = options.method || 'GET'
+
+  console.log(`[API] ${method} ${url}`, { headers: Object.keys(headers) })
 
   try {
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    })
+    const response = await fetch(url, { method, headers, body: options.body ? JSON.stringify(options.body) : undefined })
 
     const text = await response.text()
     data = text ? JSON.parse(text) : {}
 
     if (!response.ok) {
-      console.error(`API Error [${table}] [${response.status}]:`, data)
+      console.error(`API Error [${table}] [${response.status}] [${method} ${url}]:`, data)
 
       if (data?.code === 'PGRST303' || data?.message?.includes('JWT expired')) {
         localStorage.removeItem('outbound_token')
@@ -137,7 +136,7 @@ async function fetchAPI(
       count: response.headers.get('content-range')?.split('/')[1]
     }
   } catch (err: any) {
-    console.error(`API Error [${table}] [fetch]:`, err)
+    console.error(`API Error [${table}] [fetch] [${method} ${url}]:`, err)
     return {
       data: [],
       error: { message: err.message || 'Network error', status: 0 },
