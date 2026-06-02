@@ -753,6 +753,7 @@ export const brandIntentsAPI = {
 // ─────────────────────────────────────────────
 export const discoveredCompaniesAPI = {
   list: async (options: {
+    clientId?: string
     brandId?: string
     status?: string
     sourceName?: string
@@ -764,6 +765,7 @@ export const discoveredCompaniesAPI = {
     perPage?: number
   } = {}): Promise<{ data: DiscoveredCompany[], total: number, error: any }> => {
     const params: Record<string, string> = { 'order': 'discovered_at.desc' }
+    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
     if (options.status) {
       if (options.status === 'raw') params['enrichment_status'] = `eq.raw`
@@ -802,16 +804,18 @@ export const discoveredCompaniesAPI = {
     return deleteAPI('discovered_companies', id)
   },
 
-  getSourceNames: async (): Promise<{ data: string[], error: any }> => {
+  getSourceNames: async (clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'select': 'source_name', 'source_name': 'not.is.null' }
+    if (clientId) params['client_id'] = `eq.${clientId}`
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
     const names = [...new Set(data.map((d: any) => d.source_name).filter(Boolean))] as string[]
     return { data: names, error: null }
   },
 
-  getSignalTypes: async (): Promise<{ data: string[], error: any }> => {
+  getSignalTypes: async (clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'select': 'signal_type', 'signal_type': 'not.is.null' }
+    if (clientId) params['client_id'] = `eq.${clientId}`
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
     const types = [...new Set(data.map((d: any) => d.signal_type).filter(Boolean))] as string[]

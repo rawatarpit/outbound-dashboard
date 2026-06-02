@@ -99,7 +99,7 @@ export default function DiscoveredCompaniesPage() {
 
   const fetchSourceNames = async () => {
     try {
-      const { data } = await discoveredCompaniesAPI.getSourceNames()
+      const { data } = await discoveredCompaniesAPI.getSourceNames(client?.id)
       setSourceNames(data)
     } catch {}
   }
@@ -108,6 +108,7 @@ export default function DiscoveredCompaniesPage() {
     setIsLoading(true)
     try {
       const { data, total, error } = await discoveredCompaniesAPI.list({
+        clientId: client?.id,
         brandId: brandFilter,
         status: statusFilter,
         sourceName: sourceFilter,
