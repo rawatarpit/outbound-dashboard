@@ -109,28 +109,40 @@ async function fetchAPI(
     headers['Prefer'] = 'count=exact'
   }
 
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  })
+  let data: any
 
-  const data = await response.json()
+  try {
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    })
 
-  if (!response.ok) {
-    console.error(`API Error [${table}]:`, data)
+    const text = await response.text()
+    data = text ? JSON.parse(text) : {}
 
-    if (data?.code === 'PGRST303' || data?.message?.includes('JWT expired')) {
-      localStorage.removeItem('outbound_token')
-      localStorage.removeItem('outbound_user')
-      window.location.href = '/login'
+    if (!response.ok) {
+      console.error(`API Error [${table}] [${response.status}]:`, data)
+
+      if (data?.code === 'PGRST303' || data?.message?.includes('JWT expired')) {
+        localStorage.removeItem('outbound_token')
+        localStorage.removeItem('outbound_user')
+        window.location.href = '/login'
+      }
     }
-  }
 
-  return {
-    data: Array.isArray(data) ? data : data ? [data] : [],
-    error: response.ok ? null : data,
-    count: response.headers.get('content-range')?.split('/')[1]
+    return {
+      data: Array.isArray(data) ? data : data ? [data] : [],
+      error: response.ok ? null : { ...data, status: response.status },
+      count: response.headers.get('content-range')?.split('/')[1]
+    }
+  } catch (err: any) {
+    console.error(`API Error [${table}] [fetch]:`, err)
+    return {
+      data: [],
+      error: { message: err.message || 'Network error', status: 0 },
+      count: '0'
+    }
   }
 }
 
