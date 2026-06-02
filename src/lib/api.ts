@@ -789,11 +789,9 @@ export const discoveredCompaniesAPI = {
     if (options.scoreMin) params['relevance_score'] = `gte.${options.scoreMin}`
     if (options.scoreMax) params['relevance_score'] = `lte.${options.scoreMax}`
     if (options.search) params['name'] = `ilike.*${options.search}*`
-    const range: [number, number] = [
-      ((options.page || 1) - 1) * (options.perPage || 50),
-      (options.page || 1) * (options.perPage || 50) - 1
-    ]
-    const result = await fetchAPI('discovered_companies', { params, range })
+    params['limit'] = String(options.perPage || 50)
+    params['offset'] = String(((options.page || 1) - 1) * (options.perPage || 50))
+    const result = await fetchAPI('discovered_companies', { params, count: true })
     return {
       data: result.data as DiscoveredCompany[],
       total: parseInt(result.count || '0'),
@@ -817,7 +815,7 @@ export const discoveredCompaniesAPI = {
   },
 
   getSourceNames: async (clientId?: string): Promise<{ data: string[], error: any }> => {
-    const params: Record<string, string> = { 'select': 'source_name', 'source_name': 'not.is.null' }
+    const params: Record<string, string> = { 'source_name': 'not.is.null' }
     if (clientId) params['client_id'] = `eq.${clientId}`
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
@@ -826,7 +824,7 @@ export const discoveredCompaniesAPI = {
   },
 
   getSignalTypes: async (clientId?: string): Promise<{ data: string[], error: any }> => {
-    const params: Record<string, string> = { 'select': 'signal_type', 'signal_type': 'not.is.null' }
+    const params: Record<string, string> = { 'signal_type': 'not.is.null' }
     if (clientId) params['client_id'] = `eq.${clientId}`
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
