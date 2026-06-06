@@ -147,7 +147,7 @@ export default function DiscoveredCompaniesPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Discovered Companies</span>
           </h1>
-          <p className="text-muted-foreground">Browse all companies through the pipeline — from raw results to approved leads</p>
+          <p className="text-muted-foreground mt-1">Browse all companies through the pipeline — from raw results to approved leads</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
           <Building2 className="h-4 w-4" />
@@ -155,7 +155,7 @@ export default function DiscoveredCompaniesPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">

@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Analytics</span>
           </h1>
-          <p className="text-muted-foreground">Track your outbound performance</p>
+          <p className="text-muted-foreground mt-1">Track your outbound performance</p>
         </div>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Analytics</span>
           </h1>
-          <p className="text-muted-foreground">Track your outbound performance</p>
+          <p className="text-muted-foreground mt-1">Track your outbound performance</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedBrand} onValueChange={setSelectedBrand}>

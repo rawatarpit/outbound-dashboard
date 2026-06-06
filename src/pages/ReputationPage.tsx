@@ -122,7 +122,7 @@ export default function ReputationPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Reputation & Domain Health</span>
           </h1>
-          <p className="text-muted-foreground">Monitor sending reputation and deliverability</p>
+          <p className="text-muted-foreground mt-1">Monitor sending reputation and deliverability</p>
         </div>
         <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
           <SelectTrigger className="w-[200px]">

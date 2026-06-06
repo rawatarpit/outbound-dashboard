@@ -110,7 +110,7 @@ export default function WebhooksPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Webhooks</span>
           </h1>
-          <p className="text-muted-foreground">Configure outbound webhooks for system events</p>
+          <p className="text-muted-foreground mt-1">Configure outbound webhooks for system events</p>
         </div>
         <Button onClick={() => { setEditingWebhook(null); setIsModalOpen(true) }}>
           <Plus className="h-4 w-4 mr-2" />

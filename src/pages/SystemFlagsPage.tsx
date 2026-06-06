@@ -86,7 +86,7 @@ export default function SystemFlagsPage() {
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">System Flags</span>
         </h1>
-        <p className="text-muted-foreground">Master switches that control the entire system</p>
+        <p className="text-muted-foreground mt-1">Master switches that control the entire system</p>
       </div>
 
       {!canManage && (

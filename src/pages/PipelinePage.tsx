@@ -122,7 +122,7 @@ export default function PipelinePage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Pipeline</span>
           </h1>
-          <p className="text-muted-foreground">Manage companies through the sales pipeline</p>
+          <p className="text-muted-foreground mt-1">Manage companies through the sales pipeline</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={brandFilter} onValueChange={setBrandFilter}>
@@ -228,7 +228,7 @@ export default function PipelinePage() {
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">

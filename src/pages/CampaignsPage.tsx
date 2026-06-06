@@ -131,7 +131,7 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Campaigns</span>
           </h1>
-          <p className="text-muted-foreground">Track all sent emails and their delivery status</p>
+          <p className="text-muted-foreground mt-1">Track all sent emails and their delivery status</p>
         </div>
       </div>
 

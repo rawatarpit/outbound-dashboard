@@ -280,7 +280,7 @@ export default function LeadDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Lead Information</CardTitle>
             </CardHeader>
@@ -388,7 +388,7 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
@@ -426,7 +426,7 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -494,7 +494,7 @@ export default function LeadDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
@@ -523,7 +523,7 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
@@ -551,7 +551,7 @@ export default function LeadDetailPage() {
           </Card>
 
           {company && (
-            <Card>
+            <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
@@ -608,7 +608,7 @@ export default function LeadDetailPage() {
           )}
 
           {brand && (
-            <Card>
+            <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />

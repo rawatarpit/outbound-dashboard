@@ -325,7 +325,7 @@ export default function DiscoveryPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Discovery Sources</span>
           </h1>
-          <p className="text-muted-foreground">Configure data sources for company and contact discovery</p>
+          <p className="text-muted-foreground mt-1">Configure data sources for company and contact discovery</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={brandFilter} onValueChange={setBrandFilter}>

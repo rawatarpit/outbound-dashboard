@@ -268,7 +268,7 @@ export default function ApiKeysPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">API Keys & Services</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Configure all services your outbound engine uses. Configure once, use everywhere.</p>
+          <p className="text-sm text-muted-foreground mt-1">Configure all services your outbound engine uses. Configure once, use everywhere.</p>
         </div>
       </div>
 

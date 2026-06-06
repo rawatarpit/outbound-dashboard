@@ -152,7 +152,7 @@ export default function LeadsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Leads</span>
           </h1>
-          <p className="text-muted-foreground">Manage and track your leads through the pipeline</p>
+          <p className="text-muted-foreground mt-1">Manage and track your leads through the pipeline</p>
         </div>
         <Button onClick={() => setIsImportModalOpen(true)}>
           <Upload className="h-4 w-4 mr-2" />

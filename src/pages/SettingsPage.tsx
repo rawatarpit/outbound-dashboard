@@ -119,7 +119,7 @@ export default function SettingsPage() {
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Settings</span>
         </h1>
-        <p className="text-muted-foreground">Configure your outbound engine</p>
+        <p className="text-muted-foreground mt-1">Configure your outbound engine</p>
       </div>
 
       <Tabs defaultValue="llm" className="w-full">

@@ -187,7 +187,7 @@ export default function OutreachQueuePage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Outreach Queue</span>
           </h1>
-          <p className="text-muted-foreground">Review and approve email drafts before sending</p>
+          <p className="text-muted-foreground mt-1">Review and approve email drafts before sending</p>
         </div>
         <Select value={brandFilter} onValueChange={setBrandFilter}>
           <SelectTrigger className="w-[200px]">
