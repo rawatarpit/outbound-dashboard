@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import { AlertTriangle, Shield, Mail, TrendingUp, Activity, RefreshCw, Ban, CheckCircle, AlertCircle, Gauge, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, Shield, Mail, TrendingUp, Activity, RefreshCw, Ban, CheckCircle, AlertCircle, Gauge, ShieldAlert, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
 import { brandsAPI } from '@/lib/api'
@@ -103,8 +103,10 @@ export default function ReputationPage() {
   if (brands.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Reputation & Domain Health</h1>
-        <Card>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Reputation & Domain Health</span>
+        </h1>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="py-16 text-center text-muted-foreground">
             No brands configured yet
           </CardContent>
@@ -117,7 +119,9 @@ export default function ReputationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reputation & Domain Health</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Reputation & Domain Health</span>
+          </h1>
           <p className="text-muted-foreground">Monitor sending reputation and deliverability</p>
         </div>
         <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
@@ -133,7 +137,7 @@ export default function ReputationPage() {
       </div>
 
       {brand?.auto_paused && (
-        <Card className="border-red-500/40 bg-red-500/5 border-2">
+        <Card className="border-red-500/40 bg-red-500/5 border-2 rounded-2xl">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
@@ -153,7 +157,7 @@ export default function ReputationPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Gauge className="h-5 w-5 text-muted-foreground/50" />
@@ -188,7 +192,7 @@ export default function ReputationPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
               <Mail className="h-5 w-5 text-muted-foreground/50" />
@@ -198,7 +202,7 @@ export default function ReputationPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
               <ShieldAlert className="h-5 w-5 text-muted-foreground/50" />
@@ -222,7 +226,7 @@ export default function ReputationPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
               <AlertTriangle className="h-5 w-5 text-muted-foreground/50" />
@@ -239,7 +243,7 @@ export default function ReputationPage() {
       </div>
 
       {bounceRate > 5 && (
-        <Card className="border-red-500/30 bg-red-500/5">
+        <Card className="border-red-500/30 bg-red-500/5 rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
@@ -257,7 +261,7 @@ export default function ReputationPage() {
       )}
 
       {complaintCount > 0 && (
-        <Card className="border-yellow-500/30 bg-yellow-500/5">
+        <Card className="border-yellow-500/30 bg-yellow-500/5 rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 shrink-0">
@@ -274,7 +278,7 @@ export default function ReputationPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Domain Details</CardTitle>
           <CardDescription>

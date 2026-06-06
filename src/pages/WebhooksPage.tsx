@@ -12,7 +12,8 @@ import {
   Webhook,
   Trash2,
   MoreHorizontal,
-  Send
+  Send,
+  Loader2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
@@ -106,7 +107,9 @@ export default function WebhooksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Webhooks</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Webhooks</span>
+          </h1>
           <p className="text-muted-foreground">Configure outbound webhooks for system events</p>
         </div>
         <Button onClick={() => { setEditingWebhook(null); setIsModalOpen(true) }}>
@@ -116,7 +119,7 @@ export default function WebhooksPage() {
       </div>
 
       {webhooks.length === 0 ? (
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Webhook className="h-12 w-12 text-muted-foreground/40 mb-4" />
             <h3 className="text-lg font-medium text-foreground">No webhooks configured</h3>
@@ -130,7 +133,7 @@ export default function WebhooksPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {webhooks.map((webhook) => (
-            <Card key={webhook.id}>
+            <Card key={webhook.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">

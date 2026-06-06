@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
-import { Settings, Mail, Bot, Server, Save, Building2 } from 'lucide-react'
+import { Settings, Mail, Bot, Server, Save, Building2, Loader2 } from 'lucide-react'
 import { settingsAPI, clientAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import type { Client } from '@/lib/supabase'
@@ -116,12 +116,14 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Settings</span>
+        </h1>
         <p className="text-muted-foreground">Configure your outbound engine</p>
       </div>
 
       <Tabs defaultValue="llm" className="w-full">
-        <TabsList>
+        <TabsList className="bg-muted/70 border border-border/50 p-0.5">
           <TabsTrigger value="llm">
             <Bot className="h-4 w-4 mr-2" />
             LLM Configuration
@@ -145,7 +147,7 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="llm">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>LLM Configuration</CardTitle>
               <CardDescription>
@@ -223,7 +225,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="email">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Email Configuration</CardTitle>
               <CardDescription>
@@ -353,7 +355,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="imap">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>IMAP Configuration</CardTitle>
               <CardDescription>
@@ -432,7 +434,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="general">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>General Settings</CardTitle>
               <CardDescription>
@@ -464,7 +466,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="clients">
-          <Card>
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />

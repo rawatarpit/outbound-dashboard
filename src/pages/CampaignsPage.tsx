@@ -127,13 +127,15 @@ export default function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Campaigns</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Campaigns</span>
+          </h1>
           <p className="text-muted-foreground">Track all sent emails and their delivery status</p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-2.5 bg-blue-500/10 rounded-xl">
               <Send className="h-5 w-5 text-blue-500" />
@@ -145,7 +147,7 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-2.5 bg-green-500/10 rounded-xl">
               <TrendingUp className="h-5 w-5 text-green-500" />
@@ -157,7 +159,7 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className={`p-2.5 rounded-xl ${bounceRate > 0.05 ? 'bg-red-500/10' : 'bg-muted'}`}>
               <AlertTriangle className={`h-5 w-5 ${bounceRate > 0.05 ? 'text-red-500' : 'text-muted-foreground'}`} />
@@ -171,7 +173,7 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className={`p-2.5 rounded-xl ${replyRate > 0.03 ? 'bg-emerald-500/10' : 'bg-muted'}`}>
               <Reply className={`h-5 w-5 ${replyRate > 0.03 ? 'text-emerald-500' : 'text-muted-foreground'}`} />
@@ -185,7 +187,7 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-2.5 bg-indigo-500/10 rounded-xl">
               <Clock className="h-5 w-5 text-indigo-500" />
@@ -198,7 +200,7 @@ export default function CampaignsPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle>Delivery Funnel</CardTitle>
         </CardHeader>
@@ -232,7 +234,7 @@ export default function CampaignsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">

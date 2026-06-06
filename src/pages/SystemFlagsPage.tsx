@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Switch } from '@/components/ui/Switch'
 import { Badge } from '@/components/ui/Badge'
-import { AlertTriangle, Shield, Send, Search, Mail } from 'lucide-react'
+import { AlertTriangle, Shield, Send, Search, Mail, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { systemAPI } from '@/lib/api'
 
@@ -83,12 +83,14 @@ export default function SystemFlagsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">System Flags</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">System Flags</span>
+        </h1>
         <p className="text-muted-foreground">Master switches that control the entire system</p>
       </div>
 
       {!canManage && (
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 p-4">
             <AlertTriangle className="h-5 w-5 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Only owners and admins can modify system flags</p>
@@ -96,7 +98,7 @@ export default function SystemFlagsPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>System Controls</CardTitle>
           <CardDescription>
@@ -107,7 +109,7 @@ export default function SystemFlagsPage() {
           {flags.map((flag) => {
             const Icon = flag.icon
             return (
-              <div key={flag.key} className="flex items-center justify-between p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+              <div key={flag.key} className="flex items-center justify-between p-4 border border-border/50 rounded-xl hover:bg-muted/50 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className={`p-2 rounded-lg ${flag.value ? 'bg-primary/10' : 'bg-muted'}`}>
                     <Icon className={`h-5 w-5 ${flag.value ? 'text-primary' : 'text-muted-foreground/50'}`} />

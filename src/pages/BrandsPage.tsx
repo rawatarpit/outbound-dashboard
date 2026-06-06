@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
 import Drawer from '@/components/Drawer'
 import BrandForm from '@/components/forms/BrandForm'
-import { Plus, Building2, Mail, Search, ExternalLink, MoreHorizontal, Play, Pause } from 'lucide-react'
+import { Plus, Building2, Mail, Search, ExternalLink, MoreHorizontal, Play, Pause, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { brandsAPI } from '@/lib/api'
 import {
@@ -129,7 +129,9 @@ export default function BrandsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Brands</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Brands</span>
+          </h1>
           <p className="text-muted-foreground mt-1">Manage your brand profiles and campaigns</p>
         </div>
         <Button onClick={handleCreateBrand}>
@@ -139,7 +141,7 @@ export default function BrandsPage() {
       </div>
 
       {brands.length === 0 ? (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
               <Building2 className="h-8 w-8 text-muted-foreground/40" />
@@ -156,7 +158,7 @@ export default function BrandsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {brands.map((brand) => (
             <div key={brand.id} className="group relative">
-              <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
+              <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

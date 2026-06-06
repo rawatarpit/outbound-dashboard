@@ -253,7 +253,10 @@ export default function ApiKeysPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
+        <div className="relative">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-border border-t-primary shadow-2xl" />
+          <div className="absolute inset-0 animate-pulse rounded-full h-10 w-10 bg-primary/5 blur-xl" />
+        </div>
       </div>
     )
   }
@@ -262,13 +265,15 @@ export default function ApiKeysPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">API Keys & Services</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">API Keys & Services</span>
+          </h1>
           <p className="text-sm text-muted-foreground">Configure all services your outbound engine uses. Configure once, use everywhere.</p>
         </div>
       </div>
 
       {/* Centralized Service Configuration */}
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -300,7 +305,7 @@ export default function ApiKeysPage() {
       </Card>
 
       {/* Personal API Keys - for programmatic access */}
-      <Card>
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -340,7 +345,7 @@ export default function ApiKeysPage() {
                 const isConfigured = key.status === 'configured'
 
                 return (
-                  <Card key={key.id} className={`hover:shadow-md transition-shadow ${!isConfigured ? 'opacity-70 border-dashed' : ''}`}>
+                  <Card key={key.id} className={`rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-shadow ${!isConfigured ? 'opacity-70 border-dashed' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">

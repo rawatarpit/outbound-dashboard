@@ -183,7 +183,9 @@ export default function OutreachQueuePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Outreach Queue</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Outreach Queue</span>
+          </h1>
           <p className="text-muted-foreground">Review and approve email drafts before sending</p>
         </div>
         <Select value={brandFilter} onValueChange={setBrandFilter}>
@@ -199,7 +201,7 @@ export default function OutreachQueuePage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-2.5 bg-muted rounded-xl">
               <Mail className="h-5 w-5 text-foreground" />
@@ -210,7 +212,7 @@ export default function OutreachQueuePage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-2.5 bg-muted rounded-xl">
               <Clock className="h-5 w-5 text-foreground" />
@@ -224,7 +226,7 @@ export default function OutreachQueuePage() {
       </div>
 
       {entries.length === 0 ? (
-        <Card className="bg-muted border-border">
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center mb-4">
               <Mail className="h-7 w-7 text-muted-foreground/60" />
@@ -238,7 +240,7 @@ export default function OutreachQueuePage() {
           {entries.map((entry) => {
             const isProcessing = entry.status === 'draft_processing'
             return (
-              <Card key={entry.id} className="hover:shadow-md transition-shadow overflow-hidden">
+              <Card key={entry.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3 min-w-0">

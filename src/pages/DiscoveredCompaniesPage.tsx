@@ -144,7 +144,9 @@ export default function DiscoveredCompaniesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Discovered Companies</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Discovered Companies</span>
+          </h1>
           <p className="text-muted-foreground">Browse all companies through the pipeline — from raw results to approved leads</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">

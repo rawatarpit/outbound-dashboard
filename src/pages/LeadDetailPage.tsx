@@ -234,7 +234,7 @@ export default function LeadDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-foreground truncate">{displayName}</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground truncate">{displayName}</h1>
             <Badge variant={STATUS_VARIANTS[lead.status] || 'default'}>
               {formatStatusLabel(lead.status)}
             </Badge>

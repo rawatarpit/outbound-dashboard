@@ -148,7 +148,9 @@ export default function LeadsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Leads</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Leads</span>
+          </h1>
           <p className="text-muted-foreground">Manage and track your leads through the pipeline</p>
         </div>
         <Button onClick={() => setIsImportModalOpen(true)}>
@@ -161,7 +163,7 @@ export default function LeadsPage() {
         {stats.map(stat => {
           const Icon = stat.icon
           return (
-            <Card key={stat.label} className="border-border">
+            <Card key={stat.label} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardContent className="p-5 flex items-center gap-4">
                 <div className={cn('rounded-xl p-3', stat.bg)}>
                   <Icon className={cn('h-5 w-5', stat.color)} />
@@ -177,7 +179,7 @@ export default function LeadsPage() {
       </div>
 
       {sourceBreakdown.length > 0 && (
-        <Card className="border-border">
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -205,7 +207,7 @@ export default function LeadsPage() {
         </Card>
       )}
 
-      <Card className="border-border">
+      <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 flex gap-2">

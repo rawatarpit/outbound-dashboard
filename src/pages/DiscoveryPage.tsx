@@ -86,7 +86,7 @@ function SourceDetailView({
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -99,7 +99,7 @@ function SourceDetailView({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/10 rounded-lg">
@@ -112,7 +112,7 @@ function SourceDetailView({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-lg">
@@ -125,7 +125,7 @@ function SourceDetailView({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-lg">
@@ -143,7 +143,7 @@ function SourceDetailView({
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Configuration</CardTitle>
           </CardHeader>
@@ -172,8 +172,8 @@ function SourceDetailView({
             </div>
           </CardContent>
         </Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
 
-        <Card>
           <CardHeader>
             <CardTitle>Execution History</CardTitle>
           </CardHeader>
@@ -329,7 +329,9 @@ export default function DiscoveryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Discovery Sources</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Discovery Sources</span>
+          </h1>
           <p className="text-muted-foreground">Configure data sources for company and contact discovery</p>
         </div>
         <div className="flex items-center gap-4">
@@ -351,7 +353,7 @@ export default function DiscoveryPage() {
       </div>
 
       {sources.length === 0 ? (
-        <Card>
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-medium text-foreground">No discovery sources</h3>

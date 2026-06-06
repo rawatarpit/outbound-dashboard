@@ -119,7 +119,9 @@ export default function PipelinePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Pipeline</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Pipeline</span>
+          </h1>
           <p className="text-muted-foreground">Manage companies through the sales pipeline</p>
         </div>
         <div className="flex items-center gap-4">
@@ -174,7 +176,7 @@ export default function PipelinePage() {
               </div>
               <div className="bg-muted rounded-b-lg border border-border p-2 space-y-2 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
-                  <Card key={company.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                  <Card key={company.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
