@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { type Lead, type BrandProfile, type Company, type SentMessage, LEAD_STATUSES } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -6,39 +6,63 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
-import {
-  ArrowLeft,
-  Mail,
-  Building2,
-  Calendar,
-  Linkedin,
-  MessageSquare,
-  Edit2,
-  Save,
-  X,
-  Activity
-} from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { ArrowLeft, Mail, Building2, Calendar, Linkedin, MessageSquare, Edit2, Save, X, Activity, BarChart3, Target, Clock, Send, CheckCircle, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { formatDate, formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, formatNumber } from '@/lib/utils'
 import { leadsAPI, brandsAPI, companiesAPI, messagesAPI } from '@/lib/api'
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-muted text-foreground',
-  researching: 'bg-muted text-foreground',
-  qualified: 'bg-muted text-foreground',
-  icp_passed: 'bg-muted text-foreground',
-  contacted: 'bg-muted text-foreground',
-  replied: 'bg-muted text-foreground',
-  negotiating: 'bg-muted text-muted-foreground',
-  closed_won: 'bg-muted text-foreground',
-  closed_lost: 'bg-muted text-foreground'
+const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'success' | 'destructive' | 'warning' | 'outline'> = {
+  new: 'default',
+  researching: 'secondary',
+  qualified: 'default',
+  icp_passed: 'success',
+  contacted: 'default',
+  replied: 'success',
+  negotiating: 'warning',
+  closed_won: 'success',
+  closed_lost: 'destructive',
+}
+
+function ScoreRing({ score }: { score: number | null }) {
+  const value = Math.min(Math.max(score ?? 0, 0), 100)
+  const radius = 40
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (value / 100) * circumference
+  const strokeColor = value > 70 ? '#22c55e' : value > 40 ? '#f59e0b' : '#ef4444'
+  const textColor = value > 70 ? 'text-green-500' : value > 40 ? 'text-amber-500' : 'text-red-500'
+
+  return (
+    <div className="flex flex-col items-center py-4">
+      <div className="relative">
+        <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeWidth="8" className="text-muted-foreground/20" />
+          <circle
+            cx="50" cy="50" r={radius} fill="none" stroke={strokeColor} strokeWidth="8" strokeLinecap="round"
+            strokeDasharray={circumference} strokeDashoffset={offset}
+            className="transition-all duration-700 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`text-3xl font-bold ${textColor}`}>{value}</span>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground mt-2">Lead Score</p>
+    </div>
+  )
+}
+
+interface TimelineEvent {
+  id: string
+  title: string
+  description: string
+  date: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+}
+
+function formatStatusLabel(status: string) {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
 export default function LeadDetailPage() {
@@ -85,7 +109,6 @@ export default function LeadDetailPage() {
 
   const handleUpdateLead = async () => {
     if (!lead) return
-
     try {
       const { error } = await leadsAPI.update(lead.id, editedLead)
       if (error) throw error
@@ -99,7 +122,6 @@ export default function LeadDetailPage() {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!lead) return
-
     try {
       const { error } = await leadsAPI.update(lead.id, { status: newStatus })
       if (error) throw error
@@ -109,6 +131,76 @@ export default function LeadDetailPage() {
       toast.error(error.message || 'Failed to update status')
     }
   }
+
+  const timelineEvents: TimelineEvent[] = useMemo(() => {
+    if (!lead) return []
+    const events: TimelineEvent[] = [
+      {
+        id: 'created',
+        title: 'Lead Created',
+        description: lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Lead',
+        date: lead.created_at,
+        icon: Calendar,
+        color: 'bg-blue-500',
+      },
+    ]
+
+    messages.forEach((msg) => {
+      if (msg.sent_at || msg.created_at) {
+        events.push({
+          id: `sent-${msg.id}`,
+          title: 'Email Sent',
+          description: msg.subject || 'No subject',
+          date: msg.sent_at || msg.created_at,
+          icon: Send,
+          color: 'bg-indigo-500',
+        })
+      }
+      if (msg.delivered_at) {
+        events.push({
+          id: `delivered-${msg.id}`,
+          title: 'Email Delivered',
+          description: msg.subject || 'No subject',
+          date: msg.delivered_at,
+          icon: CheckCircle,
+          color: 'bg-sky-500',
+        })
+      }
+      if (msg.opened_at) {
+        events.push({
+          id: `opened-${msg.id}`,
+          title: 'Email Opened',
+          description: msg.subject || 'No subject',
+          date: msg.opened_at,
+          icon: Activity,
+          color: 'bg-green-500',
+        })
+      }
+      if (msg.replied_at) {
+        events.push({
+          id: `replied-${msg.id}`,
+          title: 'Reply Received',
+          description: msg.subject || 'No subject',
+          date: msg.replied_at,
+          icon: MessageSquare,
+          color: 'bg-emerald-500',
+        })
+      }
+      if (msg.bounced_at) {
+        events.push({
+          id: `bounced-${msg.id}`,
+          title: 'Email Bounced',
+          description: msg.subject || 'No subject',
+          date: msg.bounced_at,
+          icon: AlertCircle,
+          color: 'bg-red-500',
+        })
+      }
+    })
+
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return events
+  }, [lead, messages])
 
   if (isLoading) {
     return (
@@ -132,31 +224,31 @@ export default function LeadDetailPage() {
     )
   }
 
+  const displayName = lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Lead Details'
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate('/leads')}>
-          <ArrowLeft className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={() => navigate('/leads')}>
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground">
-              {lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Lead Details'}
-            </h1>
-            <Badge className={STATUS_COLORS[lead.status] || ''}>
-              {lead.status.replace('_', ' ')}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold text-foreground truncate">{displayName}</h1>
+            <Badge variant={STATUS_VARIANTS[lead.status] || 'default'}>
+              {formatStatusLabel(lead.status)}
             </Badge>
           </div>
           {lead.email && (
-            <a href={`mailto:${lead.email}`} className="text-muted-foreground hover:underline">
+            <a href={`mailto:${lead.email}`} className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               {lead.email}
             </a>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           {isEditing ? (
             <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button variant="outline" onClick={() => { setIsEditing(false); setEditedLead(lead) }}>
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
@@ -177,161 +269,283 @@ export default function LeadDetailPage() {
               Send Email
             </Button>
           )}
+          {lead.linkedin_url && (
+            <Button variant="outline" onClick={() => window.open(lead.linkedin_url!, '_blank', 'noopener,noreferrer')}>
+              <Linkedin className="h-4 w-4 mr-2" />
+              LinkedIn
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Lead Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-                <div className="grid gap-5 md:grid-cols-2">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-muted-foreground">Full Name</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedLead.full_name || ''}
-                      onChange={(e) => setEditedLead({ ...editedLead, full_name: e.target.value })}
-                    />
-                  ) : (
-                    <p className="font-medium">{lead.full_name || 'N/A'}</p>
-                  )}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lead Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Full Name</Label>
+                    {isEditing ? (
+                      <Input value={editedLead.full_name || ''} onChange={(e) => setEditedLead({ ...editedLead, full_name: e.target.value })} className="mt-1" />
+                    ) : (
+                      <p className="font-medium mt-0.5">{lead.full_name || 'N/A'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Email</Label>
+                    {isEditing ? (
+                      <Input type="email" value={editedLead.email || ''} onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })} className="mt-1" />
+                    ) : (
+                      <p className="mt-0.5">{lead.email || 'N/A'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Phone</Label>
+                    {isEditing ? (
+                      <Input value={(editedLead.raw_payload as any)?.phone || ''} onChange={(e) => setEditedLead({ ...editedLead, raw_payload: { ...(editedLead.raw_payload as any), phone: e.target.value } })} className="mt-1" />
+                    ) : (
+                      <p className="mt-0.5">{(lead.raw_payload as any)?.phone || 'N/A'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Title</Label>
+                    {isEditing ? (
+                      <Input value={editedLead.title || ''} onChange={(e) => setEditedLead({ ...editedLead, title: e.target.value })} className="mt-1" />
+                    ) : (
+                      <p className="mt-0.5">{lead.title || 'N/A'}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Email</Label>
-                  {isEditing ? (
-                    <Input
-                      type="email"
-                      value={editedLead.email || ''}
-                      onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
-                    />
-                  ) : (
-                    <p>{lead.email || 'N/A'}</p>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Phone</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedLead.raw_payload?.['phone'] as string || ''}
-                      onChange={(e) => setEditedLead({
-                        ...editedLead,
-                        raw_payload: { ...editedLead.raw_payload, phone: e.target.value }
-                      })}
-                    />
-                  ) : (
-                    <p>{(lead.raw_payload as any)?.phone || 'N/A'}</p>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Title</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedLead.title || ''}
-                      onChange={(e) => setEditedLead({ ...editedLead, title: e.target.value })}
-                    />
-                  ) : (
-                    <p>{lead.title || 'N/A'}</p>
-                  )}
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Company</Label>
+                    <p className="font-medium mt-0.5">{company?.name || lead.domain || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Source</Label>
+                    <p className="capitalize mt-0.5">{lead.source || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Lead Score</Label>
+                    <p className="text-2xl font-bold mt-0.5">{lead.lead_score ?? 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Confidence</Label>
+                    <p className="mt-0.5">{lead.confidence_score != null ? `${(lead.confidence_score * 100).toFixed(1)}%` : 'N/A'}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-muted-foreground">Company</Label>
-                  <p>{lead.domain || 'N/A'}</p>
+              {lead.tags && lead.tags.length > 0 && (
+                <div className="mt-5 pt-5 border-t border-border">
+                  <Label className="text-muted-foreground text-xs">Tags</Label>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {lead.tags.map((tag, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Source</Label>
-                  <p className="capitalize">{lead.source || 'manual'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Lead Score</Label>
-                  <p className="text-2xl font-bold">{lead.lead_score ?? 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Confidence</Label>
-                  <p>{lead.confidence_score ? `${(lead.confidence_score * 100).toFixed(1)}%` : 'N/A'}</p>
-                </div>
-              </div>
-            </div>
+              )}
 
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <Label className="text-muted-foreground">Status</Label>
+              <div className="mt-5 pt-5 border-t border-border">
+                <Label className="text-muted-foreground text-xs">Status</Label>
+                <div className="mt-1.5">
                   <Select value={lead.status} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {LEAD_STATUSES.map(status => (
+                      {LEAD_STATUSES.map((status) => (
                         <SelectItem key={status} value={status}>
-                          {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {formatStatusLabel(status)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {lead.linkedin_url && (
-                  <Button variant="outline" onClick={() => window.open(lead.linkedin_url!, '_blank', 'noopener,noreferrer')}>
-                    <Linkedin className="h-4 w-4 mr-2" />
-                    LinkedIn
-                  </Button>
+              </div>
+
+              {(lead.notes || isEditing) && (
+                <div className="mt-5 pt-5 border-t border-border">
+                  <Label className="text-muted-foreground text-xs">Notes</Label>
+                  {isEditing ? (
+                    <textarea
+                      value={editedLead.notes || ''}
+                      onChange={(e) => setEditedLead({ ...editedLead, notes: e.target.value })}
+                      className="mt-1 flex w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition-colors hover:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring min-h-[80px] resize-y"
+                      rows={3}
+                      placeholder="Add notes..."
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm whitespace-pre-wrap text-foreground/80">{lead.notes}</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Activity Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {timelineEvents.length === 0 ? (
+                <p className="text-center text-muted-foreground py-6">No activity recorded</p>
+              ) : (
+                <div className="relative">
+                  {timelineEvents.map((event, idx) => {
+                    const Icon = event.icon
+                    const isLast = idx === timelineEvents.length - 1
+                    return (
+                      <div key={event.id} className="flex gap-4 pb-2 relative">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-9 h-9 rounded-full ${event.color} flex items-center justify-center ring-4 ring-background z-10`}>
+                            <Icon className="h-4 w-4 text-white" />
+                          </div>
+                          {!isLast && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                        </div>
+                        <div className="pb-6 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium">{event.title}</p>
+                            <span className="text-xs text-muted-foreground/50">{formatRelativeTime(event.date)}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Email History
+                {messages.length > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{messages.length}</Badge>
                 )}
-              </div>
-            </div>
-
-            {lead.notes && (
-              <div className="mt-6 pt-6 border-t border-border">
-                <Label className="text-muted-foreground">Notes</Label>
-                <p className="mt-1">{lead.notes}</p>
-              </div>
-            )}
-
-            {lead.tags && lead.tags.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-border">
-                <Label className="text-muted-foreground">Tags</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {lead.tags.map((tag, i) => (
-                    <Badge key={i} variant="secondary">{tag}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <Mail className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground">No emails sent yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {messages.map((msg) => (
+                    <div key={msg.id} className="p-4 border border-border rounded-xl hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{msg.subject || 'No subject'}</p>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            To: {msg.to_email}
+                          </p>
+                          {msg.body && (
+                            <p className="text-sm text-muted-foreground/70 mt-2 line-clamp-2">
+                              {msg.body.length > 180 ? `${msg.body.substring(0, 180)}...` : msg.body}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 mt-2.5">
+                            <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatRelativeTime(msg.created_at)}
+                            </span>
+                            {msg.opened_at && (
+                              <span className="text-xs text-green-600 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" /> Opened
+                              </span>
+                            )}
+                            {msg.replied_at && (
+                              <span className="text-xs text-emerald-600 flex items-center gap-1">
+                                <MessageSquare className="h-3 w-3" /> Replied
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            msg.status === 'delivered' || msg.status === 'sent' ? 'success' :
+                            msg.status === 'failed' || msg.status === 'bounced' ? 'destructive' :
+                            'secondary'
+                          }
+                          className="shrink-0 capitalize"
+                        >
+                          {msg.status}
+                        </Badge>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Timeline</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Lead Score
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground/50" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="text-sm font-medium">{formatDate(lead.created_at)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Activity className="h-4 w-4 text-muted-foreground/50" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Last Updated</p>
-                  <p className="text-sm font-medium">{formatRelativeTime(lead.updated_at)}</p>
-                </div>
-              </div>
-              {brand && (
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-muted-foreground/50" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Brand</p>
-                    <p className="text-sm font-medium">{brand.brand_name}</p>
+            <CardContent>
+              <ScoreRing score={lead.lead_score ?? null} />
+              {lead.confidence_score != null && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Confidence</span>
+                    <span className="font-medium">{(lead.confidence_score * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="mt-1.5 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(lead.confidence_score * 100, 100)}%`,
+                        backgroundColor: lead.confidence_score > 0.7 ? '#22c55e' : lead.confidence_score > 0.4 ? '#f59e0b' : '#ef4444',
+                      }}
+                    />
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = `mailto:${lead.email}`}>
+                <Mail className="h-4 w-4 mr-2" />
+                Send Email
+              </Button>
+              {lead.linkedin_url && (
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.open(lead.linkedin_url!, '_blank', 'noopener,noreferrer')}>
+                  <Linkedin className="h-4 w-4 mr-2" />
+                  View LinkedIn
+                </Button>
+              )}
+              {company && (
+                <Button className="w-full justify-start" variant="outline" onClick={() => navigate(`/pipeline?company=${company.id}`)}>
+                  <Building2 className="h-4 w-4 mr-2" />
+                  View in Pipeline
+                </Button>
               )}
             </CardContent>
           </Card>
@@ -339,24 +553,84 @@ export default function LeadDetailPage() {
           {company && (
             <Card>
               <CardHeader>
-                <CardTitle>Company</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Company
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="text-xs text-muted-foreground">Name</p>
                     <p className="font-medium">{company.name}</p>
                   </div>
-                  {company.industry && (
+                  {company.domain && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Industry</p>
-                      <p>{company.industry}</p>
+                      <p className="text-xs text-muted-foreground">Domain</p>
+                      <p className="text-sm">{company.domain}</p>
                     </div>
                   )}
-                  {company.employee_count && (
+                  {company.industry && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Employees</p>
-                      <p>{company.employee_count}</p>
+                      <p className="text-xs text-muted-foreground">Industry</p>
+                      <p className="text-sm">{company.industry}</p>
+                    </div>
+                  )}
+                  {company.employee_count != null && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Employees</p>
+                      <p className="text-sm">{formatNumber(company.employee_count)}</p>
+                    </div>
+                  )}
+                  {company.estimated_value != null && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Est. Value</p>
+                      <p className="text-sm font-medium">${formatNumber(company.estimated_value)}</p>
+                    </div>
+                  )}
+                  {company.priority && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Priority</p>
+                      <Badge variant={company.priority === 'high' ? 'destructive' : company.priority === 'medium' ? 'warning' : 'secondary'} className="mt-0.5 capitalize">
+                        {company.priority}
+                      </Badge>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge variant={company.status === 'active' ? 'success' : company.status === 'inactive' ? 'secondary' : 'default'} className="mt-0.5 capitalize">
+                      {company.status}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {brand && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Brand
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Name</p>
+                    <p className="font-medium">{brand.brand_name}</p>
+                  </div>
+                  {brand.product && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Product</p>
+                      <p className="text-sm">{brand.product}</p>
+                    </div>
+                  )}
+                  {brand.positioning && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Positioning</p>
+                      <p className="text-sm line-clamp-2">{brand.positioning}</p>
                     </div>
                   )}
                 </div>
@@ -365,45 +639,6 @@ export default function LeadDetailPage() {
           )}
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Email History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {messages.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No emails sent yet</p>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="p-4 border border-border rounded-xl">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium">{msg.subject || 'No subject'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        To: {msg.to_email} • {formatRelativeTime(msg.created_at)}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        msg.status === 'delivered' ? 'success' :
-                        msg.status === 'failed' ? 'destructive' :
-                        msg.status === 'bounced' ? 'destructive' :
-                        'secondary'
-                      }
-                    >
-                      {msg.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }

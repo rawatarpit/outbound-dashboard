@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { type BrandProfile } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import Drawer from '@/components/Drawer'
-import { Mail, Send, XCircle, Eye, Building2, Edit3, Save } from 'lucide-react'
+import { Mail, Send, XCircle, Eye, Building2, Edit3, Save, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
 import { brandsAPI, campaignsAPI } from '@/lib/api'
@@ -37,7 +30,6 @@ interface OutreachEntry {
 
 export default function OutreachQueuePage() {
   const { client } = useAuth()
-  const navigate = useNavigate()
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [entries, setEntries] = useState<OutreachEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -169,6 +161,13 @@ export default function OutreachQueuePage() {
     }
   }
 
+  const pendingCount = entries.length
+  const todayCount = entries.filter(e => {
+    const d = new Date(e.created_at)
+    const now = new Date()
+    return d.toDateString() === now.toDateString()
+  }).length
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -199,62 +198,104 @@ export default function OutreachQueuePage() {
         </Select>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-2.5 bg-muted rounded-xl">
+              <Mail className="h-5 w-5 text-foreground" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+              <p className="text-sm text-muted-foreground">Pending Drafts</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-2.5 bg-muted rounded-xl">
+              <Clock className="h-5 w-5 text-foreground" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{todayCount}</p>
+              <p className="text-sm text-muted-foreground">Created Today</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {entries.length === 0 ? (
         <Card className="bg-muted border-border">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Mail className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <div className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center mb-4">
+              <Mail className="h-7 w-7 text-muted-foreground/60" />
+            </div>
             <h3 className="text-lg font-medium text-foreground">No outreach drafts</h3>
-            <p className="text-muted-foreground mb-4">Draft emails will appear here once the engine generates them</p>
+            <p className="text-muted-foreground">Draft emails will appear here once the engine generates them</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {entries.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-primary" />
+          {entries.map((entry) => {
+            const isProcessing = entry.status === 'draft_processing'
+            return (
+              <Card key={entry.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Building2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-lg leading-tight">{entry.company_name || 'No Company'}</CardTitle>
+                        <CardDescription className="truncate">{entry.company_domain || entry.company_id}</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{entry.company_name || 'No Company'}</CardTitle>
-                      <CardDescription>{entry.company_domain || entry.company_id}</CardDescription>
-                    </div>
+                    <Badge variant={isProcessing ? 'warning' : 'default'} className="shrink-0 ml-3">
+                      {isProcessing ? 'Draft Processing' : 'Draft'}
+                    </Badge>
                   </div>
-                  <Badge className="bg-primary/10 text-primary border border-border">Draft</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-3 bg-muted rounded-xl space-y-1">
-                  <p className="text-sm font-medium text-foreground/80">{entry.subject || 'No subject'}</p>
-                  <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-wrap">
-                    {entry.body || 'No body'}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
-                  <span>Created {formatRelativeTime(entry.created_at)}</span>
-                  {entry.brand && <span>· Brand: {entry.brand.brand_name}</span>}
-                </div>
+                  <div className="p-4 bg-muted rounded-xl space-y-2 mb-4">
+                    <p className="font-semibold text-foreground">{entry.subject || <span className="italic text-muted-foreground">No subject</span>}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 whitespace-pre-wrap">
+                      {entry.body || <span className="italic">No body</span>}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-border">
-                  <Button size="sm" onClick={() => handleApproveSend(entry)} isLoading={isSending === entry.id}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Approve & Send
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleReject(entry)}>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatRelativeTime(entry.created_at)}
+                    </span>
+                    {entry.brand && (
+                      <>
+                        <span className="text-muted-foreground/30">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Building2 className="h-3.5 w-3.5" />
+                          {entry.brand.brand_name}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
+                    <Button size="sm" onClick={() => handleApproveSend(entry)} isLoading={isSending === entry.id}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Approve & Send
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => handleReject(entry)}>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 
@@ -263,13 +304,16 @@ export default function OutreachQueuePage() {
         onClose={() => setEditingEntry(null)}
         title="Edit Outreach Draft"
         description={editingEntry?.company_name || editingEntry?.company_domain || 'Unknown'}
-        size="lg"
+        size="xl"
       >
         {editingEntry && (
           <div className="space-y-6">
             <div className="space-y-2">
               <Label>To</Label>
-              <p className="text-sm text-muted-foreground">{editingEntry.company_domain || editingEntry.company_name || 'Unknown'}</p>
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-xl">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">{editingEntry.company_domain || editingEntry.company_name || 'Unknown'}</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_subject">Subject</Label>
@@ -289,10 +333,13 @@ export default function OutreachQueuePage() {
                 className="font-mono text-sm"
               />
             </div>
-            <div className="p-3 bg-muted rounded-xl">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Preview</p>
-              <p className="text-sm font-medium text-foreground/80">{editSubject}</p>
-              <p className="text-sm text-muted-foreground/80 mt-2 whitespace-pre-wrap line-clamp-6">{editBody}</p>
+            <div className="p-4 bg-muted rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs font-medium text-muted-foreground">Preview</p>
+              </div>
+              <p className="text-sm font-semibold text-foreground">{editSubject || <span className="italic text-muted-foreground">No subject</span>}</p>
+              <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap line-clamp-6 leading-relaxed">{editBody || <span className="italic">No body</span>}</p>
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button variant="outline" onClick={() => setEditingEntry(null)}>Cancel</Button>

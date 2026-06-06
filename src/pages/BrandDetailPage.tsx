@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { type BrandProfile, type BrandIntent } from '@/lib/supabase'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import Drawer from '@/components/Drawer'
@@ -315,7 +312,7 @@ export default function BrandDetailPage() {
                     <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Discovery Engine</p>
                     <p className="text-[11px] text-muted-foreground/60 mb-3">Automated company discovery</p>
                     <Switch
-                      checked={brand.discovery_enabled}
+                      checked={brand.discovery_enabled ?? false}
                       onCheckedChange={handleToggleDiscovery}
                     />
                   </div>
@@ -335,7 +332,7 @@ export default function BrandDetailPage() {
                     <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Outbound Engine</p>
                     <p className="text-[11px] text-muted-foreground/60 mb-3">Automated email sending</p>
                     <Switch
-                      checked={brand.outbound_enabled}
+                      checked={brand.outbound_enabled ?? false}
                       onCheckedChange={handleToggleOutbound}
                     />
                   </div>

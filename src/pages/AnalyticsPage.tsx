@@ -1,42 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { type BrandProfile } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area
-} from 'recharts'
-import { TrendingUp, Mail, Users, MessageSquare, Building2 } from 'lucide-react'
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
+import { TrendingUp, Mail, Users, MessageSquare, Building2, Send, MailOpen, AlertCircle, Target } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
 import { brandsAPI, analyticsAPI } from '@/lib/api'
 import { Link } from 'react-router-dom'
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const FUNNEL_COLORS = ['#6366f1', '#10b981', '#a855f7']
 
 export default function AnalyticsPage() {
   const { client } = useAuth()
   const [brands, setBrands] = useState<BrandProfile[]>([])
   const [selectedBrand, setSelectedBrand] = useState<string>('')
   const [dateRange, setDateRange] = useState('30')
-  const [stats, setStats] = useState<any>(null)
+  const [overview, setOverview] = useState<any>(null)
+  const [timeSeries, setTimeSeries] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    fetchBrands()
-  }, [])
+  useEffect(() => { fetchBrands() }, [])
 
   useEffect(() => {
     if (brands.length > 0 && !selectedBrand) {
@@ -66,58 +52,59 @@ export default function AnalyticsPage() {
         analyticsAPI.overview(),
         analyticsAPI.chart(parseInt(dateRange)),
       ])
-
       if (overviewRes.error) throw overviewRes.error
-
-      const overview = overviewRes.data
-      const chartData = chartRes.data || []
-
+      const o = overviewRes.data
+      const raw = chartRes.data || []
       const days = parseInt(dateRange)
-      const timeSeriesData = Array.from({ length: days }, (_, i) => {
+      const series = Array.from({ length: days }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - (days - 1 - i))
         const dateStr = date.toISOString().split('T')[0]
-        const dayEntry = chartData.find((d: any) => d.date === dateStr)
+        const entry = raw.find((d: any) => d.date === dateStr)
         return {
           name: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-          sent: dayEntry?.sent || 0,
-          delivered: dayEntry?.delivered || 0,
-          opened: dayEntry?.opened || 0
+          sent: entry?.sent || 0,
+          replied: entry?.replied || 0,
         }
       })
-
-      const total = overview.sent_count || overview.sentCount || 0
-      const replied = Math.round(parseFloat(overview.reply_rate || overview.replyRate || '0') * total)
-      const bounced = Math.round(parseFloat(overview.bounce_rate || overview.bounceRate || '0') * total)
-      const delivered = total - bounced
-      const opened = replied
-
-      const funnelData = [
-        { name: 'Sent', value: total },
-        { name: 'Delivered', value: delivered },
-        { name: 'Opened', value: opened },
-        { name: 'Replied', value: replied }
-      ]
-
-      setStats({
-        total,
-        delivered,
-        opened,
-        clicked: replied,
-        bounced,
-        deliveryRate: total ? delivered / total : 0,
-        openRate: delivered ? opened / delivered : 0,
-        clickRate: delivered ? replied / delivered : 0,
-        bounceRate: total ? bounced / total : 0,
-        timeSeriesData,
-        funnelData
-      })
+      setOverview(o)
+      setTimeSeries(series)
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch analytics')
     } finally {
       setIsLoading(false)
     }
   }
+
+  const m = useMemo(() => {
+    const sent = overview?.sentCount || overview?.sent_count || 0
+    const bouncePct = parseFloat(overview?.bounceRate || overview?.bounce_rate || '0')
+    const replyPct = parseFloat(overview?.replyRate || overview?.reply_rate || '0')
+    const bounces = Math.round(sent * bouncePct / 100)
+    return {
+      sent,
+      delivered: sent - bounces,
+      replied: Math.round(sent * replyPct / 100),
+      bounces,
+      bouncePct,
+      replyPct,
+      totalLeads: overview?.totalLeads || overview?.total_leads || 0,
+      newLeads: overview?.newLeads || overview?.new_leads || 0,
+      contactedLeads: overview?.contactedLeads || overview?.contacted_leads || 0,
+      qualifiedLeads: overview?.qualifiedLeads || overview?.qualified_leads || 0,
+      totalCampaigns: overview?.totalCampaigns || overview?.total_campaigns || 0,
+      activeCampaigns: overview?.activeCampaigns || overview?.active_campaigns || 0,
+    }
+  }, [overview])
+
+  const deliveryRate = m.sent > 0 ? m.delivered / m.sent : 0
+  const funnelMax = Math.max(m.sent, m.delivered, m.replied, 1)
+
+  const funnelStages = [
+    { name: 'Sent', value: m.sent, color: FUNNEL_COLORS[0], icon: Send },
+    { name: 'Delivered', value: m.delivered, color: FUNNEL_COLORS[1], icon: MailOpen },
+    { name: 'Replied', value: m.replied, color: FUNNEL_COLORS[2], icon: MessageSquare },
+  ]
 
   if (isLoading) {
     return (
@@ -137,7 +124,6 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
           <p className="text-muted-foreground">Track your outbound performance</p>
         </div>
-        
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
@@ -156,7 +142,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
           <p className="text-muted-foreground">Track your outbound performance</p>
@@ -185,60 +171,100 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-              </div>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Sent</p>
+              <Mail className="h-3.5 w-3.5 text-muted-foreground/50" />
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-foreground">{formatNumber(stats?.total || 0)}</p>
-              <p className="text-sm text-muted-foreground">Total Sent</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.sent)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Emails sent in period</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-muted-foreground" />
-              </div>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Delivery Rate</p>
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-500/50" />
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.deliveryRate || 0)}</p>
-              <p className="text-sm text-muted-foreground">Delivery Rate</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{formatPercentage(deliveryRate)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.delivered)} delivered</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-muted rounded-lg">
-                <Users className="h-5 w-5 text-muted-foreground" />
-              </div>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reply Rate</p>
+              <MessageSquare className="h-3.5 w-3.5 text-purple-500/50" />
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.openRate || 0)}</p>
-              <p className="text-sm text-muted-foreground">Open Rate</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{formatPercentage(m.replyPct / 100)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.replied)} replies</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-muted rounded-lg">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
-              </div>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bounce Rate</p>
+              <AlertCircle className="h-3.5 w-3.5 text-red-500/50" />
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-foreground">{formatPercentage(stats?.clickRate || 0)}</p>
-              <p className="text-sm text-muted-foreground">Click Rate</p>
+            <p className="text-2xl font-bold text-foreground">{formatPercentage(m.bouncePct / 100)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.bounces)} bounced</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaigns</p>
+              <Target className="h-3.5 w-3.5 text-muted-foreground/50" />
             </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.totalCampaigns)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Total campaigns</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</p>
+              <Send className="h-3.5 w-3.5 text-muted-foreground/50" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.activeCampaigns)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Active campaigns</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Leads</p>
+              <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.totalLeads)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className="text-foreground font-medium">{formatNumber(m.newLeads)}</span> new this period
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contacted</p>
+              <Send className="h-3.5 w-3.5 text-muted-foreground/50" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.contactedLeads)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Leads reached out to</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Qualified</p>
+              <Target className="h-3.5 w-3.5 text-muted-foreground/50" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{formatNumber(m.qualifiedLeads)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Qualified leads</p>
           </CardContent>
         </Card>
       </div>
@@ -251,120 +277,215 @@ export default function AnalyticsPage() {
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Email Volume</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                Send Volume
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {timeSeries.some(d => d.sent > 0) ? (
+                <div className="h-[320px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats?.timeSeriesData || []}>
+                    <AreaChart data={timeSeries}>
                       <defs>
-                        <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="analyticsSentGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
                           <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                         </linearGradient>
+                        <linearGradient id="analyticsRepliedGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
-                      <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                      <YAxis stroke="#6b7280" fontSize={12} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="sent" stroke="#6366f1" fillOpacity={1} fill="url(#colorSent)" strokeWidth={2} />
+                      <XAxis dataKey="name" stroke="hsl(0 0% 70%)" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(0 0% 70%)" fontSize={11} tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid hsl(0 0% 90%)' }} />
+                      <Area type="monotone" dataKey="sent" stroke="#6366f1" fillOpacity={1} fill="url(#analyticsSentGrad)" strokeWidth={2} dot={false} name="Sent" />
+                      <Area type="monotone" dataKey="replied" stroke="#10b981" fillOpacity={1} fill="url(#analyticsRepliedGrad)" strokeWidth={2} dot={false} name="Replied" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Delivery Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats?.timeSeriesData || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" />
-                      <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                      <YAxis stroke="#6b7280" fontSize={12} />
-                      <Tooltip />
-                      <Bar dataKey="delivered" fill="#10b981" name="Delivered" />
-                      <Bar dataKey="opened" fill="#8b5cf6" name="Opened" />
-                    </BarChart>
-                  </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Mail className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">No send data for this period</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="funnel">
           <Card>
             <CardHeader>
-              <CardTitle>Conversion Funnel</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <Target className="h-4 w-4 text-muted-foreground" />
+                Email Funnel
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stats?.funnelData || []}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={150}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {stats?.funnelData.map((_: unknown, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid gap-4 md:grid-cols-4 mt-5">
-                {stats?.funnelData.map((item: { name: string; value: number }, index: number) => (
-                  <div key={item.name} className="text-center p-4 border border-border rounded-xl">
-                    <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: COLORS[index] }} />
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-2xl font-bold">{formatNumber(item.value)}</p>
-                  </div>
-                ))}
-              </div>
+              {m.sent > 0 ? (
+                <div className="space-y-8">
+                  {funnelStages.map((stage, i) => {
+                    const barWidth = (stage.value / funnelMax) * 100
+                    const prevValue = i > 0 ? funnelStages[i - 1].value : stage.value
+                    const conversion = prevValue > 0 ? Math.round((stage.value / prevValue) * 100) : 0
+                    const overallConversion = m.sent > 0 ? Math.round((stage.value / m.sent) * 100) : 0
+                    return (
+                      <div key={stage.name}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stage.color}15` }}>
+                              <stage.icon className="h-4 w-4" style={{ color: stage.color }} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{stage.name}</p>
+                              {i > 0 && (
+                                <p className="text-[11px] text-muted-foreground">
+                                  {conversion}% of {funnelStages[i - 1].name}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-foreground">{formatNumber(stage.value)}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {overallConversion}% of all sent
+                            </p>
+                          </div>
+                        </div>
+                        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${Math.max(barWidth, 2)}%`, backgroundColor: stage.color }}
+                          />
+                        </div>
+                        {i < funnelStages.length - 1 && conversion > 0 && (
+                          <div className="flex justify-center mt-1.5">
+                            <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                              {conversion}% conversion → {funnelStages[i + 1].name}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Target className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">No email data to build funnel</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="performance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {['Emails Sent', 'Delivered', 'Opened', 'Clicked', 'Bounced'].map((label) => {
-                  const key = label.toLowerCase().replace(' ', '')
-                  const value = stats?.[key] || 0
-                  const isLast = label === 'Bounced'
-                  return (
-                    <div key={label} className="flex items-center justify-between p-4 border border-border rounded-xl">
-                      <div>
-                        <p className="font-medium">{label}</p>
-                        <p className="text-sm text-muted-foreground">{label === 'Bounced' ? 'Failed deliveries' : `Total ${label.toLowerCase()}`}</p>
-                      </div>
-                      <p className={`text-2xl font-bold ${isLast ? 'text-red-400' : 'text-foreground'}`}>
-                        {formatNumber(value)}
-                      </p>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  Rate Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <MailOpen className="h-3.5 w-3.5 text-emerald-500" />
+                      <span className="text-sm font-medium text-foreground">Delivery Rate</span>
                     </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    <span className="text-sm font-bold text-foreground">{formatPercentage(deliveryRate)}</span>
+                  </div>
+                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${deliveryRate * 100}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">{formatNumber(m.delivered)} of {formatNumber(m.sent)} delivered</p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-3.5 w-3.5 text-purple-500" />
+                      <span className="text-sm font-medium text-foreground">Reply Rate</span>
+                    </div>
+                    <span className="text-sm font-bold text-foreground">{formatPercentage(m.replyPct / 100)}</span>
+                  </div>
+                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-purple-500 transition-all" style={{ width: `${Math.min(m.replyPct, 100)}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">{formatNumber(m.replied)} of {formatNumber(m.delivered)} delivered replied</p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                      <span className="text-sm font-medium text-foreground">Bounce Rate</span>
+                    </div>
+                    <span className="text-sm font-bold text-foreground">{formatPercentage(m.bouncePct / 100)}</span>
+                  </div>
+                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${Math.min(m.bouncePct, 100)}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">{formatNumber(m.bounces)} of {formatNumber(m.sent)} bounced</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  Lead Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {m.totalLeads > 0 ? (
+                  <>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-foreground">New Leads</span>
+                        <span className="text-sm font-bold text-foreground">{formatNumber(m.newLeads)}</span>
+                      </div>
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${(m.newLeads / m.totalLeads) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">{Math.round((m.newLeads / m.totalLeads) * 100)}% of total leads</p>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-foreground">Contacted Leads</span>
+                        <span className="text-sm font-bold text-foreground">{formatNumber(m.contactedLeads)}</span>
+                      </div>
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${(m.contactedLeads / m.totalLeads) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">{Math.round((m.contactedLeads / m.totalLeads) * 100)}% of total leads</p>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-foreground">Qualified Leads</span>
+                        <span className="text-sm font-bold text-foreground">{formatNumber(m.qualifiedLeads)}</span>
+                      </div>
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(m.qualifiedLeads / m.totalLeads) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">{Math.round((m.qualifiedLeads / m.totalLeads) * 100)}% of total leads</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Users className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                    <p className="text-sm text-muted-foreground">No lead data available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -27,6 +27,8 @@ import {
 
 interface CompanyWithBrand extends Company {
   brand?: BrandProfile
+  lead_score?: number | null
+  deal_value?: number | null
 }
 
 const STATUS_COLORS: Record<string, string> = {

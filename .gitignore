@@ -32,3 +32,5 @@ npm-debug.log*
 *.sublime-*
 
 # Supabase (backend only - we only deploy frontend)
+supabase/
+dashboard-architecture.md

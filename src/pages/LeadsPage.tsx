@@ -1,61 +1,50 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Badge } from '@/components/ui/Badge'
 import Drawer from '@/components/Drawer'
 import LeadImportForm from '@/components/forms/LeadImportForm'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/Table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
-import {
-  Users,
-  Search,
-  Upload,
-  ChevronLeft,
-  ChevronRight,
-  Mail,
-  ExternalLink,
-  MoreHorizontal
-} from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { Users, Search, Upload, ChevronLeft, ChevronRight, Mail, ExternalLink, MoreHorizontal, Target, TrendingUp, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
 import { leadsAPI, brandsAPI } from '@/lib/api'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/DropdownMenu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/DropdownMenu'
 
 const PAGE_SIZE = 50
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-muted text-foreground',
-  researching: 'bg-muted text-foreground',
-  qualified: 'bg-muted text-foreground',
-  icp_passed: 'bg-muted text-foreground',
-  contacted: 'bg-muted text-foreground',
-  replied: 'bg-muted text-foreground',
-  negotiating: 'bg-muted text-muted-foreground',
-  closed_won: 'bg-muted text-foreground',
-  closed_lost: 'bg-muted text-foreground'
+const STATUS_CONFIG: Record<string, { dot: string; bg: string; text: string }> = {
+  new: { dot: 'bg-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/30', text: 'text-blue-700 dark:text-blue-300' },
+  researching: { dot: 'bg-slate-500', bg: 'bg-slate-50 dark:bg-slate-950/30', text: 'text-slate-700 dark:text-slate-300' },
+  qualified: { dot: 'bg-green-500', bg: 'bg-green-50 dark:bg-green-950/30', text: 'text-green-700 dark:text-green-300' },
+  icp_passed: { dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-300' },
+  contacted: { dot: 'bg-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/30', text: 'text-indigo-700 dark:text-indigo-300' },
+  replied: { dot: 'bg-teal-500', bg: 'bg-teal-50 dark:bg-teal-950/30', text: 'text-teal-700 dark:text-teal-300' },
+  negotiating: { dot: 'bg-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-700 dark:text-amber-300' },
+  closed_won: { dot: 'bg-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-300 font-semibold' },
+  closed_lost: { dot: 'bg-gray-400', bg: 'bg-gray-50 dark:bg-gray-950/30', text: 'text-gray-500 dark:text-gray-400' },
 }
+
+function formatStatusLabel(status: string) {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+}
+
+const SOURCE_PALETTE = [
+  'bg-blue-500',
+  'bg-violet-500',
+  'bg-cyan-500',
+  'bg-rose-500',
+  'bg-amber-500',
+  'bg-teal-500',
+  'bg-indigo-500',
+  'bg-emerald-500',
+  'bg-pink-500',
+  'bg-orange-500',
+]
 
 export default function LeadsPage() {
   const { client } = useAuth()
@@ -95,9 +84,8 @@ export default function LeadsPage() {
         status: statusFilter || undefined,
         search: searchQuery || undefined,
         page: currentPage,
-        perPage: PAGE_SIZE
+        perPage: PAGE_SIZE,
       })
-
       if (error) throw error
       setLeads(data)
       setTotalCount(total)
@@ -115,7 +103,6 @@ export default function LeadsPage() {
 
   const handleDeleteLead = async (lead: Lead) => {
     if (!confirm(`Delete lead ${lead.full_name || lead.email}?`)) return
-
     try {
       const { error } = await leadsAPI.delete(lead.id)
       if (error) throw error
@@ -127,6 +114,35 @@ export default function LeadsPage() {
   }
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+
+  const stats = useMemo(() => {
+    const newLeads = leads.filter(l => l.status === 'new').length
+    const contacted = leads.filter(l => l.status === 'contacted').length
+    const won = leads.filter(l => l.status === 'closed_won').length
+    return [
+      { label: 'Total Leads', value: formatNumber(totalCount), icon: Users, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+      { label: 'New', value: formatNumber(newLeads), icon: Target, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/30' },
+      { label: 'Contacted', value: formatNumber(contacted), icon: TrendingUp, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30' },
+      { label: 'Won', value: formatNumber(won), icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+    ]
+  }, [leads, totalCount])
+
+  const sourceBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {}
+    leads.forEach(l => {
+      const src = l.source || 'manual'
+      counts[src] = (counts[src] || 0) + 1
+    })
+    const total = leads.length || 1
+    return Object.entries(counts)
+      .map(([source, count], i) => ({
+        source,
+        count,
+        percentage: Math.round((count / total) * 100),
+        color: SOURCE_PALETTE[i % SOURCE_PALETTE.length],
+      }))
+      .sort((a, b) => b.count - a.count)
+  }, [leads])
 
   return (
     <div className="space-y-6">
@@ -141,35 +157,83 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      <Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map(stat => {
+          const Icon = stat.icon
+          return (
+            <Card key={stat.label} className="border-border">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className={cn('rounded-xl p-3', stat.bg)}>
+                  <Icon className={cn('h-5 w-5', stat.color)} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {sourceBreakdown.length > 0 && (
+        <Card className="border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium text-foreground">Lead Sources</h3>
+            </div>
+            <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+              {sourceBreakdown.map(s => (
+                <div
+                  key={s.source}
+                  className={cn(s.color, 'transition-all')}
+                  style={{ width: `${s.percentage}%` }}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+              {sourceBreakdown.map(s => (
+                <div key={s.source} className="flex items-center gap-2 text-sm">
+                  <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', s.color)} />
+                  <span className="text-foreground capitalize">{s.source}</span>
+                  <span className="text-muted-foreground">{s.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="border-border">
         <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name or email..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
                   className="pl-10"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
-                <SelectTrigger className="w-[180px]">
+              <Select value={statusFilter || 'all'} onValueChange={v => { setStatusFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
+                <SelectTrigger className="w-[170px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   {LEAD_STATUSES.map(status => (
                     <SelectItem key={status} value={status}>
-                      {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {formatStatusLabel(status)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={brandFilter || 'all'} onValueChange={(v) => { setBrandFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
-                <SelectTrigger className="w-[180px]">
+              <Select value={brandFilter || 'all'} onValueChange={v => { setBrandFilter(v === 'all' ? undefined : v); setCurrentPage(1) }}>
+                <SelectTrigger className="w-[170px]">
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
                 <SelectContent>
@@ -182,6 +246,7 @@ export default function LeadsPage() {
                 </SelectContent>
               </Select>
               <Button variant="outline" onClick={handleSearch}>
+                <Search className="h-4 w-4 mr-1.5" />
                 Search
               </Button>
             </div>
@@ -214,73 +279,85 @@ export default function LeadsPage() {
                     <TableHead>Score</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-[50px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell className="font-medium">
-                        {lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
-                          {lead.email || 'N/A'}
-                        </a>
-                      </TableCell>
-                      <TableCell>{lead.domain || 'N/A'}</TableCell>
-                      <TableCell>{lead.title || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_COLORS[lead.status] || ''}>
-                          {lead.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {lead.lead_score != null ? (
-                          <span className={cn(
-                            'font-medium',
-                            lead.lead_score >= 70 ? 'text-foreground font-bold' :
-                            lead.lead_score >= 40 ? 'text-foreground' : 'text-muted-foreground'
-                          )}>
-                            {lead.lead_score}
+                  {leads.map(lead => {
+                    const statusCfg = STATUS_CONFIG[lead.status] || STATUS_CONFIG.new
+                    return (
+                      <TableRow key={lead.id}>
+                        <TableCell className="font-medium">
+                          {lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
+                            {lead.email || 'N/A'}
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{lead.domain || 'N/A'}</TableCell>
+                        <TableCell className="text-muted-foreground">{lead.title || 'N/A'}</TableCell>
+                        <TableCell>
+                          <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium', statusCfg.bg, statusCfg.text)}>
+                            <span className={cn('h-1.5 w-1.5 rounded-full', statusCfg.dot)} />
+                            {formatStatusLabel(lead.status)}
                           </span>
-                        ) : 'N/A'}
-                      </TableCell>
-                      <TableCell className="capitalize">{lead.source || 'manual'}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatRelativeTime(lead.created_at)}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link to={`/leads/${lead.id}`}>
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                View Details
-                              </Link>
-                            </DropdownMenuItem>
-                            {lead.email && (
+                        </TableCell>
+                        <TableCell>
+                          {lead.lead_score != null ? (
+                            <span className={cn(
+                              'font-mono text-sm font-medium',
+                              lead.lead_score >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
+                              lead.lead_score >= 40 ? 'text-amber-600 dark:text-amber-400' :
+                              'text-muted-foreground'
+                            )}>
+                              {lead.lead_score}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1.5 text-sm capitalize text-muted-foreground">
+                            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                            {lead.source || 'manual'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                          {formatRelativeTime(lead.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-accent transition-colors">
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem asChild>
-                                <a href={`mailto:${lead.email}`}>
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Send Email
-                                </a>
+                                <Link to={`/leads/${lead.id}`}>
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  View Details
+                                </Link>
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteLead(lead)}
-                              className="text-destructive"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                              {lead.email && (
+                                <DropdownMenuItem asChild>
+                                  <a href={`mailto:${lead.email}`}>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Send Email
+                                  </a>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteLead(lead)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
 
@@ -297,7 +374,7 @@ export default function LeadsPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-muted-foreground/80">
+                  <span className="text-sm text-muted-foreground tabular-nums">
                     Page {currentPage} of {totalPages}
                   </span>
                   <Button

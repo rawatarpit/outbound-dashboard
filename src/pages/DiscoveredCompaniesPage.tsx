@@ -255,7 +255,7 @@ export default function DiscoveredCompaniesPage() {
                 </TableHeader>
                 <TableBody>
                   {companies.map((company) => {
-                    const style = STATUS_STYLES[company.enrichment_status] || STATUS_STYLES.raw
+                    const style = STATUS_STYLES[company.enrichment_status ?? 'raw'] || STATUS_STYLES.raw
                     return (
                       <>
                         <TableRow
@@ -288,7 +288,7 @@ export default function DiscoveredCompaniesPage() {
                           <TableCell>
                             <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border', style.badge)}>
                               <span className={cn('inline-block h-1.5 w-1.5 rounded-full', style.dot)} />
-                              {company.enrichment_status?.charAt(0).toUpperCase() + company.enrichment_status?.slice(1)}
+                              {(company.enrichment_status?.charAt(0).toUpperCase() ?? '') + (company.enrichment_status?.slice(1) ?? '')}
                             </span>
                           </TableCell>
                           <TableCell>

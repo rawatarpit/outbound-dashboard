@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type BrandProfile } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Switch } from '@/components/ui/Switch'
@@ -211,7 +211,7 @@ export default function BrandsPage() {
                         <span className="text-xs text-muted-foreground/80">Discovery</span>
                       </div>
                       <Switch
-                        checked={brand.discovery_enabled}
+                        checked={brand.discovery_enabled ?? false}
                         onCheckedChange={(checked) => handleToggleDiscovery(brand, checked)}
                       />
                     </div>
@@ -221,7 +221,7 @@ export default function BrandsPage() {
                         <span className="text-xs text-muted-foreground/80">Outbound</span>
                       </div>
                       <Switch
-                        checked={brand.outbound_enabled}
+                        checked={brand.outbound_enabled ?? false}
                         onCheckedChange={(checked) => handleToggleOutbound(brand, checked)}
                       />
                     </div>

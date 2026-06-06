@@ -181,7 +181,7 @@ export default function WebhooksPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">Events</p>
                   <div className="flex flex-wrap gap-1">
-                    {webhook.events.map((event) => (
+                    {(webhook.events as string[])?.map((event) => (
                       <Badge key={event} variant="outline" className="text-xs">
                         {event}
                       </Badge>
@@ -230,11 +230,14 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
   const { user, client } = useAuth()
   const clientId = user?.clientId || client?.id
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string; url: string; secret: string; events: string[];
+    retry_count: number; retry_delay_seconds: number
+  }>({
     name: webhook?.name || '',
     url: webhook?.url || '',
     secret: webhook?.secret || '',
-    events: webhook?.events || ['lead.created'],
+    events: (webhook?.events as string[]) || ['lead.created'],
     retry_count: webhook?.retry_count ?? 3,
     retry_delay_seconds: webhook?.retry_delay_seconds ?? 60
   })
@@ -245,9 +248,9 @@ function WebhookModal({ isOpen, onClose, webhook, onSuccess }: WebhookModalProps
         name: webhook.name,
         url: webhook.url,
         secret: webhook.secret || '',
-        events: webhook.events,
-        retry_count: webhook.retry_count,
-        retry_delay_seconds: webhook.retry_delay_seconds
+        events: webhook.events as string[],
+        retry_count: webhook.retry_count ?? 3,
+        retry_delay_seconds: webhook.retry_delay_seconds ?? 60
       })
     } else {
       setFormData({

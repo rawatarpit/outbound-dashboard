@@ -22,7 +22,7 @@ const SOURCE_ICONS: Record<string, any> = {
   github: Shield,
 }
 
-export default function DiscoveryConfigForm({ onSuccess, onCancel }: DiscoveryConfigFormProps) {
+export default function DiscoveryConfigForm({ onCancel }: DiscoveryConfigFormProps) {
   const { client } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)

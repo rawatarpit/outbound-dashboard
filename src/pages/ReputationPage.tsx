@@ -4,24 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
-import {
-  AlertTriangle,
-  Shield,
-  Mail,
-  TrendingUp,
-  Activity,
-  RefreshCw,
-  Ban,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { AlertTriangle, Shield, Mail, TrendingUp, Activity, RefreshCw, Ban, CheckCircle, AlertCircle, Gauge, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
 import { brandsAPI } from '@/lib/api'
@@ -84,17 +68,26 @@ export default function ReputationPage() {
   const bounceCount = brand?.bounce_count || 0
   const complaintCount = brand?.complaint_count || 0
 
-  const getHealthColor = (score: number) => {
-    if (score >= 80) return 'text-foreground font-bold'
-    if (score >= 50) return 'text-foreground'
-    return 'text-muted-foreground'
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-500'
+    if (score >= 50) return 'text-yellow-500'
+    return 'text-red-500'
   }
 
-  const getHealthBg = (score: number) => {
-    if (score >= 80) return 'bg-green-500/5 border-green-500/20'
-    if (score >= 50) return 'bg-muted border-border'
-    return 'bg-red-500/5 border-red-500/20'
+  const getHealthRingStroke = (score: number) => {
+    if (score >= 80) return 'stroke-green-500'
+    if (score >= 50) return 'stroke-yellow-500'
+    return 'stroke-red-500'
   }
+
+  const getHealthLabel = (score: number) => {
+    if (score >= 80) return 'Good'
+    if (score >= 50) return 'Fair'
+    return 'Poor'
+  }
+
+  const ringRadius = 42
+  const ringCircumference = 2 * Math.PI * ringRadius
 
   if (isLoading) {
     return (
@@ -140,16 +133,18 @@ export default function ReputationPage() {
       </div>
 
       {brand?.auto_paused && (
-        <Card className="border-red-500/20 bg-red-500/5">
+        <Card className="border-red-500/40 bg-red-500/5 border-2">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <Ban className="h-5 w-5 text-red-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
+                <Ban className="h-5 w-5 text-red-400" />
+              </div>
               <div>
-                <p className="font-medium text-red-400">Auto-Paused</p>
-                <p className="text-sm text-red-400">Sending has been automatically paused due to reputation issues</p>
+                <p className="font-bold text-red-400">Sending Auto-Paused</p>
+                <p className="text-sm text-red-400/80">Sending has been automatically paused due to reputation issues</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleUnpause}>
+            <Button variant="outline" onClick={handleUnpause} className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-400">
               <RefreshCw className="h-4 w-4 mr-2" />
               Un-pause
             </Button>
@@ -160,19 +155,36 @@ export default function ReputationPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Shield className="h-5 w-5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-4">
+              <Gauge className="h-5 w-5 text-muted-foreground/50" />
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${getHealthScoreColor(deliverabilityScore)} border-current/20 bg-current/5`}>
+                {getHealthLabel(deliverabilityScore)}
+              </span>
             </div>
-            <p className={`text-3xl font-bold ${getHealthColor(deliverabilityScore)}`}>
-              {deliverabilityScore}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">Health Score</p>
-            <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-foreground"
-                style={{ width: `${deliverabilityScore}%` }}
-              />
+            <div className="flex flex-col items-center">
+              <div className="relative w-24 h-24">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r={ringRadius} fill="none" stroke="currentColor" strokeWidth="8" className="text-border" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={ringRadius}
+                    fill="none"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringCircumference * (1 - deliverabilityScore / 100)}
+                    className={getHealthRingStroke(deliverabilityScore)}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-2xl font-bold ${getHealthScoreColor(deliverabilityScore)}`}>
+                    {deliverabilityScore}
+                  </span>
+                </div>
+              </div>
             </div>
+            <p className="text-sm text-muted-foreground text-center mt-3">Health Score</p>
           </CardContent>
         </Card>
 
@@ -189,12 +201,24 @@ export default function ReputationPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <AlertCircle className="h-5 w-5 text-muted-foreground/50" />
+              <ShieldAlert className="h-5 w-5 text-muted-foreground/50" />
+              {bounceRate > 5 && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Alert</Badge>
+              )}
             </div>
-            <p className={`text-3xl font-bold ${bounceRate > 5 ? 'text-red-600' : 'text-foreground'}`}>
+            <p className={`text-3xl font-bold ${bounceRate > 5 ? 'text-red-500' : 'text-foreground'}`}>
               {formatPercentage(bounceRate / 100)}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">Bounce Rate ({formatNumber(bounceCount)} total)</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {bounceRate > 5 ? (
+                <span className="flex items-center gap-1 text-red-500">
+                  <AlertTriangle className="h-3 w-3" />
+                  {formatNumber(bounceCount)} bounced
+                </span>
+              ) : (
+                <>{formatNumber(bounceCount)} total bounces</>
+              )}
+            </p>
           </CardContent>
         </Card>
 
@@ -202,8 +226,11 @@ export default function ReputationPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
               <AlertTriangle className="h-5 w-5 text-muted-foreground/50" />
+              {complaintCount > 0 && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{complaintCount}</Badge>
+              )}
             </div>
-            <p className={`text-3xl font-bold ${complaintCount > 0 ? 'text-red-600' : 'text-foreground'}`}>
+            <p className={`text-3xl font-bold ${complaintCount > 0 ? 'text-red-500' : 'text-foreground'}`}>
               {formatNumber(complaintCount)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">Complaints</p>
@@ -211,54 +238,134 @@ export default function ReputationPage() {
         </Card>
       </div>
 
+      {bounceRate > 5 && (
+        <Card className="border-red-500/30 bg-red-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-red-500">High Bounce Rate</p>
+                <p className="text-sm text-red-500/80">
+                  Your bounce rate is {formatPercentage(bounceRate / 100)} ({formatNumber(bounceCount)} bounces out of {formatNumber(sentCount)} sent). Rates above 5% may harm your sender reputation.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {complaintCount > 0 && (
+        <Card className="border-yellow-500/30 bg-yellow-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 shrink-0">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-yellow-500">Complaints Detected</p>
+                <p className="text-sm text-yellow-500/80">
+                  {formatNumber(complaintCount)} complaint{complaintCount !== 1 ? 's' : ''} reported. Any complaints can impact deliverability.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Domain Details</CardTitle>
           <CardDescription>
-            Sending domain: {brand?.sending_domain || brand?.smtp_email?.split('@')[1] || 'Not configured'}
+            Detailed metrics for {brand?.sending_domain || brand?.smtp_email?.split('@')[1] || 'your sending domain'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className={`p-4 border border-border rounded-xl ${getHealthBg(deliverabilityScore)}`}>
-              <div className="flex items-center gap-2 mb-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 border border-border rounded-xl bg-muted/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Sending Domain</h3>
                 {deliverabilityScore >= 80 ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                  <AlertCircle className="h-4 w-4 text-muted-foreground ml-auto" />
                 )}
-                <h3 className="font-medium">Deliverability</h3>
               </div>
-              <p className={`text-2xl font-bold ${getHealthColor(deliverabilityScore)}`}>
-                {deliverabilityScore}/100
+              <p className="text-sm font-bold text-foreground truncate">
+                {brand?.sending_domain || brand?.smtp_email?.split('@')[1] || 'Not configured'}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {deliverabilityScore >= 80 ? 'Good' : deliverabilityScore >= 50 ? 'Fair' : 'Poor'}
-              </p>
+              {brand?.smtp_email && (
+                <p className="text-xs text-muted-foreground mt-1 truncate">{brand.smtp_email}</p>
+              )}
+              <div className="mt-3 flex items-center gap-2">
+                <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/60" />
+                <span className={`text-xs font-semibold ${getHealthScoreColor(deliverabilityScore)}`}>
+                  {getHealthLabel(deliverabilityScore)} — {deliverabilityScore}/100
+                </span>
+              </div>
             </div>
 
-            <div className="p-4 border border-border rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-5 w-5 text-muted-foreground" />
-                <h3 className="font-medium">Send Statistics</h3>
+            <div className="p-4 border border-border rounded-xl bg-muted/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Bounce Stats</h3>
+                {bounceRate > 5 && (
+                  <Badge variant="destructive" className="ml-auto text-[10px]">High</Badge>
+                )}
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sent</span>
                   <span className="font-medium">{formatNumber(sentCount)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Bounced</span>
-                  <span className="font-medium">{formatNumber(bounceCount)}</span>
+                  <span className={`font-medium ${bounceRate > 5 ? 'text-red-500' : ''}`}>{formatNumber(bounceCount)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Rate</span>
+                  <span className={`font-medium ${bounceRate > 5 ? 'text-red-500' : ''}`}>{formatPercentage(bounceRate / 100)}</span>
+                </div>
+              </div>
+              <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${bounceRate > 5 ? 'bg-red-500' : 'bg-foreground'}`}
+                  style={{ width: `${Math.min(bounceRate, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border border-border rounded-xl bg-muted/30">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Complaint Stats</h3>
+                {complaintCount > 0 && (
+                  <Badge variant="destructive" className="ml-auto text-[10px]">{complaintCount}</Badge>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Sent</span>
+                  <span className="font-medium">{formatNumber(sentCount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Complaints</span>
-                  <span className="font-medium">{formatNumber(complaintCount)}</span>
+                  <span className={`font-medium ${complaintCount > 0 ? 'text-red-500' : ''}`}>{formatNumber(complaintCount)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Bounce Rate</span>
-                  <span className="font-medium">{formatPercentage(bounceRate / 100)}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Rate</span>
+                  <span className={`font-medium ${complaintCount > 0 ? 'text-red-500' : ''}`}>
+                    {sentCount > 0 ? formatPercentage(complaintCount / sentCount) : '0%'}
+                  </span>
                 </div>
+              </div>
+              <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${complaintCount > 0 ? 'bg-red-500' : 'bg-foreground'}`}
+                  style={{ width: `${sentCount > 0 ? Math.min((complaintCount / sentCount) * 100, 100) : 0}%` }}
+                />
               </div>
             </div>
           </div>
@@ -274,9 +381,12 @@ export default function ReputationPage() {
           )}
 
           {brand?.last_deliverability_check && (
-            <p className="mt-4 text-xs text-muted-foreground/50">
-              Last check: {new Date(brand.last_deliverability_check).toLocaleString()}
-            </p>
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                <Activity className="h-3 w-3" />
+                <span>Last deliverability check: {new Date(brand.last_deliverability_check).toLocaleString()}</span>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
