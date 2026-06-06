@@ -10,6 +10,7 @@ import LeadImportForm from '@/components/forms/LeadImportForm'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Users, Search, Upload, ChevronLeft, ChevronRight, Mail, ExternalLink, MoreHorizontal, Target, TrendingUp, Filter } from 'lucide-react'
+import { AnimatedCounter } from '@/components/DashboardComponents'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
 import { leadsAPI, brandsAPI } from '@/lib/api'
@@ -120,10 +121,10 @@ export default function LeadsPage() {
     const contacted = leads.filter(l => l.status === 'contacted').length
     const won = leads.filter(l => l.status === 'closed_won').length
     return [
-      { label: 'Total Leads', value: formatNumber(totalCount), icon: Users, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-      { label: 'New', value: formatNumber(newLeads), icon: Target, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/30' },
-      { label: 'Contacted', value: formatNumber(contacted), icon: TrendingUp, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30' },
-      { label: 'Won', value: formatNumber(won), icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+      { label: 'Total Leads', value: totalCount, icon: Users, color: '#3b82f6', bg: '#3b82f612' },
+      { label: 'New', value: newLeads, icon: Target, color: '#8b5cf6', bg: '#8b5cf612' },
+      { label: 'Contacted', value: contacted, icon: TrendingUp, color: '#6366f1', bg: '#6366f112' },
+      { label: 'Won', value: won, icon: TrendingUp, color: '#10b981', bg: '#10b98112' },
     ]
   }, [leads, totalCount])
 
@@ -165,11 +166,11 @@ export default function LeadsPage() {
           return (
             <Card key={stat.label} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardContent className="p-5 flex items-center gap-4">
-                <div className={cn('rounded-xl p-3', stat.bg)}>
-                  <Icon className={cn('h-5 w-5', stat.color)} />
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: stat.bg }}>
+                  <Icon className="h-5 w-5" style={{ color: stat.color }} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={stat.value} /></p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </CardContent>

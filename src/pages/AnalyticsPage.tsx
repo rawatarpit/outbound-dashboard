@@ -8,6 +8,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, A
 import { TrendingUp, Mail, Users, MessageSquare, Building2, Send, MailOpen, AlertCircle, Target, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatNumber, formatPercentage } from '@/lib/utils'
+import { AnimatedCounter } from '@/components/DashboardComponents'
 import { brandsAPI, analyticsAPI } from '@/lib/api'
 import { Link } from 'react-router-dom'
 
@@ -178,61 +179,73 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Sent</p>
-              <Mail className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                <Mail className="h-[18px] w-[18px]" style={{ color: '#6366f1' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.sent)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Sent</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.sent} /></p>
             <p className="text-xs text-muted-foreground mt-1">Emails sent in period</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Delivery Rate</p>
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-500/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e12' }}>
+                <TrendingUp className="h-[18px] w-[18px]" style={{ color: '#22c55e' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatPercentage(deliveryRate)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.delivered)} delivered</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Delivery Rate</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={deliveryRate * 100} decimals={1} suffix="%" /></p>
+            <p className="text-xs text-muted-foreground mt-1"><AnimatedCounter value={m.delivered} /> delivered</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reply Rate</p>
-              <MessageSquare className="h-3.5 w-3.5 text-purple-500/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#a855f712' }}>
+                <MessageSquare className="h-[18px] w-[18px]" style={{ color: '#a855f7' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatPercentage(m.replyPct / 100)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.replied)} replies</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Reply Rate</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.replyPct} decimals={1} suffix="%" /></p>
+            <p className="text-xs text-muted-foreground mt-1"><AnimatedCounter value={m.replied} /> replies</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bounce Rate</p>
-              <AlertCircle className="h-3.5 w-3.5 text-red-500/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444412' }}>
+                <AlertCircle className="h-[18px] w-[18px]" style={{ color: '#ef4444' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatPercentage(m.bouncePct / 100)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{formatNumber(m.bounces)} bounced</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Bounce Rate</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.bouncePct} decimals={1} suffix="%" /></p>
+            <p className="text-xs text-muted-foreground mt-1"><AnimatedCounter value={m.bounces} /> bounced</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaigns</p>
-              <Target className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b12' }}>
+                <Target className="h-[18px] w-[18px]" style={{ color: '#f59e0b' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.totalCampaigns)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Campaigns</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.totalCampaigns} /></p>
             <p className="text-xs text-muted-foreground mt-1">Total campaigns</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</p>
-              <Send className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf612' }}>
+                <Send className="h-[18px] w-[18px]" style={{ color: '#8b5cf6' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.activeCampaigns)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Active</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.activeCampaigns} /></p>
             <p className="text-xs text-muted-foreground mt-1">Active campaigns</p>
           </CardContent>
         </Card>
@@ -241,33 +254,39 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Leads</p>
-              <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                <Users className="h-[18px] w-[18px]" style={{ color: '#6366f1' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.totalLeads)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Leads</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.totalLeads} /></p>
             <p className="text-xs text-muted-foreground mt-1">
-              <span className="text-foreground font-medium">{formatNumber(m.newLeads)}</span> new this period
+              <span className="text-foreground font-medium"><AnimatedCounter value={m.newLeads} /></span> new this period
             </p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contacted</p>
-              <Send className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf612' }}>
+                <Send className="h-[18px] w-[18px]" style={{ color: '#8b5cf6' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.contactedLeads)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Contacted</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.contactedLeads} /></p>
             <p className="text-xs text-muted-foreground mt-1">Leads reached out to</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Qualified</p>
-              <Target className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e12' }}>
+                <Target className="h-[18px] w-[18px]" style={{ color: '#22c55e' }} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatNumber(m.qualifiedLeads)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Qualified</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={m.qualifiedLeads} /></p>
             <p className="text-xs text-muted-foreground mt-1">Qualified leads</p>
           </CardContent>
         </Card>

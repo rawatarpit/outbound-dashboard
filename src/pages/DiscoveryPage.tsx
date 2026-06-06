@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, cn } from '@/lib/utils'
+import { AnimatedCounter } from '@/components/DashboardComponents'
 import { discoverySourcesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
@@ -87,56 +88,48 @@ function SourceDetailView({
 
       <div className="grid grid-cols-4 gap-4">
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Users className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{(source as any).total_records_fetched || 0}</p>
-                <p className="text-sm text-muted-foreground">Total Records</p>
-              </div>
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#3b82f612' }}>
+              <Users className="h-5 w-5" style={{ color: '#3b82f6' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={(source as any).total_records_fetched || 0} /></p>
+              <p className="text-sm text-muted-foreground">Total Records</p>
             </div>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <Building2 className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{(source as any).total_companies_enriched || 0}</p>
-                <p className="text-sm text-muted-foreground">Companies Enriched</p>
-              </div>
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#22c55e12' }}>
+              <Building2 className="h-5 w-5" style={{ color: '#22c55e' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={(source as any).total_companies_enriched || 0} /></p>
+              <p className="text-sm text-muted-foreground">Companies Enriched</p>
             </div>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-lg">
-                <Users className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{(source as any).total_contacts_enriched || 0}</p>
-                <p className="text-sm text-muted-foreground">Contacts Enriched</p>
-              </div>
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8b5cf612' }}>
+              <Users className="h-5 w-5" style={{ color: '#8b5cf6' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={(source as any).total_contacts_enriched || 0} /></p>
+              <p className="text-sm text-muted-foreground">Contacts Enriched</p>
             </div>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-lg">
-                <TrendingUp className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {source.last_status === 'success' ? '100%' : source.last_status === 'failed' ? '0%' : 'N/A'}
-                </p>
-                <p className="text-sm text-muted-foreground">Success Rate</p>
-              </div>
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: source.last_status === 'success' ? '#10b98112' : source.last_status === 'failed' ? '#ef444412' : '#a3a3a312' }}>
+              <TrendingUp className="h-5 w-5" style={{ color: source.last_status === 'success' ? '#10b981' : source.last_status === 'failed' ? '#ef4444' : '#a3a3a3' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight" style={{ color: source.last_status === 'success' ? '#10b981' : source.last_status === 'failed' ? '#ef4444' : 'inherit' }}>
+                {source.last_status === 'success' ? '100%' : source.last_status === 'failed' ? '0%' : 'N/A'}
+              </p>
+              <p className="text-sm text-muted-foreground">Success Rate</p>
             </div>
           </CardContent>
         </Card>

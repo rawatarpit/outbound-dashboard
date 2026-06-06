@@ -11,6 +11,7 @@ import BrandForm from '@/components/forms/BrandForm'
 import { Plus, Building2, Mail, Search, ExternalLink, MoreHorizontal, Play, Pause, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { brandsAPI } from '@/lib/api'
+import { AnimatedCounter } from '@/components/DashboardComponents'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -233,7 +234,7 @@ export default function BrandsPage() {
                     <div className="flex items-center gap-4">
                       <div>
                         <p className="text-xs text-muted-foreground/60">Sent Today</p>
-                        <p className="font-bold text-foreground">{brand.sent_count || 0}</p>
+                        <p className="font-bold text-foreground"><AnimatedCounter value={brand.sent_count || 0} /></p>
                       </div>
                       <div className="w-px h-8 bg-border" />
                       <div>

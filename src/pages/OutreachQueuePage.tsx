@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import Drawer from '@/components/Drawer'
 import { Mail, Send, XCircle, Eye, Building2, Edit3, Save, Clock } from 'lucide-react'
+import { AnimatedCounter } from '@/components/DashboardComponents'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
 import { brandsAPI, campaignsAPI } from '@/lib/api'
@@ -203,22 +204,22 @@ export default function OutreachQueuePage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-2.5 bg-muted rounded-xl">
-              <Mail className="h-5 w-5 text-foreground" />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#3b82f612' }}>
+              <Mail className="h-5 w-5" style={{ color: '#3b82f6' }} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+              <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={pendingCount} /></p>
               <p className="text-sm text-muted-foreground">Pending Drafts</p>
             </div>
           </CardContent>
         </Card>
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-2.5 bg-muted rounded-xl">
-              <Clock className="h-5 w-5 text-foreground" />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8b5cf612' }}>
+              <Clock className="h-5 w-5" style={{ color: '#8b5cf6' }} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{todayCount}</p>
+              <p className="text-2xl font-bold text-foreground tracking-tight"><AnimatedCounter value={todayCount} /></p>
               <p className="text-sm text-muted-foreground">Created Today</p>
             </div>
           </CardContent>
