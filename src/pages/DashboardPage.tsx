@@ -111,6 +111,40 @@ export default function DashboardPage() {
   const brand = data?.brand
   const avgScore = data?.avg_composite_score
 
+  // --- Derived health & insights for non-technical users ---
+  let healthIssues = 0, healthWarnings = 0
+  if (workers) {
+    Object.values(workers).forEach((w: any) => {
+      if (w?.circuit_breaker) healthIssues++
+      else if (w?.status === 'idle' || w?.status === 'paused') healthWarnings++
+    })
+  }
+  if (sendHealth) {
+    const dPct = sendHealth.daily.used / Math.max(sendHealth.daily.limit, 1)
+    const hPct = sendHealth.hourly.used / Math.max(sendHealth.hourly.limit, 1)
+    if (dPct >= 1) healthIssues++
+    else if (dPct >= 0.8) healthWarnings++
+    if (hPct >= 1) healthIssues++
+    else if (hPct >= 0.8) healthWarnings++
+  }
+  const healthStatus = healthIssues > 0 ? 'critical' : healthWarnings > 0 ? 'warning' : 'good'
+
+  const pipelineValue = (() => {
+    if (!pipeline) return null
+    // Estimate $500 avg deal value per company in pipeline
+    const total = pipeline.total || 0
+    const won = (pipeline.stages?.closed_won || 0)
+    const active = total - (pipeline.stages?.closed_lost || 0) - won
+    return { total, active, won }
+  })()
+
+  const deliveryRate = sendHealth
+    ? Math.round((sendHealth.delivered_today / Math.max(sendHealth.sent_today, 1)) * 100)
+    : null
+  const openRate = sendHealth
+    ? Math.round((sendHealth.opened_today / Math.max(sendHealth.delivered_today, 1)) * 100)
+    : null
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -125,6 +159,35 @@ export default function DashboardPage() {
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground" />
               {brand.name}
             </span>
+          </div>
+        )}
+      </div>
+
+      {/* System Health */}
+      <div className={`rounded-xl border p-4 flex items-center gap-3 ${
+        healthStatus === 'critical' ? 'bg-red-500/5 border-red-500/20' :
+        healthStatus === 'warning' ? 'bg-amber-500/5 border-amber-500/20' :
+        'bg-green-500/5 border-green-500/20'
+      }`}>
+        {healthStatus === 'critical' ? <ShieldAlert className="h-5 w-5 text-red-500" /> :
+         healthStatus === 'warning' ? <AlertCircle className="h-5 w-5 text-amber-500" /> :
+         <CheckCircle className="h-5 w-5 text-green-500" />}
+        <div className="flex-1">
+          <p className="text-sm font-medium">
+            {healthStatus === 'critical' ? 'Action needed' :
+             healthStatus === 'warning' ? 'Some attention needed' :
+             'All systems healthy'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {healthStatus === 'critical' ? `${healthIssues} issue(s) require immediate attention` :
+             healthStatus === 'warning' ? `${healthWarnings} thing(s) to review` :
+             'Everything is running smoothly'}
+          </p>
+        </div>
+        {pipelineValue && (
+          <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Target className="h-3.5 w-3.5" />{pipelineValue.active} active deals</span>
+            <span className="flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" />~{formatCurrency(pipelineValue.active * 1000)} pipeline</span>
           </div>
         )}
       </div>
@@ -190,6 +253,41 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Insight Bar */}
+      {(funnel || sendHealth) && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm bg-muted/30 rounded-xl px-5 py-3 border border-border">
+          {funnel && (
+            <>
+              <span><span className="font-semibold text-foreground">{formatNumber(funnel.raw_24h)}</span> <span className="text-muted-foreground">discovered today</span></span>
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+              <span><span className="font-semibold text-foreground">{formatNumber(funnel.approved)}</span> <span className="text-muted-foreground">approved</span></span>
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+            </>
+          )}
+          {sendHealth && (
+            <span><span className="font-semibold text-foreground">{formatNumber(sendHealth.sent_today)}</span> <span className="text-muted-foreground">sent</span></span>
+          )}
+          {deliveryRate != null && (
+            <>
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+              <span><span className={`font-semibold ${deliveryRate >= 90 ? 'text-green-500' : deliveryRate >= 70 ? 'text-amber-500' : 'text-red-500'}`}>{deliveryRate}%</span> <span className="text-muted-foreground">delivery</span></span>
+            </>
+          )}
+          {openRate != null && (
+            <>
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+              <span><span className={`font-semibold ${openRate >= 40 ? 'text-green-500' : openRate >= 20 ? 'text-amber-500' : 'text-red-500'}`}>{openRate}%</span> <span className="text-muted-foreground">open rate</span></span>
+            </>
+          )}
+          {avgScore != null && (
+            <>
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+              <span><span className="font-semibold text-foreground">{avgScore}</span> <span className="text-muted-foreground">avg lead score</span></span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Funnel + Pipeline */}
       <div className="grid gap-6 lg:grid-cols-7">
@@ -284,6 +382,18 @@ export default function DashboardPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Won Revenue</span>
                       <span className="font-semibold text-[#22c55e]">{formatCurrency(pipeline.won_revenue)}</span>
+                    </div>
+                  )}
+                  {pipelineValue && pipelineValue.active > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Est. Pipeline Value</span>
+                      <span className="font-semibold text-foreground">{formatCurrency(pipelineValue.active * 1000)}</span>
+                    </div>
+                  )}
+                  {pipelineValue && pipelineValue.won > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Win Rate</span>
+                      <span className="font-semibold text-foreground">{Math.round((pipelineValue.won / pipelineValue.total) * 100)}%</span>
                     </div>
                   )}
                 </div>
@@ -529,7 +639,20 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {workers ? (
-              Object.entries(workers).map(([type, info]: [string, any]) => {
+              <>
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium mb-1 ${
+                healthStatus === 'critical' ? 'bg-red-500/10 text-red-600' :
+                healthStatus === 'warning' ? 'bg-amber-500/10 text-amber-600' :
+                'bg-green-500/10 text-green-600'
+              }`}>
+                {healthStatus === 'critical' ? <ShieldAlert className="h-3.5 w-3.5" /> :
+                 healthStatus === 'warning' ? <AlertCircle className="h-3.5 w-3.5" /> :
+                 <CheckCircle className="h-3.5 w-3.5" />}
+                {healthStatus === 'critical' ? `${healthIssues} issue(s)` :
+                 healthStatus === 'warning' ? `${healthWarnings} thing(s) to check` :
+                 'All workers running'}
+              </div>
+              {Object.entries(workers).map(([type, info]: [string, any]) => {
                 const icons: Record<string, any> = { discovery: Search, enrichment: Database, send: Send, reply: Reply }
                 const Icon = icons[type] || Activity
                 const status = info?.status || 'idle'
@@ -568,7 +691,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )
-              })
+              })}
+              </>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">No worker data available</div>
             )}
