@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authenticateUser } from "../_shared/auth.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -9,7 +9,6 @@ Deno.serve(async (req)=>{
     headers: corsHeaders
   });
   try {
-    const supabase = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
     const url = new URL(req.url);
     const path = url.pathname.replace("/system", "");
     if (path === "/health" || path === "/health/") {
@@ -24,43 +23,14 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        error: "Missing authorization header"
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
+    const auth = await authenticateUser(req);
+    if (auth.error) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        error: "Invalid or expired token"
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-    const { data: member } = await supabase.from("client_members").select("client_id, role").eq("user_id", user.id).maybeSingle();
-    if (!member || !member.client_id) {
-      return new Response(JSON.stringify({
-        error: "No client associated"
-      }), {
-        status: 403,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      });
-    }
-    const clientId = member.client_id;
+    const { supabase, member, clientId } = auth;
     if (path === "/flags" || path === "/flags/") {
       if (req.method === "GET") {
         const { data } = await supabase.from("system_flags").select("*").eq("client_id", clientId);
@@ -75,11 +45,7 @@ Deno.serve(async (req)=>{
     }
     const flagMatch = path.match(/^\/flags\/(.+)$/);
     if (flagMatch && req.method === "POST") {
-      const { data: memberRole } = await supabase.from("client_members").select("role").eq("user_id", user.id).maybeSingle();
-      if (!memberRole || ![
-        "owner",
-        "admin"
-      ].includes(memberRole.role)) {
+      if (!member.role || !["owner", "admin"].includes(member.role)) {
         return new Response(JSON.stringify({
           error: "Only admins can modify system flags"
         }), {

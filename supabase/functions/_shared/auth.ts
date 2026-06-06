@@ -174,3 +174,52 @@ export async function requireAuthWithDetails(req, selectFields) {
   }
   return result.device;
 }
+
+/**
+ * Authenticates a user by verifying the JWT from the Authorization header.
+ * Creates a single client with the service_role key (for DB access) and
+ * the user's JWT (for auth verification via getUser()).
+ * Returns { user, member, clientId, supabase } on success.
+ */
+export async function authenticateUser(req) {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) {
+    return { error: "Missing authorization header", status: 401 };
+  }
+  const jwt = authHeader.replace("Bearer ", "");
+  if (!jwt) {
+    return { error: "Invalid authorization header", status: 401 };
+  }
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  // Create client with service_role key + user's JWT in global headers
+  // The service_role key bypasses RLS for DB queries.
+  // The user's JWT in global headers allows getUser() to verify the token.
+  const supabase = createClient(supabaseUrl, serviceKey, {
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+    auth: { persistSession: false }
+  });
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    console.error("[user-auth] JWT verification failed:", authError?.message);
+    return { error: "Invalid or expired token", status: 401 };
+  }
+  const { data: member, error: memberError } = await supabase
+    .from("client_members")
+    .select("client_id, role, email, id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (memberError || !member || !member.client_id) {
+    console.error("[user-auth] No client member found:", memberError?.message);
+    return { error: "No client associated", status: 403 };
+  }
+  return { user, member, clientId: member.client_id, error: null, status: 200, supabase };
+}
+
+export async function requireUserAuth(req) {
+  const result = await authenticateUser(req);
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  return result;
+}

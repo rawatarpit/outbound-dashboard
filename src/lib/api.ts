@@ -812,7 +812,7 @@ export const discoveredCompaniesAPI = {
     return deleteAPI('discovered_companies', id)
   },
 
-  getSourceNames: async (clientId?: string): Promise<{ data: string[], error: any }> => {
+  getSourceNames: async (_clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'source_name': 'not.is.null' }
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
@@ -820,7 +820,7 @@ export const discoveredCompaniesAPI = {
     return { data: names, error: null }
   },
 
-  getSignalTypes: async (clientId?: string): Promise<{ data: string[], error: any }> => {
+  getSignalTypes: async (_clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'signal_type': 'not.is.null' }
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }

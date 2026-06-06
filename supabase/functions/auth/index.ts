@@ -138,11 +138,11 @@ Deno.serve(async (req)=>{
     }
     // Login
     console.log("Login attempt for:", email);
-    const { data: session, error: loginError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    console.log("Login result:", session, "error:", loginError);
+    console.log("Login result:", authData ? "has data" : "null", "error:", loginError?.message);
     if (loginError) {
       console.log("Login error:", loginError.message);
       return new Response(JSON.stringify({
@@ -155,7 +155,8 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    if (!session?.access_token) {
+    const authSession = authData?.session;
+    if (!authSession?.access_token) {
       console.log("No session/access_token in result");
       return new Response(JSON.stringify({
         error: "Login failed - no session"
@@ -167,25 +168,27 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    console.log("Login success, token:", session.access_token.substring(0, 20) + "...");
+    console.log("Login success, token:", authSession.access_token.substring(0, 20) + "...");
+    const authUserId = authSession.user.id;
+    const authUserEmail = authSession.user.email || email;
     // Find member - try with user_id first, then email
-    let member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("user_id", session.user.id).maybeSingle();
+    let member = await supabase.from("client_members").select("client_id, email, name, role, clients(id, name)").eq("user_id", authUserId).maybeSingle();
     if (!member) {
-      member = await supabase.from("client_members").select("client_id, email, name, role, clients(name)").eq("email", email).maybeSingle();
+      member = await supabase.from("client_members").select("client_id, email, name, role, clients(id, name)").eq("email", email).maybeSingle();
     }
     // If still no member but we have user, check if they own a client directly
-    if (!member && session.user.email) {
-      const { data: client } = await supabase.from("clients").select("id, name").eq("owner_email", session.user.email).maybeSingle();
+    if (!member && authUserEmail) {
+      const { data: client } = await supabase.from("clients").select("id, name").eq("owner_email", authUserEmail).maybeSingle();
       if (client) {
-        member = { client_id: client.id, email: session.user.email, name: session.user.user_metadata?.name || email.split("@")[0], role: "owner" }
+        member = { client_id: client.id, email: authUserEmail, name: authSession.user.user_metadata?.name || email.split("@")[0], role: "owner", clients: client } as any;
       }
     }
     return new Response(JSON.stringify({
-      token: session.access_token,
+      token: authSession.access_token,
       user: {
-        id: session.user.id,
-        email: member?.email || session.user.email,
-        name: member?.name || session.user.user_metadata?.name || email.split("@")[0],
+        id: authUserId,
+        email: member?.email || authUserEmail,
+        name: member?.name || authSession.user.user_metadata?.name || email.split("@")[0],
         role: member?.role || "owner",
         clientId: member?.client_id,
         clientName: (member as any)?.clients?.name
