@@ -140,8 +140,8 @@ export default function ReputationPage() {
         <Card className="border-red-500/40 bg-red-500/5 border-2 rounded-2xl">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
-                <Ban className="h-5 w-5 text-red-400" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: '#ef444412', borderColor: '#ef444433' }}>
+                <Ban className="h-5 w-5" style={{ color: '#ef4444' }} />
               </div>
               <div>
                 <p className="font-bold text-red-400">Sending Auto-Paused</p>
@@ -160,7 +160,9 @@ export default function ReputationPage() {
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <Gauge className="h-5 w-5 text-muted-foreground/50" />
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                <Gauge className="h-5 w-5" style={{ color: '#6366f1' }} />
+              </div>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${getHealthScoreColor(deliverabilityScore)} border-current/20 bg-current/5`}>
                 {getHealthLabel(deliverabilityScore)}
               </span>
@@ -195,7 +197,9 @@ export default function ReputationPage() {
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <Mail className="h-5 w-5 text-muted-foreground/50" />
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f612' }}>
+                <Mail className="h-5 w-5" style={{ color: '#3b82f6' }} />
+              </div>
             </div>
             <p className="text-3xl font-bold text-foreground">{formatNumber(sentCount)}</p>
             <p className="text-sm text-muted-foreground mt-1">Total Sent</p>
@@ -205,7 +209,9 @@ export default function ReputationPage() {
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <ShieldAlert className="h-5 w-5 text-muted-foreground/50" />
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444412' }}>
+                <ShieldAlert className="h-5 w-5" style={{ color: '#ef4444' }} />
+              </div>
               {bounceRate > 5 && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Alert</Badge>
               )}
@@ -229,7 +235,9 @@ export default function ReputationPage() {
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <AlertTriangle className="h-5 w-5 text-muted-foreground/50" />
+              <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b12' }}>
+                <AlertTriangle className="h-5 w-5" style={{ color: '#f59e0b' }} />
+              </div>
               {complaintCount > 0 && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{complaintCount}</Badge>
               )}
@@ -246,8 +254,8 @@ export default function ReputationPage() {
         <Card className="border-red-500/30 bg-red-500/5 rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
-                <AlertCircle className="h-5 w-5 text-red-500" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: '#ef444412', borderColor: '#ef444433' }}>
+                <AlertCircle className="h-5 w-5" style={{ color: '#ef4444' }} />
               </div>
               <div className="flex-1">
                 <p className="font-bold text-red-500">High Bounce Rate</p>
@@ -264,8 +272,8 @@ export default function ReputationPage() {
         <Card className="border-yellow-500/30 bg-yellow-500/5 rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 shrink-0">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: '#f59e0b12', borderColor: '#f59e0b33' }}>
+                <AlertTriangle className="h-5 w-5" style={{ color: '#f59e0b' }} />
               </div>
               <div className="flex-1">
                 <p className="font-bold text-yellow-500">Complaints Detected</p>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { type DiscoveredCompany, type BrandProfile, ENRICHMENT_STATUSES, REJECTION_REASONS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
@@ -32,10 +32,20 @@ import {
   Target,
   Brain,
   BarChart3,
+  CheckCircle,
+  XCircle,
+  Clock,
+  PieChart,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
 import { discoveredCompaniesAPI, brandsAPI } from '@/lib/api'
+import { AnimatedCounter, SectionHeader, StatCard } from '@/components/DashboardComponents'
+import {
+  BarChart as ReBarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts'
+
+const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
 
 const PAGE_SIZE = 50
 
@@ -140,6 +150,24 @@ export default function DiscoveredCompaniesPage() {
 
   const rejectionOptions = REJECTION_REASONS.map(r => r.value)
 
+  const stats = useMemo(() => ({
+    approved: companies.filter(c => c.enrichment_status === 'approved').length,
+    rejected: companies.filter(c => c.enrichment_status === 'rejected').length,
+    pending: companies.filter(c => c.enrichment_status === 'raw' || !c.enrichment_status).length,
+  }), [companies])
+
+  const sourceBreakdown = useMemo(() => {
+    const map = new Map<string, number>()
+    companies.forEach(c => {
+      const src = c.source_name || 'Unknown'
+      map.set(src, (map.get(src) || 0) + 1)
+    })
+    return Array.from(map.entries())
+      .map(([source, count]) => ({ source, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+  }, [companies])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -149,14 +177,49 @@ export default function DiscoveredCompaniesPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Browse all companies through the pipeline — from raw results to approved leads</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-          <Building2 className="h-4 w-4" />
-          {formatNumber(totalCount)} total
-        </div>
       </div>
+
+      {/* KPI Stats */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <StatCard icon={Building2} label="Total Companies" value={<AnimatedCounter value={totalCount} />}
+          subvalue="All discovered records" color="#6366f1" />
+        <StatCard icon={CheckCircle} label="Approved" value={<AnimatedCounter value={stats.approved} />}
+          subvalue={`${totalCount > 0 ? Math.round((stats.approved / totalCount) * 100) : 0}% of total`} color="#22c55e" />
+        <StatCard icon={XCircle} label="Rejected" value={<AnimatedCounter value={stats.rejected} />}
+          subvalue={`${totalCount > 0 ? Math.round((stats.rejected / totalCount) * 100) : 0}% of total`} color="#ef4444" />
+        <StatCard icon={Clock} label="Pending Review" value={<AnimatedCounter value={stats.pending} />}
+          subvalue="Awaiting enrichment" color="#f59e0b" />
+      </div>
+
+      {/* Source Breakdown Chart */}
+      {sourceBreakdown.length > 0 && (
+        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <SectionHeader icon={PieChart} title="Source Breakdown" subtitle="Companies by discovery source" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ReBarChart data={sourceBreakdown} layout="vertical" barCategoryGap="25%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 90%)" horizontal={false} />
+                  <XAxis type="number" stroke="hsl(0 0% 70%)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="source" stroke="hsl(0 0% 70%)" fontSize={11} tickLine={false} axisLine={false} width={90} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid hsl(0 0% 90%)' }} />
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                    {sourceBreakdown.map((_, i) => (
+                      <rect key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </ReBarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
+          <SectionHeader icon={Building2} title="Discovered Companies" subtitle="Filter and browse discovered records" />
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <div className="relative flex-1 min-w-[200px]">
@@ -236,7 +299,9 @@ export default function DiscoveredCompaniesPage() {
             </div>
           ) : companies.length === 0 ? (
             <div className="text-center py-16">
-              <Search className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#6366f112' }}>
+                <Search className="h-7 w-7" style={{ color: '#6366f1' }} />
+              </div>
               <h3 className="text-lg font-medium text-foreground">No companies found</h3>
               <p className="text-muted-foreground">Run a discovery to start finding companies</p>
             </div>

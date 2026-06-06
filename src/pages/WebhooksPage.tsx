@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type ClientWebhook, WEBHOOK_EVENTS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -13,11 +13,16 @@ import {
   Trash2,
   MoreHorizontal,
   Send,
-  Loader2
+  Loader2,
+  Activity,
+  CheckCircle,
+  XCircle,
+  Zap,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
 import { webhooksAPI } from '@/lib/api'
+import { AnimatedCounter, SectionHeader, StatCard } from '@/components/DashboardComponents'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +108,10 @@ export default function WebhooksPage() {
     )
   }
 
+  const activeCount = webhooks.filter(w => w.is_active).length
+  const disabledCount = webhooks.filter(w => !w.is_active).length
+  const recentTriggers = webhooks.filter(w => w.last_triggered_at).length
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -118,10 +127,24 @@ export default function WebhooksPage() {
         </Button>
       </div>
 
+      {/* KPI Stats */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <StatCard icon={Webhook} label="Total Webhooks" value={<AnimatedCounter value={webhooks.length} />}
+          subvalue="Configured endpoints" color="#6366f1" />
+        <StatCard icon={CheckCircle} label="Active" value={<AnimatedCounter value={activeCount} />}
+          subvalue={`${webhooks.length > 0 ? Math.round((activeCount / webhooks.length) * 100) : 0}% of total`} color="#22c55e" />
+        <StatCard icon={XCircle} label="Disabled" value={<AnimatedCounter value={disabledCount} />}
+          subvalue={disabledCount === 0 ? 'All active' : `${disabledCount} inactive`} color="#a3a3a3" />
+        <StatCard icon={Zap} label="Recent Triggers" value={<AnimatedCounter value={recentTriggers} />}
+          subvalue="Have been triggered" color="#f59e0b" />
+      </div>
+
       {webhooks.length === 0 ? (
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Webhook className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#6366f112' }}>
+              <Webhook className="h-7 w-7" style={{ color: '#6366f1' }} />
+            </div>
             <h3 className="text-lg font-medium text-foreground">No webhooks configured</h3>
             <p className="text-muted-foreground mb-4">Add a webhook to receive notifications about system events</p>
             <Button onClick={() => setIsModalOpen(true)}>
@@ -131,17 +154,19 @@ export default function WebhooksPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <SectionHeader icon={Webhook} title="Webhook Endpoints" subtitle={`${webhooks.length} webhook(s) configured`} />
+          <div className="grid gap-4 md:grid-cols-2">
           {webhooks.map((webhook) => (
             <Card key={webhook.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-primary/10 p-2.5">
-                      <Webhook className="h-5 w-5 text-primary" />
+                    <div className="rounded-xl p-2.5" style={{ backgroundColor: '#6366f112' }}>
+                      <Webhook className="h-5 w-5" style={{ color: '#6366f1' }} />
                     </div>
                     <div>
-                      <CardTitle className="text-base">{webhook.name}</CardTitle>
+                      <p className="text-base font-semibold text-foreground">{webhook.name}</p>
                       <p className="text-sm text-muted-foreground truncate max-w-[200px]">{webhook.url}</p>
                     </div>
                   </div>
@@ -206,6 +231,7 @@ export default function WebhooksPage() {
               </CardContent>
             </Card>
           ))}
+          </div>
         </div>
       )}
 

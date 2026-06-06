@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type ClientSettings, LLM_PROVIDERS } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -14,10 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
-import { Settings, Mail, Bot, Server, Save, Building2, Loader2 } from 'lucide-react'
+import { Settings, Mail, Bot, Server, Save, Building2, Loader2, Activity } from 'lucide-react'
 import { settingsAPI, clientAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import type { Client } from '@/lib/supabase'
+import { SectionHeader, AnimatedCounter } from '@/components/DashboardComponents'
 
 export default function SettingsPage() {
   const { client, user } = useAuth()
@@ -102,6 +103,9 @@ export default function SettingsPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const providersCount = [formData.llm_provider, formData.smtp_host || formData.email_provider === 'resend'].filter(Boolean).length
+  const featuresCount = [formData.imap_enabled, clientForm.discovery_enabled ?? true, clientForm.enrichment_enabled ?? true].filter(Boolean).length
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -120,6 +124,58 @@ export default function SettingsPage() {
           <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Settings</span>
         </h1>
         <p className="text-muted-foreground mt-1">Configure your outbound engine</p>
+      </div>
+
+      {/* Config Health Banner */}
+      <div className="relative overflow-hidden rounded-xl border p-4 bg-gradient-to-r from-muted/50 to-muted/30 border-border/50">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+            <Settings className="h-5 w-5" style={{ color: '#6366f1' }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">Configuration Summary</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${formData.llm_provider ? 'bg-green-500' : 'bg-red-500'}`} />
+                LLM {formData.llm_provider ? 'Configured' : 'Not configured'}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${formData.smtp_host ? 'bg-green-500' : formData.email_provider === 'resend' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                Email {formData.smtp_host || formData.email_provider === 'resend' ? 'Configured' : 'Partial'}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${formData.imap_enabled ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                IMAP {formData.imap_enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+              <Server className="h-[18px] w-[18px]" style={{ color: '#6366f1' }} />
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Available Providers</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tracking-tight">
+            <AnimatedCounter value={providersCount} />
+          </p>
+        </div>
+        <div className="relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e12' }}>
+              <Activity className="h-[18px] w-[18px]" style={{ color: '#22c55e' }} />
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Features</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground tracking-tight">
+            <AnimatedCounter value={featuresCount} />
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="llm" className="w-full">
@@ -148,13 +204,8 @@ export default function SettingsPage() {
 
         <TabsContent value="llm">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>LLM Configuration</CardTitle>
-              <CardDescription>
-                Configure the AI model used for outreach and analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="pt-6 space-y-5">
+              <SectionHeader icon={Bot} title="LLM Configuration" subtitle="Configure the AI model used for outreach and analysis" />
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="llm_provider">Provider</Label>
@@ -226,13 +277,8 @@ export default function SettingsPage() {
 
         <TabsContent value="email">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Email Configuration</CardTitle>
-              <CardDescription>
-                Configure SMTP settings for sending emails
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="pt-6 space-y-5">
+              <SectionHeader icon={Mail} title="Email Configuration" subtitle="Configure SMTP settings for sending emails" />
               <div className="space-y-2">
                 <Label htmlFor="email_provider">Email Provider</Label>
                 <Select
@@ -356,13 +402,8 @@ export default function SettingsPage() {
 
         <TabsContent value="imap">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>IMAP Configuration</CardTitle>
-              <CardDescription>
-                Configure IMAP settings for receiving replies
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="pt-6 space-y-5">
+              <SectionHeader icon={Server} title="IMAP Configuration" subtitle="Configure IMAP settings for receiving replies" />
               <div className="flex items-center gap-2">
                 <Switch
                   id="imap_enabled"
@@ -435,13 +476,8 @@ export default function SettingsPage() {
 
         <TabsContent value="general">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>
-                Webhook configuration and other settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="pt-6 space-y-5">
+              <SectionHeader icon={Settings} title="General Settings" subtitle="Webhook configuration and other settings" />
               <div className="space-y-2">
                 <Label htmlFor="sending_domain">Default Sending Domain</Label>
                 <Input
@@ -467,16 +503,8 @@ export default function SettingsPage() {
 
         <TabsContent value="clients">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Client Profile
-              </CardTitle>
-              <CardDescription>
-                Manage your organization profile and settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="pt-6 space-y-5">
+              <SectionHeader icon={Building2} title="Client Profile" subtitle="Manage your organization profile and settings" />
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="client_name">Organization Name</Label>

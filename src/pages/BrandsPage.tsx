@@ -161,10 +161,10 @@ export default function BrandsPage() {
             <div key={brand.id} className="group relative">
               <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
                 <div className="p-5">
-                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center border border-primary/10">
-                        <Building2 className="h-5 w-5 text-primary" />
+                      <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                        <Building2 className="h-5 w-5" style={{ color: '#6366f1' }} />
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-foreground truncate">{brand.brand_name}</p>

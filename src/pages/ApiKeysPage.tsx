@@ -22,17 +22,18 @@ interface ExternalKey {
   source: string
   status: 'configured' | 'missing'
   icon: any
-  color: string
+  bgColor: string
+  iconColor: string
   url?: string
 }
 
-const SERVICE_META: Record<string, { icon: any; color: string; url?: string }> = {
-  apollo: { icon: Globe, color: 'text-muted-foreground bg-muted', url: 'https://apollo.io' },
-  hunter: { icon: Search, color: 'text-muted-foreground bg-muted', url: 'https://hunter.io' },
-  apify: { icon: Database, color: 'text-muted-foreground bg-muted', url: 'https://apify.com' },
-  github: { icon: Shield, color: 'text-foreground/80 bg-muted', url: 'https://github.com/settings/tokens' },
-  llm: { icon: Bot, color: 'text-muted-foreground bg-muted' },
-  smtp: { icon: Mail, color: 'text-muted-foreground bg-muted' },
+const SERVICE_META: Record<string, { icon: any; bgColor: string; iconColor: string; url?: string }> = {
+  apollo: { icon: Globe, bgColor: '#6366f112', iconColor: '#6366f1', url: 'https://apollo.io' },
+  hunter: { icon: Search, bgColor: '#3b82f612', iconColor: '#3b82f6', url: 'https://hunter.io' },
+  apify: { icon: Database, bgColor: '#a855f712', iconColor: '#a855f7', url: 'https://apify.com' },
+  github: { icon: Shield, bgColor: '#6366f112', iconColor: '#6366f1', url: 'https://github.com/settings/tokens' },
+  llm: { icon: Bot, bgColor: '#f59e0b12', iconColor: '#f59e0b' },
+  smtp: { icon: Mail, bgColor: '#3b82f612', iconColor: '#3b82f6' },
 }
 
 export default function ApiKeysPage() {
@@ -67,7 +68,7 @@ export default function ApiKeysPage() {
           const config = (source.config || {}) as Record<string, any>
           const apiKey = config.api_key || config.token
           if (apiKey) {
-            const meta = SERVICE_META[source.type] || { icon: Key, color: 'text-muted-foreground bg-muted' }
+            const meta = SERVICE_META[source.type] || { icon: Key, bgColor: '#6366f112', iconColor: '#6366f1' }
             const brandLabel = brand.brand_name || brand.product || ''
             allKeys.push({
               id: `src-${source.id}`,
@@ -78,7 +79,8 @@ export default function ApiKeysPage() {
               source: brandLabel,
               status: 'configured',
               icon: meta.icon,
-              color: meta.color,
+              bgColor: meta.bgColor,
+              iconColor: meta.iconColor,
               url: meta.url,
             })
           }
@@ -99,7 +101,8 @@ export default function ApiKeysPage() {
             source: brandLabel,
             status: 'configured',
             icon: Mail,
-            color: 'text-muted-foreground bg-muted',
+            bgColor: '#3b82f612',
+            iconColor: '#3b82f6',
           })
         }
         if (activeBrand.provider_api_key) {
@@ -113,7 +116,8 @@ export default function ApiKeysPage() {
             source: brandLabel,
             status: 'configured',
             icon: Mail,
-            color: 'text-muted-foreground bg-muted',
+            bgColor: '#3b82f612',
+            iconColor: '#3b82f6',
           })
         }
       }
@@ -130,7 +134,8 @@ export default function ApiKeysPage() {
             source: 'Global Settings',
             status: 'configured',
             icon: Bot,
-            color: 'text-muted-foreground bg-muted',
+            bgColor: '#f59e0b12',
+            iconColor: '#f59e0b',
           })
         }
       }
@@ -140,7 +145,7 @@ export default function ApiKeysPage() {
       for (const type of keyTypes) {
         const hasKey = allKeys.some(k => k.service === type)
         if (!hasKey) {
-          const meta = SERVICE_META[type] || { icon: Key, color: 'text-muted-foreground bg-muted' }
+          const meta = SERVICE_META[type] || { icon: Key, bgColor: '#a3a3a312', iconColor: '#a3a3a3' }
           allKeys.push({
             id: `missing-${type}`,
             service: type,
@@ -150,7 +155,8 @@ export default function ApiKeysPage() {
             source: 'Not configured',
             status: 'missing',
             icon: meta.icon,
-            color: 'text-muted-foreground/50 bg-muted',
+            bgColor: '#a3a3a312',
+            iconColor: '#a3a3a3',
             url: meta.url,
           })
         }
@@ -349,8 +355,8 @@ export default function ApiKeysPage() {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`rounded-xl p-2.5 ${key.color}`}>
-                            <Icon className="h-5 w-5" />
+                          <div className="rounded-xl p-2.5" style={{ backgroundColor: key.bgColor }}>
+                            <Icon className="h-5 w-5" style={{ color: key.iconColor }} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">

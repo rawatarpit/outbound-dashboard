@@ -19,11 +19,13 @@ import {
   TrendingUp,
   Users,
   Building2,
-  Clock
+  Clock,
+  Activity,
+  Database
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, cn } from '@/lib/utils'
-import { AnimatedCounter } from '@/components/DashboardComponents'
+import { AnimatedCounter, StatCard, SectionHeader } from '@/components/DashboardComponents'
 import { discoverySourcesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
@@ -39,11 +41,11 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 
-const SOURCE_COLORS: Record<string, { bg: string; icon: string }> = {
-  apollo: { bg: 'bg-muted', icon: 'text-muted-foreground' },
-  apify: { bg: 'bg-muted', icon: 'text-muted-foreground' },
-  hunter: { bg: 'bg-muted', icon: 'text-muted-foreground' },
-  default: { bg: 'bg-muted', icon: 'text-muted-foreground' }
+const SOURCE_COLORS: Record<string, { bgColor: string; iconColor: string }> = {
+  apollo: { bgColor: '#6366f112', iconColor: '#6366f1' },
+  apify: { bgColor: '#6366f112', iconColor: '#6366f1' },
+  hunter: { bgColor: '#6366f112', iconColor: '#6366f1' },
+  default: { bgColor: '#6366f112', iconColor: '#6366f1' }
 }
 
 function SourceDetailView({ 
@@ -69,8 +71,8 @@ function SourceDetailView({
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-4 flex-1">
-          <div className={cn('rounded-lg p-3', colors.bg)}>
-            <Search className={cn('h-6 w-6', colors.icon)} />
+          <div className="rounded-lg p-3" style={{ backgroundColor: colors.bgColor }}>
+            <Search className="h-6 w-6" style={{ color: colors.iconColor }} />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">{source.name}</h2>
@@ -345,10 +347,26 @@ export default function DiscoveryPage() {
         </div>
       </div>
 
+      {/* ── KPI Ribbon ── */}
+      {sources.length > 0 && (
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <StatCard icon={Search} label="Total Sources" value={<AnimatedCounter value={sources.length} />}
+            subvalue={`${sources.filter(s => s.is_active).length} active`} color="#6366f1" />
+          <StatCard icon={Activity} label="Active Sources" value={<AnimatedCounter value={sources.filter(s => s.is_active).length} />}
+            subvalue={`${sources.filter(s => !s.is_active).length} inactive`} color="#22c55e" />
+          <StatCard icon={Database} label="Total Records" value={<AnimatedCounter value={sources.reduce((sum, s) => sum + ((s as any).total_records_fetched || 0), 0)} />}
+            subvalue={`across ${sources.length} sources`} color="#a855f7" />
+          <StatCard icon={CheckCircle} label="Success Rate" value={`${sources.length > 0 ? Math.round((sources.filter(s => s.last_status === 'success').length / sources.length) * 100) : 0}%`}
+            subvalue={`${sources.filter(s => s.last_status === 'failed').length} failed`} color="#f59e0b" />
+        </div>
+      )}
+
       {sources.length === 0 ? (
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: '#6366f112' }}>
+              <Search className="h-7 w-7" style={{ color: '#6366f1' }} />
+            </div>
             <h3 className="text-lg font-medium text-foreground">No discovery sources</h3>
             <p className="text-muted-foreground mb-4">Configure your first data source to start discovering companies</p>
             <Button onClick={() => { setEditingSource(null); setIsModalOpen(true) }}>
@@ -358,7 +376,9 @@ export default function DiscoveryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-4">
+          <SectionHeader icon={Search} title="Discovery Sources" subtitle={`${sources.length} configured sources`} />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sources.map((source) => {
             const colors = SOURCE_COLORS[source.type] || SOURCE_COLORS.default
             return (
@@ -370,8 +390,8 @@ export default function DiscoveryPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={cn('rounded-lg p-2', colors.bg)}>
-                        <Search className={cn('h-5 w-5', colors.icon)} />
+                      <div className="rounded-lg p-2" style={{ backgroundColor: colors.bgColor }}>
+                        <Search className="h-5 w-5" style={{ color: colors.iconColor }} />
                       </div>
                       <div>
                         <CardTitle className="text-base">{source.name}</CardTitle>
@@ -432,7 +452,8 @@ export default function DiscoveryPage() {
                 </CardContent>
               </Card>
             )
-          })}
+            })}
+        </div>
         </div>
       )}
 

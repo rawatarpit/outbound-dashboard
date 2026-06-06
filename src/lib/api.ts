@@ -729,6 +729,15 @@ export const campaignsAPI = {
 }
 
 // ─────────────────────────────────────────────
+// Sidebar Counts (lightweight summary)
+// ─────────────────────────────────────────────
+export const sidebarAPI = {
+  counts: async (): Promise<{ data: { leads: number; pipeline: number; outreach: number } | null; error: any }> => {
+    return callEdgeFunction('sidebar/counts')
+  }
+}
+
+// ─────────────────────────────────────────────
 // Import Batches (REST fallback)
 // ─────────────────────────────────────────────
 export const importBatchesAPI = {

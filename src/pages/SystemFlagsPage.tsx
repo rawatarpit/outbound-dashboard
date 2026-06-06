@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Switch } from '@/components/ui/Switch'
 import { Badge } from '@/components/ui/Badge'
-import { AlertTriangle, Shield, Send, Search, Mail, Loader2 } from 'lucide-react'
+import { AlertTriangle, Shield, Send, Search, Mail, Loader2, CheckCircle, AlertCircle, ShieldAlert, ToggleLeft, ToggleRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { systemAPI } from '@/lib/api'
+import { AnimatedCounter, SectionHeader, StatCard } from '@/components/DashboardComponents'
 
 interface SystemFlag {
   key: string
@@ -69,6 +70,11 @@ export default function SystemFlagsPage() {
     }
   }
 
+  const enabledCount = flags.filter(f => f.value).length
+  const disabledCount = flags.filter(f => !f.value).length
+  const allEnabled = disabledCount === 0
+  const healthStatus = allEnabled ? 'good' : 'warning'
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -82,11 +88,47 @@ export default function SystemFlagsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">System Flags</span>
-        </h1>
-        <p className="text-muted-foreground mt-1">Master switches that control the entire system</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">System Flags</span>
+          </h1>
+          <p className="text-muted-foreground mt-1">Master switches that control the entire system</p>
+        </div>
+      </div>
+
+      {/* Health Banner */}
+      <div className={`relative overflow-hidden rounded-xl border p-5 ${
+        healthStatus === 'good'
+          ? 'bg-gradient-to-r from-green-500/5 to-green-500/10 border-green-500/20'
+          : 'bg-gradient-to-r from-amber-500/5 to-amber-500/10 border-amber-500/20'
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        <div className="relative flex items-center gap-4">
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
+            healthStatus === 'good' ? 'bg-green-500/15' : 'bg-amber-500/15'
+          }`}>
+            {healthStatus === 'good' ? <CheckCircle className="h-5 w-5 text-green-500" /> : <AlertCircle className="h-5 w-5 text-amber-500" />}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              {healthStatus === 'good' ? 'All System Flags Active' : 'Some Flags Disabled'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {healthStatus === 'good' ? 'All system controls are enabled and operational' : `${disabledCount} flag(s) are currently turned off`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Stats */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        <StatCard icon={ToggleRight} label="Total Flags" value={<AnimatedCounter value={flags.length} />}
+          subvalue="System controls" color="#6366f1" />
+        <StatCard icon={CheckCircle} label="Enabled" value={<AnimatedCounter value={enabledCount} />}
+          subvalue={`${flags.length > 0 ? Math.round((enabledCount / flags.length) * 100) : 0}% active`} color="#22c55e" />
+        <StatCard icon={ToggleLeft} label="Disabled" value={<AnimatedCounter value={disabledCount} />}
+          subvalue={disabledCount === 0 ? 'All active' : `${disabledCount} inactive`} color="#a3a3a3" />
       </div>
 
       {!canManage && (
@@ -100,10 +142,7 @@ export default function SystemFlagsPage() {
 
       <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>System Controls</CardTitle>
-          <CardDescription>
-            Toggle system-wide features. Turning off automation will pause all workers.
-          </CardDescription>
+          <SectionHeader icon={Shield} title="System Controls" subtitle="Toggle system-wide features. Turning off automation will pause all workers." />
         </CardHeader>
         <CardContent className="space-y-4">
           {flags.map((flag) => {
@@ -111,8 +150,8 @@ export default function SystemFlagsPage() {
             return (
               <div key={flag.key} className="flex items-center justify-between p-4 border border-border/50 rounded-xl hover:bg-muted/50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${flag.value ? 'bg-primary/10' : 'bg-muted'}`}>
-                    <Icon className={`h-5 w-5 ${flag.value ? 'text-primary' : 'text-muted-foreground/50'}`} />
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: flag.value ? '#22c55e12' : '#a3a3a312' }}>
+                    <Icon className="h-5 w-5" style={{ color: flag.value ? '#22c55e' : '#a3a3a3' }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

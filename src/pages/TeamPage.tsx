@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type ClientMember } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -29,11 +29,15 @@ import {
   MoreHorizontal,
   RefreshCw,
   Trash2,
-  Shield
+  Shield,
+  Users,
+  ShieldCheck,
+  UserPlus,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, getInitials } from '@/lib/utils'
 import { teamAPI } from '@/lib/api'
+import { AnimatedCounter, SectionHeader, StatCard } from '@/components/DashboardComponents'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -141,6 +145,8 @@ export default function TeamPage() {
   }
 
   const canManage = currentMember?.role === 'owner' || currentMember?.role === 'admin'
+  const adminOwnerCount = members.filter(m => m.role === 'owner' || m.role === 'admin').length
+  const pendingInvites = members.filter(m => !m.joined_at).length
 
   if (isLoading) {
     return (
@@ -170,15 +176,19 @@ export default function TeamPage() {
         )}
       </div>
 
+      {/* KPI Stats */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        <StatCard icon={Users} label="Team Members" value={<AnimatedCounter value={members.length} />}
+          subvalue={client?.seats ? `${members.length} of ${client.seats} seats used` : undefined} color="#6366f1" />
+        <StatCard icon={ShieldCheck} label="Admins / Owners" value={<AnimatedCounter value={adminOwnerCount} />}
+          subvalue={`${members.length > 0 ? Math.round((adminOwnerCount / members.length) * 100) : 0}% of team`} color="#22c55e" />
+        <StatCard icon={UserPlus} label="Pending Invites" value={<AnimatedCounter value={pendingInvites} />}
+          subvalue={pendingInvites === 0 ? 'All joined' : 'Awaiting response'} color="#f59e0b" />
+      </div>
+
       <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCog className="h-5 w-5" />
-            Team Members
-          </CardTitle>
-          <CardDescription>
-            {client?.seats ? `${members.length} of ${client.seats} seats used` : `${members.length} members`}
-          </CardDescription>
+          <SectionHeader icon={UserCog} title="Team Members" subtitle={client?.seats ? `${members.length} of ${client.seats} seats used` : `${members.length} members`} />
         </CardHeader>
         <CardContent>
           <Table>
@@ -196,7 +206,7 @@ export default function TeamPage() {
                 <TableRow key={member.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center font-medium" style={{ backgroundColor: '#6366f112', color: '#6366f1' }}>
                         {getInitials(member.name || member.email)}
                       </div>
                       <div>

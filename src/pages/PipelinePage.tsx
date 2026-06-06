@@ -14,9 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
-import { Plus, ExternalLink, Building2, MoreHorizontal } from 'lucide-react'
+import { AnimatedCounter, StatCard, SectionHeader } from '@/components/DashboardComponents'
+import { Plus, ExternalLink, Building2, MoreHorizontal, Search, CheckCircle, Target, BarChart3, GitBranch, TrendingUp, Activity, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency, cn, formatNumber } from '@/lib/utils'
 import { companiesAPI, brandsAPI } from '@/lib/api'
 import {
   DropdownMenu,
@@ -104,6 +105,14 @@ export default function PipelinePage() {
     return acc
   }, {} as Record<string, CompanyWithBrand[]>)
 
+  const pipelineActive = companies.filter(c => c.status !== 'closed_lost' && c.status !== 'closed_won').length
+  const pipelineWon = companies.filter(c => c.status === 'closed_won').length
+  const pipelineLost = companies.filter(c => c.status === 'closed_lost').length
+  const avgScore = companies.length > 0
+    ? Math.round(companies.reduce((sum, c) => sum + (c.lead_score || 0), 0) / companies.length)
+    : 0
+  const dealValue = companies.reduce((sum, c) => sum + (c.deal_value || 0), 0)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -164,6 +173,41 @@ export default function PipelinePage() {
         </div>
       </div>
 
+      {/* ── KPI Ribbon ── */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <StatCard icon={Building2} label="Total Companies" value={<AnimatedCounter value={companies.length} />}
+          subvalue={`${pipelineActive} active`} color="#6366f1" />
+        <StatCard icon={GitBranch} label="Active Pipeline" value={<AnimatedCounter value={pipelineActive} />}
+          subvalue={`${pipelineWon} won`} color="#22c55e" />
+        <StatCard icon={Target} label="Avg Score" value={<AnimatedCounter value={avgScore} />}
+          subvalue={companies.length > 0 ? `across ${companies.length} companies` : '—'} color="#f59e0b" />
+        <StatCard icon={TrendingUp} label="Deal Value" value={formatCurrency(dealValue)}
+          subvalue={pipelineWon > 0 ? `${pipelineWon} closed won` : 'no closed deals'} color="#a855f7" />
+      </div>
+
+      {/* ── Pipeline Stats Bar ── */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl px-5 py-3 border border-border/50">
+        <span><span className="font-semibold text-foreground">{formatNumber(companies.length)}</span> <span className="text-muted-foreground">total</span></span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span><span className="font-semibold text-foreground">{formatNumber(pipelineActive)}</span> <span className="text-muted-foreground">active</span></span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span><span className="font-semibold text-green-600">{formatNumber(pipelineWon)}</span> <span className="text-muted-foreground">won</span></span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span><span className="font-semibold text-red-500">{formatNumber(pipelineLost)}</span> <span className="text-muted-foreground">lost</span></span>
+        {avgScore > 0 && (
+          <>
+            <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+            <span><span className="font-semibold text-foreground">{avgScore}</span> <span className="text-muted-foreground">avg score</span></span>
+          </>
+        )}
+        {dealValue > 0 && (
+          <>
+            <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+            <span><span className="font-semibold text-foreground">{formatCurrency(dealValue)}</span> <span className="text-muted-foreground">total value</span></span>
+          </>
+        )}
+      </div>
+
       {viewMode === 'kanban' ? (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {PIPELINE_STAGES.map((stage) => (
@@ -177,8 +221,11 @@ export default function PipelinePage() {
               <div className="bg-muted rounded-b-lg border border-border p-2 space-y-2 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
                   <Card key={company.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between">
+                      <CardContent className="p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f112' }}>
+                          <Building2 className="h-4 w-4" style={{ color: '#6366f1' }} />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{company.name}</p>
                           {company.domain && (
@@ -221,7 +268,12 @@ export default function PipelinePage() {
                   </Card>
                 ))}
                 {companiesByStage[stage.id]?.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground/50 py-4">No companies</p>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center mb-1.5" style={{ backgroundColor: '#a3a3a312' }}>
+                      <Building2 className="h-4 w-4" style={{ color: '#a3a3a3' }} />
+                    </div>
+                    <p className="text-xs text-center text-muted-foreground/60">No companies</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -229,10 +281,13 @@ export default function PipelinePage() {
         </div>
       ) : (
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="px-6 pt-5">
+            <SectionHeader icon={Building2} title="All Companies" subtitle={`${companies.length} companies in pipeline`} />
+          </div>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-muted border-b border-border">
+                <thead className="bg-muted/50 border-b border-border">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Company</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
@@ -248,8 +303,8 @@ export default function PipelinePage() {
                     <tr key={company.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Building2 className="h-4 w-4 text-primary" />
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                            <Building2 className="h-4 w-4" style={{ color: '#6366f1' }} />
                           </div>
                           <div>
                             <p className="font-medium">{company.name}</p>
@@ -307,7 +362,9 @@ export default function PipelinePage() {
               </table>
               {companies.length === 0 && (
                 <div className="text-center py-16">
-                  <Building2 className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#a3a3a312' }}>
+                    <Building2 className="h-7 w-7" style={{ color: '#a3a3a3' }} />
+                  </div>
                   <p className="text-muted-foreground">No companies found</p>
                 </div>
               )}

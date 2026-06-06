@@ -1,16 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { type Lead, type BrandProfile, type Company, type SentMessage, LEAD_STATUSES } from '@/lib/supabase'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import { ArrowLeft, Mail, Building2, Calendar, Linkedin, MessageSquare, Edit2, Save, X, Activity, BarChart3, Target, Clock, Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Mail, Building2, Calendar, Linkedin, MessageSquare, Edit2, Save, X, Activity, BarChart3, Target, Clock, Send, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber } from '@/lib/utils'
 import { leadsAPI, brandsAPI, companiesAPI, messagesAPI } from '@/lib/api'
+import { AnimatedCounter, SectionHeader, StatCard } from '@/components/DashboardComponents'
 
 const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'success' | 'destructive' | 'warning' | 'outline'> = {
   new: 'default',
@@ -132,7 +133,7 @@ export default function LeadDetailPage() {
     }
   }
 
-  const timelineEvents: TimelineEvent[] = useMemo(() => {
+  const   timelineEvents: TimelineEvent[] = useMemo(() => {
     if (!lead) return []
     const events: TimelineEvent[] = [
       {
@@ -141,7 +142,7 @@ export default function LeadDetailPage() {
         description: lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Lead',
         date: lead.created_at,
         icon: Calendar,
-        color: 'bg-blue-500',
+        color: '#3b82f6',
       },
     ]
 
@@ -153,7 +154,7 @@ export default function LeadDetailPage() {
           description: msg.subject || 'No subject',
           date: msg.sent_at || msg.created_at,
           icon: Send,
-          color: 'bg-indigo-500',
+          color: '#6366f1',
         })
       }
       if (msg.delivered_at) {
@@ -163,7 +164,7 @@ export default function LeadDetailPage() {
           description: msg.subject || 'No subject',
           date: msg.delivered_at,
           icon: CheckCircle,
-          color: 'bg-sky-500',
+          color: '#06b6d4',
         })
       }
       if (msg.opened_at) {
@@ -173,7 +174,7 @@ export default function LeadDetailPage() {
           description: msg.subject || 'No subject',
           date: msg.opened_at,
           icon: Activity,
-          color: 'bg-green-500',
+          color: '#22c55e',
         })
       }
       if (msg.replied_at) {
@@ -183,7 +184,7 @@ export default function LeadDetailPage() {
           description: msg.subject || 'No subject',
           date: msg.replied_at,
           icon: MessageSquare,
-          color: 'bg-emerald-500',
+          color: '#10b981',
         })
       }
       if (msg.bounced_at) {
@@ -193,7 +194,7 @@ export default function LeadDetailPage() {
           description: msg.subject || 'No subject',
           date: msg.bounced_at,
           icon: AlertCircle,
-          color: 'bg-red-500',
+          color: '#ef4444',
         })
       }
     })
@@ -278,11 +279,23 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
+      {/* Overview KPI Row */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <StatCard icon={BarChart3} label="Lead Score" value={lead.lead_score != null ? <AnimatedCounter value={lead.lead_score} /> : '—'}
+          subvalue={lead.lead_score != null ? (lead.lead_score >= 70 ? 'High quality' : lead.lead_score >= 40 ? 'Medium quality' : 'Low quality') : undefined} color="#6366f1" />
+        <StatCard icon={Activity} label="Status" value={formatStatusLabel(lead.status)}
+          subvalue="Current stage" color="#22c55e" />
+        <StatCard icon={Building2} label="Company" value={company?.name || lead.domain || 'N/A'}
+          subvalue={company?.industry || 'No industry'} color="#f59e0b" />
+        <StatCard icon={Clock} label="Timeline Events" value={<AnimatedCounter value={timelineEvents.length} />}
+          subvalue={messages.length > 0 ? `${messages.length} email(s)` : 'No emails'} color="#8b5cf6" />
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle>Lead Information</CardTitle>
+              <SectionHeader icon={Building2} title="Lead Information" subtitle="Contact details and metadata" />
             </CardHeader>
             <CardContent>
               <div className="grid gap-5 md:grid-cols-2">
@@ -390,10 +403,7 @@ export default function LeadDetailPage() {
 
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Activity Timeline
-              </CardTitle>
+              <SectionHeader icon={Activity} title="Activity Timeline" subtitle={timelineEvents.length > 0 ? `${timelineEvents.length} event(s)` : 'No activity yet'} />
             </CardHeader>
             <CardContent>
               {timelineEvents.length === 0 ? (
@@ -406,7 +416,7 @@ export default function LeadDetailPage() {
                     return (
                       <div key={event.id} className="flex gap-4 pb-2 relative">
                         <div className="flex flex-col items-center">
-                          <div className={`w-9 h-9 rounded-full ${event.color} flex items-center justify-center ring-4 ring-background z-10`}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center ring-4 ring-background z-10" style={{ backgroundColor: event.color }}>
                             <Icon className="h-4 w-4 text-white" />
                           </div>
                           {!isLast && <div className="w-0.5 flex-1 bg-border mt-1" />}
@@ -428,13 +438,8 @@ export default function LeadDetailPage() {
 
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Email History
-                {messages.length > 0 && (
-                  <Badge variant="secondary" className="ml-auto">{messages.length}</Badge>
-                )}
-              </CardTitle>
+              <SectionHeader icon={MessageSquare} title="Email History" subtitle={messages.length > 0 ? `${messages.length} email(s) sent` : 'No emails sent'}
+                action={messages.length > 0 ? <Badge variant="secondary" className="text-xs">{messages.length}</Badge> : undefined} />
             </CardHeader>
             <CardContent>
               {messages.length === 0 ? (
@@ -496,10 +501,7 @@ export default function LeadDetailPage() {
         <div className="space-y-6">
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Lead Score
-              </CardTitle>
+              <SectionHeader icon={BarChart3} title="Lead Score" subtitle={lead.lead_score != null ? `Score: ${lead.lead_score}/100` : 'Not scored'} />
             </CardHeader>
             <CardContent>
               <ScoreRing score={lead.lead_score ?? null} />
@@ -525,10 +527,7 @@ export default function LeadDetailPage() {
 
           <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
+              <SectionHeader icon={Target} title="Quick Actions" subtitle="Common lead tasks" />
             </CardHeader>
             <CardContent className="space-y-3">
               <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = `mailto:${lead.email}`}>
@@ -553,10 +552,7 @@ export default function LeadDetailPage() {
           {company && (
             <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Company
-                </CardTitle>
+                <SectionHeader icon={Building2} title="Company" subtitle={company?.name || 'Unknown company'} />
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -610,10 +606,7 @@ export default function LeadDetailPage() {
           {brand && (
             <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Brand
-                </CardTitle>
+                <SectionHeader icon={Building2} title="Brand" subtitle={brand?.brand_name || 'Unknown brand'} />
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
