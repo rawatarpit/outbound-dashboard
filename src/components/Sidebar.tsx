@@ -26,7 +26,7 @@ import { sidebarAPI, brandsAPI, systemAPI } from '@/lib/api'
 import type { BrandProfile } from '@/lib/supabase'
 
 const mainNav = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, countKey: undefined },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, countKey: undefined },
   { name: 'Discovered', href: '/discovered-companies', icon: Search, countKey: undefined },
   { name: 'Leads', href: '/leads', icon: Users, countKey: 'leads' as const },
   { name: 'Pipeline', href: '/pipeline', icon: GitBranch, countKey: 'pipeline' as const },
@@ -139,7 +139,7 @@ function BrandItem({ brand }: { brand: BrandProfile }) {
       }
     >
       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/30" />
-      <span className="truncate">{brand.name}</span>
+      <span className="truncate">{brand.brand_name || brand.name}</span>
     </NavLink>
   )
 }

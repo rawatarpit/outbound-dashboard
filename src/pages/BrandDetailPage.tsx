@@ -22,6 +22,7 @@ import {
   Radio,
   BarChart3,
 } from 'lucide-react'
+import { SectionHeader, AnimatedCounter, StatCard } from '@/components/DashboardComponents'
 import toast from 'react-hot-toast'
 import { formatRelativeTime } from '@/lib/utils'
 import { brandsAPI, discoverySourcesAPI, brandIntentsAPI } from '@/lib/api'
@@ -214,8 +215,8 @@ export default function BrandDetailPage() {
   if (!brand) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
-          <Search className="h-8 w-8 text-muted-foreground" />
+        <div className="w-20 h-20 rounded-2xl border border-border/50 flex items-center justify-center mb-6 shadow-inner" style={{ backgroundColor: '#6366f112' }}>
+          <Search className="h-8 w-8" style={{ color: '#6366f1' }} />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">Brand not found</h2>
         <p className="text-muted-foreground mb-8">The brand you're looking for doesn't exist or has been removed</p>
@@ -235,7 +236,7 @@ export default function BrandDetailPage() {
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ───── Header ───── */}
-        <div className="relative overflow-hidden rounded-2xl bg-card p-8 shadow-lg border border-border">
+        <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-sm p-8 shadow-lg border border-border/50">
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <button
@@ -302,80 +303,68 @@ export default function BrandDetailPage() {
         {/* ───── Engine Toggle Cards ───── */}
         <div className="grid gap-5 md:grid-cols-3">
           <div className="group relative">
-            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
-                    <Search className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Discovery Engine</p>
-                    <p className="text-[11px] text-muted-foreground/60 mb-3">Automated company discovery</p>
-                    <Switch
-                      checked={brand.discovery_enabled ?? false}
-                      onCheckedChange={handleToggleDiscovery}
-                    />
-                  </div>
+            <div className="relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 hover:border-border hover:shadow-sm hover:bg-card transition-all duration-300">
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f112' }}>
+                  <Search className="h-[18px] w-[18px]" style={{ color: '#6366f1' }} />
                 </div>
               </div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Discovery Engine</p>
+              <p className="text-[11px] text-muted-foreground/60 mb-3">Automated company discovery</p>
+              <Switch
+                checked={brand.discovery_enabled ?? false}
+                onCheckedChange={handleToggleDiscovery}
+              />
             </div>
           </div>
 
           <div className="group relative">
-            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">Outbound Engine</p>
-                    <p className="text-[11px] text-muted-foreground/60 mb-3">Automated email sending</p>
-                    <Switch
-                      checked={brand.outbound_enabled ?? false}
-                      onCheckedChange={handleToggleOutbound}
-                    />
-                  </div>
+            <div className="relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 hover:border-border hover:shadow-sm hover:bg-card transition-all duration-300">
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f612' }}>
+                  <Mail className="h-[18px] w-[18px]" style={{ color: '#3b82f6' }} />
                 </div>
               </div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Outbound Engine</p>
+              <p className="text-[11px] text-muted-foreground/60 mb-3">Automated email sending</p>
+              <Switch
+                checked={brand.outbound_enabled ?? false}
+                onCheckedChange={handleToggleOutbound}
+              />
             </div>
           </div>
 
           <div className="group relative">
-            <div className="relative rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-muted p-3 shadow-sm shrink-0">
-                    <Activity className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-muted-foreground tracking-[0.15em] uppercase mb-1">System Status</p>
-                    <p className="text-[11px] text-muted-foreground/60 mb-3">
-                      <span className={`inline-flex items-center gap-1.5 font-semibold ${brand.is_paused ? 'text-muted-foreground' : 'text-foreground'}`}>
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${brand.is_paused ? 'bg-muted-foreground' : 'bg-foreground'}`} />
-                        {brand.is_paused ? 'Paused' : 'Active'}
-                      </span>
-                    </p>
-                    <button
-                      onClick={handleTogglePause}
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
-                        brand.is_paused
-                          ? 'text-foreground bg-foreground/5 border-foreground/10 hover:bg-foreground/10'
-                          : 'text-muted-foreground bg-muted border-border hover:bg-accent'
-                      }`}
-                    >
-                      {brand.is_paused ? 'Resume' : 'Pause'}
-                    </button>
-                  </div>
+            <div className="relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 hover:border-border hover:shadow-sm hover:bg-card transition-all duration-300">
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e12' }}>
+                  <Activity className="h-[18px] w-[18px]" style={{ color: '#22c55e' }} />
                 </div>
               </div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">System Status</p>
+              <p className="text-[11px] text-muted-foreground/60 mb-3">
+                <span className={`inline-flex items-center gap-1.5 font-semibold ${brand.is_paused ? 'text-muted-foreground' : 'text-foreground'}`}>
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${brand.is_paused ? 'bg-muted-foreground' : 'bg-foreground'}`} />
+                  {brand.is_paused ? 'Paused' : 'Active'}
+                </span>
+              </p>
+              <button
+                onClick={handleTogglePause}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
+                  brand.is_paused
+                    ? 'text-foreground bg-foreground/5 border-foreground/10 hover:bg-foreground/10'
+                    : 'text-muted-foreground bg-muted border-border hover:bg-accent'
+                }`}
+              >
+                {brand.is_paused ? 'Resume' : 'Pause'}
+              </button>
             </div>
           </div>
         </div>
 
         {/* ───── Tabs ───── */}
         <Tabs defaultValue="overview" className="w-full">
-          <div className="rounded-2xl bg-muted border border-border p-1.5 shadow-sm">
+          <div className="rounded-2xl bg-muted/70 border border-border/50 p-0.5">
             <TabsList className="w-full bg-transparent gap-1">
               {[
                 { value: 'overview', label: 'Overview' },
@@ -399,16 +388,8 @@ export default function BrandDetailPage() {
           <TabsContent value="overview" className="mt-8">
             <div className="grid gap-8 lg:grid-cols-2">
               <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                    <Brain className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Brand Information</h3>
-                    <p className="text-xs text-muted-foreground">Core brand configuration</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                <SectionHeader icon={Brain} title="Brand Information" subtitle="Core brand configuration" />
+                <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                   <div className="p-0 divide-y divide-border">
                     {[
                       { label: 'Product', value: brand.product },
@@ -428,27 +409,24 @@ export default function BrandDetailPage() {
               </div>
 
               <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Send Statistics</h3>
-                    <p className="text-xs text-muted-foreground">Delivery performance metrics</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                <SectionHeader icon={BarChart3} title="Send Statistics" subtitle="Delivery performance metrics" />
+                <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                   <div className="p-6">
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { label: 'Sent', value: brand.sent_count || 0, accent: 'text-foreground' },
-                        { label: 'Bounces', value: brand.bounce_count || 0, accent: 'text-foreground' },
-                        { label: 'Complaints', value: brand.complaint_count || 0, accent: 'text-foreground' },
-                        { label: 'Bounce Rate', value: brand.sent_count ? `${((brand.bounce_count || 0) / brand.sent_count * 100).toFixed(1)}%` : '0%', accent: 'text-foreground' },
-                      ].map(({ label, value, accent }) => (
-                        <div key={label} className="rounded-xl bg-muted border border-border p-4">
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
-                          <p className={`text-2xl font-extrabold ${accent}`}>{value}</p>
+                        { label: 'Sent', value: brand.sent_count || 0, color: '#6366f1' },
+                        { label: 'Bounces', value: brand.bounce_count || 0, color: '#ef4444' },
+                        { label: 'Complaints', value: brand.complaint_count || 0, color: '#f59e0b' },
+                        { label: 'Bounce Rate', value: brand.sent_count ? ((brand.bounce_count || 0) / brand.sent_count * 100) : 0, color: '#a855f7', suffix: '%', decimals: 1 },
+                      ].map(({ label, value, color, suffix, decimals = 0 }) => (
+                        <div key={label} className="rounded-xl bg-card/50 border border-border/50 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
+                          </div>
+                          <p className="text-2xl font-extrabold text-foreground">
+                            {suffix ? <AnimatedCounter value={value} suffix={suffix} decimals={decimals} /> : <AnimatedCounter value={value} />}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -473,15 +451,7 @@ export default function BrandDetailPage() {
           <TabsContent value="discovery" className="mt-8">
             <div className="space-y-5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                    <Radio className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Discovery Sources</h3>
-                    <p className="text-xs text-muted-foreground">{discoverySources.length} source{discoverySources.length !== 1 ? 's' : ''} configured</p>
-                  </div>
-                </div>
+                <SectionHeader icon={Radio} title="Discovery Sources" subtitle={`${discoverySources.length} source${discoverySources.length !== 1 ? 's' : ''} configured`} />
                 <button
                   onClick={() => setIsSourceModalOpen(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
@@ -492,10 +462,10 @@ export default function BrandDetailPage() {
               </div>
 
               {discoverySources.length === 0 ? (
-                <div className="rounded-2xl bg-card border border-border shadow-sm">
+                <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
-                      <Radio className="h-8 w-8 text-muted-foreground" />
+                    <div className="w-20 h-20 rounded-2xl border border-border/50 flex items-center justify-center mb-6 shadow-inner" style={{ backgroundColor: '#6366f112' }}>
+                      <Radio className="h-8 w-8" style={{ color: '#6366f1' }} />
                     </div>
                     <p className="text-base font-bold text-foreground mb-1">No discovery sources configured</p>
                     <p className="text-sm text-muted-foreground mb-8">Add a data source to begin discovering companies</p>
@@ -509,7 +479,7 @@ export default function BrandDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+                <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                   <div className="p-2">
                     <div className="space-y-0.5">
                       {discoverySources.map((source) => (
@@ -518,8 +488,8 @@ export default function BrandDetailPage() {
                           className="group flex items-center justify-between p-4 rounded-xl hover:bg-muted transition-all duration-200"
                         >
                           <div className="flex items-center gap-4 min-w-0 flex-1">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted border border-border shrink-0">
-                              <Search className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: '#6366f112' }}>
+                              <Search className="h-4 w-4" style={{ color: '#6366f1' }} />
                             </div>
                             <div className="min-w-0">
                               <p className="font-semibold text-foreground truncate">{source.name}</p>
@@ -567,16 +537,7 @@ export default function BrandDetailPage() {
           {/* ── Tab: Intents & Signals ── */}
           <TabsContent value="intents" className="mt-8">
             <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                    <Target className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Brand Intents</h3>
-                    <p className="text-xs text-muted-foreground">{intents.length} intent{intents.length !== 1 ? 's' : ''} · Signals define when each intent triggers</p>
-                  </div>
-                </div>
+              <SectionHeader icon={Target} title="Brand Intents" subtitle={`${intents.length} intent${intents.length !== 1 ? 's' : ''} · Signals define when each intent triggers`} action={
                 <button
                   onClick={() => openIntentDrawer()}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-primary-foreground hover:opacity-90 shadow-sm text-sm font-bold transition-all duration-200"
@@ -584,13 +545,13 @@ export default function BrandDetailPage() {
                   <Plus className="h-4 w-4" />
                   Add Intent
                 </button>
-              </div>
+              } />
 
               {intents.length === 0 ? (
-                <div className="rounded-2xl bg-card border border-border shadow-sm">
+                <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-inner">
-                      <Target className="h-8 w-8 text-muted-foreground" />
+                    <div className="w-20 h-20 rounded-2xl border border-border/50 flex items-center justify-center mb-6 shadow-inner" style={{ backgroundColor: '#8b5cf612' }}>
+                      <Target className="h-8 w-8" style={{ color: '#8b5cf6' }} />
                     </div>
                     <p className="text-base font-bold text-foreground mb-1">No intents configured</p>
                     <p className="text-sm text-muted-foreground mb-8">Create intents to define which prospects to target</p>
@@ -608,7 +569,7 @@ export default function BrandDetailPage() {
                   {intents.map((intent, idx) => (
                     <div
                       key={intent.id}
-                      className="group relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-300"
+                      className="group relative overflow-hidden rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-border transition-all duration-300"
                     >
                       <div className="p-6 relative">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -695,16 +656,8 @@ export default function BrandDetailPage() {
           {/* ── Tab: Email Settings ── */}
           <TabsContent value="settings" className="mt-8">
             <div className="space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Email Configuration</h3>
-                  <p className="text-xs text-muted-foreground">SMTP and sending settings</p>
-                </div>
-              </div>
-              <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+              <SectionHeader icon={Mail} title="Email Configuration" subtitle="SMTP and sending settings" />
+              <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                 <div className="p-6">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {[
@@ -729,16 +682,8 @@ export default function BrandDetailPage() {
           {/* ── Tab: LLM Settings ── */}
           <TabsContent value="llm" className="mt-8">
             <div className="space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shadow-sm">
-                  <Brain className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground">LLM Configuration</h3>
-                  <p className="text-xs text-muted-foreground">AI model overrides for this brand</p>
-                </div>
-              </div>
-              <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+              <SectionHeader icon={Brain} title="LLM Configuration" subtitle="AI model overrides for this brand" />
+              <div className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                 <div className="p-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     {[

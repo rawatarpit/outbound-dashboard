@@ -50,7 +50,7 @@ export default function LoginPage() {
           <p className="mt-2 text-muted-foreground">Sign in to your dashboard</p>
         </div>
 
-        <div className="rounded-2xl bg-card p-8 shadow-xl ring-1 ring-border">
+        <div className="rounded-2xl bg-card/50 backdrop-blur-sm p-8 shadow-xl ring-1 ring-border/50 border border-border/50">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" required>Email</Label>

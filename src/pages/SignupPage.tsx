@@ -49,7 +49,7 @@ export default function SignupPage() {
           <p className="mt-2 text-muted-foreground">Create your account</p>
         </div>
 
-        <div className="rounded-2xl bg-card p-8 shadow-xl ring-1 ring-border">
+        <div className="rounded-2xl bg-card/50 backdrop-blur-sm p-8 shadow-xl ring-1 ring-border/50 border border-border/50">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name" required>Your Name</Label>
