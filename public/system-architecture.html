@@ -3,538 +3,1075 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outbound Engine — Full Architecture</title>
+  <title>Outbound Engine — Architecture Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      line-height: 1.5;
-      padding: 2rem;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.6;
     }
-    .container { max-width: 1440px; margin: 0 auto; }
 
-    header { text-align: center; padding: 2.5rem 0 1.5rem; }
-    header h1 {
-      font-size: 2.5rem; font-weight: 700;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    /* ─── Layout ─── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ─── Top nav ─── */
+    .top-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 1.5rem;
+    }
+    .top-nav .container {
+      display: flex; align-items: center; gap: 2rem; height: 3.5rem; overflow-x: auto;
+    }
+    .top-nav a {
+      font-size: 0.8rem; font-weight: 500; color: #475569;
+      text-decoration: none; white-space: nowrap;
+      padding: 0.25rem 0; border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .top-nav a:hover, .top-nav a.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+    /* ─── Hero ─── */
+    .hero {
+      text-align: center; padding: 4rem 0 2rem;
+      background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #fdf2f8 100%);
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .hero h1 {
+      font-size: 2.75rem; font-weight: 800;
+      background: linear-gradient(135deg, #2563eb, #7c3aed, #db2777);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    header p { color: #94a3b8; font-size: 1rem; max-width: 850px; margin: 0.5rem auto 0; }
-
-    .status-bar { display: flex; justify-content: center; gap: 1rem; margin: 1.25rem 0; flex-wrap: wrap; }
-    .status-badge {
-      display: flex; align-items: center; gap: 0.4rem;
-      background: #1e293b; padding: 0.4rem 1rem; border-radius: 999px;
-      border: 1px solid #334155; font-size: 0.8rem; font-weight: 500;
+    .hero p {
+      max-width: 720px; margin: 0.75rem auto 0;
+      font-size: 1rem; color: #475569; line-height: 1.7;
     }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .dot.green { background: #22c55e; }
-    .dot.blue { background: #3b82f6; animation: pulse 2s infinite; }
-    .dot.purple { background: #a855f7; }
-    .dot.amber { background: #f59e0b; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+      margin: 1.5rem 0 0;
+    }
+    .hero-stat {
+      background: white; border-radius: 0.75rem; padding: 0.75rem 1.25rem;
+      border: 1px solid #e2e8f0; text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .hero-stat .num {
+      font-size: 1.5rem; font-weight: 700; display: block;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-stat .label { font-size: 0.72rem; color: #64748b; margin-top: 0.1rem; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+    /* ─── Section titles ─── */
+    section { padding: 2.5rem 0; }
+    section h2 {
+      font-size: 1.5rem; font-weight: 700; color: #0f172a;
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    section h2 .emoji { font-size: 1.3rem; }
+
+    /* ─── Cards ─── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
     .card {
-      background: #1e293b; border-radius: 0.75rem; padding: 1.25rem;
-      border: 1px solid #334155; transition: all 0.2s;
+      background: white; border-radius: 0.75rem; padding: 1.25rem;
+      border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, border-color 0.2s;
     }
-    .card:hover { border-color: #475569; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     .card.full { grid-column: 1 / -1; }
-    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; color: #f1f5f9; }
+    .card h3 {
+      font-size: 0.95rem; font-weight: 600; color: #0f172a;
+      margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.35rem;
+    }
 
+    /* ─── Flow diagram ─── */
+    .pipeline-flow {
+      display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;
+      justify-content: center; padding: 1rem 0; overflow-x: auto;
+    }
+    .pipeline-step {
+      flex-shrink: 0; min-width: 72px;
+      background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 0.5rem;
+      padding: 0.4rem 0.55rem; text-align: center;
+      font-size: 0.68rem; font-weight: 500; color: #334155;
+      transition: all 0.2s;
+    }
+    .pipeline-step:hover { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .pipeline-step .icon { font-size: 1rem; display: block; }
+    .pipeline-step .sub { font-size: 0.55rem; color: #64748b; display: block; margin-top: 0.15rem; }
+    .pipeline-arrow { color: #94a3b8; font-size: 0.85rem; flex-shrink: 0; }
+    .pipeline-step.discovery { background: #eff6ff; border-color: #93c5fd; }
+    .pipeline-step.enrich { background: #fff7ed; border-color: #fdba74; }
+    .pipeline-step.research { background: #f0fdf4; border-color: #86efac; }
+    .pipeline-step.qualify { background: #f5f3ff; border-color: #c4b5fd; }
+    .pipeline-step.outreach { background: #fdf2f8; border-color: #f9a8d4; }
+    .pipeline-step.send { background: #ecfdf5; border-color: #6ee7b7; }
+    .pipeline-step.reply { background: #fff7ed; border-color: #fcd34d; }
+    .pipeline-step.negotiate { background: #f5f3ff; border-color: #a78bfa; }
+    .pipeline-step.close { background: #f0fdf4; border-color: #4ade80; }
+
+    /* ─── Tables ─── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    thead th {
+      text-align: left; padding: 0.5rem 0.6rem;
+      background: #f8fafc; font-weight: 600; color: #475569;
+      border-bottom: 2px solid #e2e8f0; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    tbody td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; }
+    tbody tr:hover td { background: #f8fafc; }
+    code {
+      background: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px;
+      font-size: 0.75rem; color: #2563eb; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    pre {
+      background: #f8fafc; color: #1e293b; padding: 0.75rem; border-radius: 0.5rem;
+      overflow-x: auto; font-size: 0.75rem; border: 1px solid #e2e8f0;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    /* ─── Tags / Badges ─── */
     .tag {
-      display: inline-block; font-size: 0.55rem; font-weight: 700;
-      padding: 0.1rem 0.3rem; border-radius: 999px;
-      text-transform: uppercase; letter-spacing: 0.02em;
+      display: inline-block; font-size: 0.6rem; font-weight: 600;
+      padding: 0.15rem 0.4rem; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap;
     }
-    .tag.new { background: #064e3b; color: #6ee7b7; }
-    .tag.fixed { background: #1e3a5f; color: #93c5fd; }
-    .tag.core { background: #3b0764; color: #d8b4fe; }
-    .tag.amber { background: #451a03; color: #fcd34d; }
-    .tag.red { background: #450a0a; color: #fca5a5; }
-    .tag.harness { background: #164e63; color: #67e8f9; }
-    .tag.agent { background: #14532d; color: #86efac; }
-    .tag.rpc { background: #4c1d95; color: #c4b5fd; }
+    .tag.blue { background: #dbeafe; color: #1d4ed8; }
+    .tag.green { background: #dcfce7; color: #15803d; }
+    .tag.amber { background: #fef3c7; color: #b45309; }
+    .tag.purple { background: #ede9fe; color: #6d28d9; }
+    .tag.red { background: #fee2e2; color: #b91c1c; }
+    .tag.sky { background: #e0f2fe; color: #0369a1; }
+    .tag.pink { background: #fce7f3; color: #9d174d; }
+    .tag.indigo { background: #e0e7ff; color: #4338ca; }
 
-    .big-flow { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; justify-content: center; padding: 1.25rem 0; }
-    .flow-node {
-      background: #0f172a; border: 2px solid #334155; border-radius: 0.6rem;
-      padding: 0.5rem 0.65rem; text-align: center; min-width: 80px;
-      font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    .chip {
+      display: inline-block; padding: 0.15rem 0.4rem; border-radius: 999px;
+      font-size: 0.65rem; margin: 0.1rem;
+      background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;
     }
-    .flow-node:hover { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.15); }
-    .flow-node.highlight { border-color: #3b82f6; background: #1e3a5f; }
-    .flow-node.success { border-color: #22c55e; background: #14532d; }
-    .flow-node.warn { border-color: #f59e0b; background: #451a03; }
-    .flow-node.purple { border-color: #a855f7; background: #3b0764; }
-    .flow-node.red { border-color: #ef4444; background: #450a0a; }
-    .flow-arrow { color: #475569; font-size: 0.8rem; }
-    .flow-label { font-size: 0.55rem; color: #64748b; display: block; }
+    .chip.blue { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+    .chip.green { background: #dcfce7; border-color: #86efac; color: #15803d; }
+    .chip.amber { background: #fef3c7; border-color: #fcd34d; color: #b45309; }
+    .chip.purple { background: #ede9fe; border-color: #c4b5fd; color: #6d28d9; }
+    .chip.red { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
 
-    .step { padding: 0.6rem 0; border-bottom: 1px solid #1e293b; display: flex; gap: 0.75rem; align-items: flex-start; }
-    .step:last-child { border: none; }
+    /* ─── Step list ─── */
+    .step-item { padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; display: flex; gap: 0.75rem; align-items: flex-start; }
+    .step-item:last-child { border: none; }
     .step-num {
-      width: 24px; height: 24px; border-radius: 999px; flex-shrink: 0;
+      width: 1.6rem; height: 1.6rem; border-radius: 999px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 600;
+      font-size: 0.75rem; font-weight: 700;
     }
-    .step-num.blue { background: #1e3a5f; color: #93c5fd; }
-    .step-num.green { background: #14532d; color: #86efac; }
-    .step-num.purple { background: #3b0764; color: #d8b4fe; }
-    .step-num.amber { background: #451a03; color: #fcd34d; }
-    .step-num.red { background: #450a0a; color: #fca5a5; }
-    .step-body { flex: 1; font-size: 0.8rem; }
-    .step-body strong { display: block; color: #f1f5f9; }
-    .step-body p { color: #94a3b8; margin: 0; }
+    .step-num.blue { background: #dbeafe; color: #1d4ed8; }
+    .step-num.green { background: #dcfce7; color: #15803d; }
+    .step-num.purple { background: #ede9fe; color: #6d28d9; }
+    .step-num.amber { background: #fef3c7; color: #b45309; }
+    .step-body { flex: 1; }
+    .step-body strong { display: block; color: #0f172a; font-size: 0.85rem; }
+    .step-body p { color: #475569; font-size: 0.8rem; margin: 0; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-    th { text-align: left; padding: 0.4rem 0.5rem; background: #0f172a; font-weight: 600; color: #94a3b8; border-bottom: 2px solid #334155; }
-    td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #1e293b; vertical-align: top; color: #cbd5e1; }
-    tr:hover td { background: #0f172a; }
-    code { background: #0f172a; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.72rem; color: #67e8f9; }
-    pre { background: #0f172a; color: #e2e8f0; padding: 0.6rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.7rem; border: 1px solid #334155; }
-
-    .sec-title { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin: 2rem 0 0.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #334155; }
-    .chip { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 999px; font-size: 0.65rem; margin: 0.1rem; background: #0f172a; border: 1px solid #334155; color: #94a3b8; }
-    .chip.blue { background: #1e3a5f; border-color: #3b82f6; color: #93c5fd; }
-    .chip.green { background: #14532d; border-color: #22c55e; color: #86efac; }
-    .chip.amber { background: #451a03; border-color: #f59e0b; color: #fcd34d; }
-    .chip.purple { background: #3b0764; border-color: #a855f7; color: #d8b4fe; }
-    .chip.red { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
-
-    .footer { text-align: center; padding: 2rem 0 1rem; color: #475569; font-size: 0.8rem; }
-    .dt { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.4rem; }
-    .dt:hover { color: #60a5fa; }
-    .dt .chev { transition: transform 0.2s; display: inline-block; font-size: 0.75rem; }
+    /* ─── Detail toggle ─── */
+    .dt {
+      cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.35rem;
+      font-weight: 500; color: #2563eb; font-size: 0.8rem;
+    }
+    .dt:hover { color: #1d4ed8; }
+    .dt .chev { transition: transform 0.2s; display: inline-block; font-size: 0.7rem; }
     .dt.open .chev { transform: rotate(90deg); }
-    .dc { display: none; padding: 0.5rem 0 0; font-size:0.8rem;color:#94a3b8; }
+    .dc { display: none; padding: 0.5rem 0 0; font-size: 0.8rem; color: #475569; }
     .dc.open { display: block; }
 
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center; padding: 2rem 0; color: #94a3b8; font-size: 0.78rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* ─── Responsive ─── */
     @media (max-width: 768px) {
-      body { padding: 1rem; }
-      header h1 { font-size: 1.6rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .hero p { font-size: 0.9rem; }
+      .card-grid { grid-template-columns: 1fr; }
+      .top-nav .container { gap: 1rem; }
     }
   </style>
 </head>
 <body>
+
+<!-- ─── Sticky Nav ─── -->
+<nav class="top-nav">
+  <div class="container">
+    <a href="#pipeline">Pipeline</a>
+    <a href="#agents">Agents</a>
+    <a href="#harness">Harness</a>
+    <a href="#discovery">Discovery</a>
+    <a href="#enrichment">Enrichment</a>
+    <a href="#llm">LLM</a>
+    <a href="#email">Email</a>
+    <a href="#reliability">Reliability</a>
+    <a href="#schema">Database</a>
+    <a href="#rpc">RPCs</a>
+    <a href="#cron">Schedule</a>
+    <a href="#python">Python</a>
+  </div>
+</nav>
+
+<!-- ─── Hero ─── -->
+<section class="hero">
+  <div class="container">
+    <h1>Outbound Engine</h1>
+    <p>An autonomous system that discovers companies showing buying signals, researches them, writes personalized emails, sends them, handles replies, and negotiates — all without human intervention.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="num">25</span><span class="label">Discovery Sources</span></div>
+      <div class="hero-stat"><span class="num">7</span><span class="label">AI Agents</span></div>
+      <div class="hero-stat"><span class="num">9</span><span class="label">Enrichment Strategies</span></div>
+      <div class="hero-stat"><span class="num">40+</span><span class="label">Database Functions</span></div>
+      <div class="hero-stat"><span class="num">8</span><span class="label">Pipeline Stages</span></div>
+      <div class="hero-stat"><span class="num">5</span><span class="label">LLM Providers</span></div>
+    </div>
+  </div>
+</section>
+
 <div class="container">
 
-<header>
-  <h1>Outbound Engine v2</h1>
-  <p>Autonomous multi-agent B2B outbound engine · <strong>25 discovery sources</strong> · 4-phase signal pipeline · <strong>7 agents</strong> wrapped in unified harness · 9 enrichment strategies · 6 pipeline stages · 40+ RPCs · dual email · full reputation stack · IMAP reply handling</p>
-  <div class="status-bar">
-    <span class="status-badge"><span class="dot green"></span> PM2 pid 467516</span>
-    <span class="status-badge"><span class="dot blue"></span> 1-min state machine</span>
-    <span class="status-badge"><span class="dot purple"></span> 7 harnessed agents</span>
-    <span class="status-badge"><span class="dot amber"></span> 40+ RPCs</span>
-    <span class="status-badge"><span class="dot green"></span> Supabase: Outbound Engine</span>
-  </div>
-</header>
+<!-- ════════════════════════════════════════════════════════ -->
+<!--                     THE PIPELINE                          -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="pipeline">
+  <h2><span class="emoji">🔄</span> End-to-End Pipeline</h2>
 
-<!-- ===================== MASTER E2E ===================== -->
-<div class="card full">
-  <h2>🔄 End-to-end: Signal Discovery → Draft → Send → Reply → Close</h2>
-  <div class="big-flow">
-    <div class="flow-node highlight">🔍<span class="flow-label">Discovery<br>25 sources, 4 phases</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node warn">🧹<span class="flow-label">Enrichment<br>9 strategies</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node">📋<span class="flow-label">Research agent</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node highlight">🎯<span class="flow-label">Qualify agent</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node success">✍️<span class="flow-label">Outreach agent</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node purple">📤<span class="flow-label">Send via Resend/SMTP</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node warn">📬<span class="flow-label">IMAP → Reply agent</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node highlight">🤝<span class="flow-label">Negotiation agent</span></div>
-    <span class="flow-arrow">→</span>
-    <div class="flow-node success">✅<span class="flow-label">Closed Won</span></div>
-  </div>
-  <table style="margin-top:0.5rem;">
-    <tr><th>stage</th><th>pipeline status</th><th>trigger</th><th>agent used</th><th>output table</th></tr>
-    <tr><td>discovery</td><td><code>raw → approved</code></td><td>6hr cron</td><td>—</td><td><code>discovered_companies</code></td></tr>
-    <tr><td>enrichment</td><td><code>approved → researching</code></td><td>1min cron + strategy router</td><td>— (strategy-based)</td><td><code>companies</code> + <code>leads</code></td></tr>
-    <tr><td>research</td><td><code>researching → qualified</code></td><td>state machine 1min tick</td><td><span class="tag agent">research.ts</span></td><td><code>research</code></td></tr>
-    <tr><td>qualification</td><td><code>qualified → draft_ready</code></td><td>state machine 1min tick</td><td><span class="tag agent">qualification.ts</span></td><td><code>qualification</code></td></tr>
-    <tr><td>outreach</td><td><code>draft_ready → contacted</code></td><td>state machine 1min tick</td><td><span class="tag agent">outreach.ts</span></td><td><code>outreach</code></td></tr>
-    <tr><td>send</td><td><code>draft_ready → contacted</code></td><td>2min cron + safety checks</td><td><span class="tag agent">sendProcessor.ts</span></td><td><code>sent_messages</code></td></tr>
-    <tr><td>reply</td><td><code>contacted → negotiating/replied</code></td><td>IMAP IDLE push</td><td><span class="tag agent">replyAnalysis.ts</span></td><td><code>replies</code></td></tr>
-    <tr><td>negotiation</td><td><code>negotiating → closed_won</code></td><td>state machine 1min tick</td><td><span class="tag agent">negotiation.ts</span></td><td><code>negotiation_drafts</code></td></tr>
-  </table>
-</div>
+  <div class="card">
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:1rem;">
+      The engine runs continuously on a loop. Each company discovered moves through these stages automatically.
+    </p>
 
-<!-- ===================== 7 AGENTS + HARNESS ===================== -->
-<div class="sec-title">🧠 7 Agents — All Wrapped in the Harness Runtime</div>
-
-<div class="grid">
-  <div class="card full">
-    <h2>🏗️ Harness Architecture — How Every Agent is Wrapped</h2>
-    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:0.75rem;">
-      Every agent goes through the same lifecycle managed by the <strong>harness layer</strong> (<code>src/harness/</code>). The harness provides: context assembly, memory injection, prompt building, structured LLM generation with Zod, retry/fallback, observability, and tool registration.
+    <div class="pipeline-flow">
+      <div class="pipeline-step discovery">
+        <span class="icon">🔍</span>Discovery
+        <span class="sub">25 sources</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step enrich">
+        <span class="icon">🧹</span>Enrichment
+        <span class="sub">9 strategies</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step research">
+        <span class="icon">📋</span>Research
+        <span class="sub">AI agent</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step qualify">
+        <span class="icon">🎯</span>Qualify
+        <span class="sub">AI agent</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step outreach">
+        <span class="icon">✍️</span>Outreach
+        <span class="sub">AI agent</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step send">
+        <span class="icon">📤</span>Send
+        <span class="sub">Resend / SMTP</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step reply">
+        <span class="icon">📬</span>Reply
+        <span class="sub">IMAP → AI</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step negotiate">
+        <span class="icon">🤝</span>Negotiate
+        <span class="sub">AI agent</span>
+      </div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-step close">
+        <span class="icon">✅</span>Closed
+        <span class="sub">Won / Lost</span>
+      </div>
     </div>
-    <div class="big-flow" style="justify-content:flex-start;gap:0.2rem;padding:0.5rem 0;">
-      <div class="flow-node highlight" style="min-width:45px;font-size:0.55rem;">📦 context<br>Assembler</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node" style="min-width:45px;font-size:0.55rem;">🧠 memory<br>Injection</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node warn" style="min-width:45px;font-size:0.55rem;">📝 prompt<br>Builder</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node success" style="min-width:45px;font-size:0.55rem;">🤖 LLM<br>structured gen</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node purple" style="min-width:45px;font-size:0.55rem;">🔁 retry/<br>fallback</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node" style="min-width:45px;font-size:0.55rem;">📊 observability<br>logging</div>
-    </div>
-    <table>
-      <tr><th>Harness module</th><th>File</th><th>What it provides to each agent</th></tr>
-      <tr><td><strong>contextManager.ts</strong></td><td><code>src/harness/contextManager.ts</code></td><td>Token budget estimation, message truncation, context assembly (delegates to <code>src/discovery/harness/contextAssembler.ts</code>). <code>assembleContext()</code> fetches: similar companies (via vector similarity), past outcomes, source performance, enrichment history, intents, conversion patterns. <code>buildContextPreamble()</code> formats selected context blocks for injection into agent prompts.</td></tr>
-      <tr><td><strong>memory.ts</strong></td><td><code>src/harness/memory.ts</code></td><td>In-memory working/long-term store. <code>injectWorkingMemory()</code> adds session facts to system prompt. <code>extractWorkingMemory()</code> deduplicates + truncates to max 10 items. <code>formatAssistantResponse()</code> attaches metadata.</td></tr>
-      <tr><td><strong>promptBuilder.ts</strong></td><td><code>src/harness/promptBuilder.ts</code></td><td><code>buildSystemPrompt()</code> from AgentConfig (identity, objective, capabilities, constraints, output format). <code>buildResearchPrompt()</code>, <code>buildQualificationPrompt()</code>, <code>buildOutreachPrompt()</code> — stage-specific builders with sanitization via <code>sanitizeForPrompt()</code>. All use <code>buildAgentPrompt()</code> which composes compaction + context preamble + user message.</td></tr>
-      <tr><td><strong>errorHandling.ts</strong></td><td><code>src/harness/errorHandling.ts</code></td><td><code>withRetry()</code> — exponential backoff (base 1s, factor 2, jitter), max 3 attempts. <code>withFallback()</code> — primary + fallback function. <code>isNonRetryable()</code> — 400/401 errors. <code>getErrorSuggestion()</code> — per-tool human-readable suggestions. <code>structuredError()</code> — JSON error with tool name, message, input, suggestion.</td></tr>
-      <tr><td><strong>observability.ts</strong></td><td><code>src/harness/observability.ts</code></td><td><code>createRunId()</code> — unique ID per agent turn. <code>logAgentTurn()</code> — pino-structured log with run_id, agent_id, turn, tokens, tools called, latencies, errors, cost, context utilization. Warns at &gt;80% context or &gt;2 tool errors.</td></tr>
-      <tr><td><strong>toolRegistry.ts</strong></td><td><code>src/harness/toolRegistry.ts</code></td><td>14 tool definitions: scrape_website, generate_research (agent-handled), score_qualification (agent-handled), generate_outreach (agent-handled), save_to_database (agent-handled), search_web, search_hackernews, search_y_combinator, enrich_company_forge, scrape_extract_company, extract_content_seeds, search_ddg, search_searxng, search_meta_ads, search_maps. Each has Zod schema + executor. Python scripts called via <code>execFile</code> with 180s timeout.</td></tr>
-      <tr><td><strong>adapterTools.ts</strong></td><td><code>src/harness/adapterTools.ts</code></td><td>9 adapter-specific tools: search_reddit, search_pushshift, search_indeed, search_jobs, search_news, search_wellfound, search_linkedin, search_meta_ads, search_maps. Wraps actual adapter implementations. <code>getAdapterToolsBySource()</code> maps source name → tool.</td></tr>
-      <tr><td><strong>types.ts</strong></td><td><code>src/harness/types.ts</code></td><td>Core interfaces: ToolDefinition, ToolCall, ToolResult, AgentTurnLog, ContextBudget, AgentConfig, AgentResult&lt;T&gt;, AgentResultStatus enum (SUCCESS/RETRYABLE_FAILURE/TERMINAL_FAILURE/SKIPPED)</td></tr>
-    </table>
-    <div style="margin-top:0.5rem;padding:0.5rem;background:#0f172a;border-radius:0.4rem;border:1px solid #334155;font-size:0.75rem;">
-      <strong>contextAssembler.ts</strong> (<code>src/discovery/harness/contextAssembler.ts</code>) — the most complex harness module. For each agent call, it runs 5 parallel queries:<br>
-      <span class="chip">findSimilarCompanies()</span> vector search via <code>match_discovery_embeddings</code> RPC (threshold 0.6, returns top 5). Falls back to seed companies (Vercel, Retool, Airbyte) if none found.<br>
-      <span class="chip">findRelevantIntents()</span> — active brand intents ordered by priority<br>
-      <span class="chip">findPastOutcomes()</span> — last 100 companies by status (closed_won/rejected), computes avg score<br>
-      <span class="chip">findSourcePerformance()</span> — signal_source_performance table<br>
-      <span class="chip">findEnrichmentHistory()</span> — discovered_companies by domain<br>
-      Plus <code>buildCompaction()</code> — stage-dependent: qualification+ stage fetches research; outreach+ adds qualification; reply+ adds outreach; negotiation adds reply.
-    </div>
-  </div>
 
-  <!-- 7 Agents Table -->
-  <div class="card full">
-    <h2>📋 The 7 Agents — Each Uses the Harness Differently</h2>
-    <table>
-      <tr><th>#</th><th>Agent</th><th>File</th><th>Input</th><th>Harness modules used</th><th>LLM schema (Zod)</th><th>Stores to</th><th>Fail behavior</th></tr>
-      <tr>
-        <td>1</td><td><strong>Research</strong></td>
-        <td><code>agents/research.ts</code></td>
-        <td>company with website</td>
-        <td><span class="chip">assembleContext</span> <span class="chip">buildResearchPrompt</span> <span class="chip">withRetry</span> <span class="chip">scrapeUrl</span> <span class="chip">logAgentTurn</span></td>
-        <td><code>industry, size_estimate, pain_points, buying_signals, automation_maturity, sponsorship_potential, summary</code></td>
-        <td><code>research</code></td>
-        <td>sky aggregator (terminal) / scrape failure (retry) / parse error (terminal)</td>
-      </tr>
-      <tr>
-        <td>2</td><td><strong>Qualification</strong></td>
-        <td><code>agents/qualification.ts</code></td>
-        <td>research data + brand profile</td>
-        <td><span class="chip">assembleContext</span> <span class="chip">buildQualificationPrompt</span> <span class="chip">generateStructured</span> <span class="chip">logAgentTurn</span></td>
-        <td><code>fit_score (0-100), reasoning, confidence (0-1)</code></td>
-        <td><code>qualification</code></td>
-        <td>no research (skipped) / parse error (terminal)</td>
-      </tr>
-      <tr>
-        <td>3</td><td><strong>Outreach</strong></td>
-        <td><code>agents/outreach.ts</code></td>
-        <td>research + lead (email, name) + brand context</td>
-        <td><span class="chip">assembleContext</span> <span class="chip">buildOutreachPrompt</span> <span class="chip">generateStructured</span> <span class="chip">logAgentTurn</span></td>
-        <td><code>subject, body</code></td>
-        <td><code>outreach</code></td>
-        <td>no research (skipped) / no lead (skipped) / existing draft (skipped)</td>
-      </tr>
-      <tr>
-        <td>4</td><td><strong>Reply Analysis</strong></td>
-        <td><code>agents/replyAnalysis.ts</code></td>
-        <td>raw email text</td>
-        <td><span class="chip">assembleContext</span> <span class="chip">generateStructured</span> <span class="chip">logAgentTurn</span></td>
-        <td><code>intent (high/medium/low/negative/unsubscribe/ooo), sentiment, objection_detected, meeting_requested, confidence, summary</code></td>
-        <td><code>replies</code> + <code>suppression_list</code></td>
-        <td>no company (terminal) / parse error (terminal)</td>
-      </tr>
-      <tr>
-        <td>5</td><td><strong>Negotiation</strong></td>
-        <td><code>agents/negotiation.ts</code></td>
-        <td>outreach + reply + brand profile</td>
-        <td><span class="chip">assembleContext</span> <span class="chip">generateStructured</span> <span class="chip">logAgentTurn</span></td>
-        <td><code>draft (min 10 chars)</code></td>
-        <td><code>negotiation_drafts</code></td>
-        <td>no outreach/reply (skipped) / low intent (skipped) / &lt;0.75 confidence (skipped)</td>
-      </tr>
-      <tr>
-        <td>6</td><td><strong>Deep Research</strong></td>
-        <td><code>agents/deepResearch.ts</code></td>
-        <td>company with URL</td>
-        <td>Playwright + LLM (enhanced)</td>
-        <td>deep company analysis</td>
-        <td><code>research</code></td>
-        <td>retryable</td>
-      </tr>
-      <tr>
-        <td>7</td><td><strong>Feedback</strong></td>
-        <td><code>agents/feedback.ts</code></td>
-        <td>past conversion data</td>
-        <td>per-brand feedback loop</td>
-        <td>continuous improvement</td>
-        <td>brand context</td>
-        <td>best-effort</td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-<!-- ===================== HARNESS PROMPT BUILDING ===================== -->
-<div class="sec-title">📝 Harness Prompt Building — Stage by Stage</div>
-<div class="grid">
-  <div class="card full">
-    <table>
-      <tr><th>Agent</th><th>Prompt template</th><th>Key instructions</th><th>Identity enforcement</th></tr>
-      <tr>
-        <td>Research</td>
-        <td><code>buildResearchPrompt()</code></td>
-        <td>"You are conducting strategic research for {brand}. Analyze this company website content. Return JSON: industry, size_estimate, pain_points, buying_signals..."</td>
-        <td>Brand name, positioning, core offer, audience injected at top</td>
-      </tr>
-      <tr>
-        <td>Qualification</td>
-        <td><code>buildQualificationPrompt()</code></td>
-        <td>"You are qualifying a lead for {brand}. Return ONLY valid JSON: fit_score (0-100), reasoning (string, NOT array), confidence (0-1)"</td>
-        <td>Brand offer, industry, pain points, automation maturity, buying signals</td>
-      </tr>
-      <tr>
-        <td>Outreach</td>
-        <td><code>buildOutreachPrompt()</code></td>
-        <td>"You are {sender}, founder of {brand}. CRITICAL IDENTITY RULES: Do NOT say 'we developed {company}' — you are selling TO them, not representing them. Write personalized cold email under 150 words."</td>
-        <td>Sender name + founder identity explicitly guarded against role reversal. Recipient name used naturally. Falls back to "there" if no name.</td>
-      </tr>
-    </table>
-    <div style="margin-top:0.5rem;padding:0.5rem;background:#0f172a;border-radius:0.4rem;border:1px solid #334155;font-size:0.75rem;">
-      <strong>All prompts go through:</strong> <code>buildAgentPrompt({ systemPrompt, contextPreamble, compaction, userMessage })</code> which composes the final prompt as: compaction block (past research/scores/drafts) → context preamble (similar companies, outcomes, source perf) → user message (stage-specific instructions).
+    <div class="table-wrap" style="margin-top:1rem;">
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>What happens</th><th>Trigger</th><th>Agent</th><th>Output</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Discovery</strong></td>
+            <td>Scans 25 sources (Reddit, HN, news, jobs, GitHub, LinkedIn, ads, maps, etc.) for companies showing buying signals like hiring, funding, or expressing pain.</td>
+            <td>Every 6 hours</td>
+            <td>—</td>
+            <td><code>discovered_companies</code></td>
+          </tr>
+          <tr>
+            <td><strong>Enrichment</strong></td>
+            <td>Runs up to 9 strategies per company to find contacts, emails, tech stack, industry details. Stops when confidence ≥ 75%.</td>
+            <td>Every 1 min</td>
+            <td>Strategy router</td>
+            <td><code>companies</code> + <code>leads</code></td>
+          </tr>
+          <tr>
+            <td><strong>Research</strong></td>
+            <td>Scrapes the company website and uses AI to analyze: industry, size, pain points, buying signals, and fit score (0–100).</td>
+            <td>State machine tick</td>
+            <td><span class="tag blue">research.ts</span></td>
+            <td><code>research</code></td>
+          </tr>
+          <tr>
+            <td><strong>Qualification</strong></td>
+            <td>AI evaluates whether the company is a good fit based on research + brand profile. Assigns a fit score and confidence level.</td>
+            <td>State machine tick</td>
+            <td><span class="tag purple">qualification.ts</span></td>
+            <td><code>qualification</code></td>
+          </tr>
+          <tr>
+            <td><strong>Outreach</strong></td>
+            <td>AI writes a personalized cold email using the research, qualification data, and brand identity — then generates subject + body.</td>
+            <td>State machine tick</td>
+            <td><span class="tag pink">outreach.ts</span></td>
+            <td><code>outreach</code></td>
+          </tr>
+          <tr>
+            <td><strong>Send</strong></td>
+            <td>Passes 10 safety checks (circuit breaker, domain health, quota, idempotency, suppression, etc.), then sends via Resend API or SMTP.</td>
+            <td>Every 2 min</td>
+            <td><span class="tag green">sendProcessor.ts</span></td>
+            <td><code>sent_messages</code></td>
+          </tr>
+          <tr>
+            <td><strong>Reply</strong></td>
+            <td>IMAP inbox monitor detects new emails, classifies them (reply, bounce, OOO, complaint, unsubscribe), and triggers the reply analysis agent.</td>
+            <td>Continuous (push)</td>
+            <td><span class="tag amber">replyAnalysis.ts</span></td>
+            <td><code>replies</code></td>
+          </tr>
+          <tr>
+            <td><strong>Negotiation</strong></td>
+            <td>If the reply shows interest, the negotiation agent drafts follow-up responses. Multi-turn conversation until closed.</td>
+            <td>State machine tick</td>
+            <td><span class="tag indigo">negotiation.ts</span></td>
+            <td><code>negotiation_drafts</code></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ===================== DISCOVERY ENGINE ===================== -->
-<div class="sec-title">🔍 Discovery Engine — 25 Sources, 4 Phases</div>
-<div class="grid">
-  <div class="card full">
-    <h2>📡 Signal-driven discovery — per-intent, per-brand</h2>
-    <div class="big-flow" style="justify-content:flex-start;gap:0.2rem;padding:0.5rem 0;">
-      <div class="flow-node" style="min-width:45px;font-size:0.55rem;">🎯 Intent</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node highlight" style="min-width:45px;font-size:0.55rem;">📝 Query Gen</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node warn" style="min-width:45px;font-size:0.55rem;">🔀 Phase 1</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node" style="min-width:45px;font-size:0.55rem;">🔍 Phase 2</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node success" style="min-width:45px;font-size:0.55rem;">🧠 Phase 3</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node purple" style="min-width:45px;font-size:0.55rem;">🌱 Phase 4</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-node" style="min-width:45px;font-size:0.55rem;">📞 Contacts</div>
+<!-- ════════════════════════════════════════════════════════ -->
+<!--                  7 AGENTS                                -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="agents">
+  <h2><span class="emoji">🧠</span> The 7 AI Agents</h2>
+
+  <p style="color:#475569;font-size:0.85rem;margin-bottom:1rem;">
+    Each agent is a specialized AI powered by a large language model (LLM). They share a common "harness" that handles context, memory, error handling, and observability — so each agent only writes its core logic.
+  </p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><span class="tag blue">1</span> Research Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Scrapes the company website, feeds the content to an LLM, and extracts structured data: industry, company size, pain points, buying signals, tech stack, and a fit score (0–100).
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip blue">scrapeUrl</span>
+        <span class="chip purple">generateStructured</span>
+        <span class="chip">Zod schema</span>
+      </div>
     </div>
-    <table>
-      <tr><th>Phase</th><th>What runs</th><th>Key logic</th><th>DB status</th></tr>
-      <tr><td><strong>Pre</strong></td><td><code>embed(brandContext)</code> → Groq nomic-embed-text-v1.5 (768d) → <code>match_discovery_embeddings</code> RPC → similar intents for query gen context</td><td>Vector similarity search</td><td>—</td></tr>
-      <tr><td><strong>Query Gen</strong></td><td><code>queryGenerationAgent.ts</code> — LLM generates queries per intent × adapters. Cached via <code>queryCache</code>. Logged to <code>discovery_query_log</code>.</td><td>Up to 6 diverse adapters per intent</td><td><code>discovery_query_log</code></td></tr>
-      <tr><td><strong>Phase 1</strong></td><td><code>discoverCompaniesBatch()</code> — parallel batches (20/batch). ALL raw results stored.</td><td>Broad search across selected adapters</td><td><code>raw</code></td></tr>
-      <tr><td><strong>Phase 2</strong></td><td>Aggregator check · job board · enterprise · media · pre-validation · keyword scoring (≥30) · domain resolution · MX check</td><td>8 filter stages</td><td><code>approved</code> / <code>rejected</code></td></tr>
-      <tr><td><strong>Phase 3</strong></td><td>Playwright scrape · batch LLM extraction (NVIDIA) · LLM scoring (hard reject &lt;30) · FORGE + Bricks enrichment · composite scoring</td><td>keyword×0.40 + LLM×0.30 + domain×0.10 + signal×0.10 + extraction×0.10</td><td><code>approved</code> with <code>requires_enrichment=true</code></td></tr>
-      <tr><td><strong>Phase 4</strong></td><td>Content seed extraction from scraped pages → secondary leads → full re-validation</td><td>LLM reads 8K chars, extracts leads + queries</td><td><code>seed_extract</code> source</td></tr>
-      <tr><td><strong>Contacts</strong></td><td><code>discoverDecisionMakers()</code> → generic email filter → <code>storeDiscoveredContacts()</code> → <code>rpc_ingest_lead</code></td><td>Parallel batches of 5, deferred after all intents</td><td><code>discovered_contacts</code> + <code>leads</code></td></tr>
-    </table>
-  </div>
 
-  <!-- 25 Sources -->
+    <div class="card">
+      <h3><span class="tag purple">2</span> Qualification Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Evaluates research data against the brand profile. Decides if this company is worth pursuing. Outputs: fit_score (0–100), reasoning, confidence (0–1).
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip blue">assembleContext</span>
+        <span class="chip purple">generateStructured</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag pink">3</span> Outreach Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Writes a personalized cold email. The agent is given the brand's identity and strict rules to never claim they built the target's product. Outputs: subject + body under 150 words.
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip blue">buildOutreachPrompt</span>
+        <span class="chip purple">generateStructured</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag amber">4</span> Reply Analysis Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Reads incoming email replies and classifies them: intent (high/medium/low/negative/unsubscribe/OOO), sentiment, objection detection, meeting requested. Auto-suppresses unsubscribe requests.
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip">intent</span>
+        <span class="chip">sentiment</span>
+        <span class="chip red">suppression</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag indigo">5</span> Negotiation Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Drafts follow-up replies when a prospect shows interest. Only activates if confidence ≥ 0.75 and intent is high/medium. Supports multi-turn conversation until close.
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip">multi-turn</span>
+        <span class="chip">follow-up</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag sky">6</span> Deep Research Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Enhanced research using Playwright browser automation + LLM. Scrapes the full website, then runs a deeper analysis with brand context to produce richer company profiles.
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip">Playwright</span>
+        <span class="chip">deep analysis</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag green">7</span> Feedback Agent</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Reviews past outcomes (closed won, lost, rejected) and updates the system's learning. Re-ranks brand intents by conversion rate, syncs embeddings to improve future discovery.
+      </p>
+      <div style="margin-top:0.5rem;font-size:0.75rem;color:#64748b;">
+        <span class="chip green">conversion_rate</span>
+        <span class="chip">re-rank</span>
+        <span class="chip">embedding sync</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              HARNESS RUNTIME                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="harness">
+  <h2><span class="emoji">🏗️</span> The Harness — How Every Agent Runs</h2>
+
   <div class="card full">
-    <h2>📡 All 25 discovery sources</h2>
-    <table>
-      <tr><th>#</th><th>Adapter</th><th>Code</th><th>Method</th><th>Limit</th><th>Signals</th></tr>
-      <tr><td>1</td><td><strong>Google Search</strong></td><td><code>search.ts</code></td><td>Programmable Search JSON API</td><td>30/min</td><td><span class="chip">all</span></td></tr>
-      <tr><td>2</td><td><strong>Reddit</strong></td><td><code>reddit-search.ts</code></td><td>Reddit JSON API (startup/entrepreneur/SaaS)</td><td>10/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span> <span class="chip amber">outbound</span></td></tr>
-      <tr><td>3</td><td><strong>Hacker News</strong></td><td><code>hackernews.ts</code></td><td>HN Algolia API</td><td>60/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span> <span class="chip blue">growth</span></td></tr>
-      <tr><td>4</td><td><strong>News</strong></td><td><code>news.ts</code></td><td>Google News RSS / NewsAPI</td><td>10/min</td><td><span class="chip blue">growth</span> <span class="chip amber">partner</span> <span class="chip">expansion</span> <span class="chip">compliance</span></td></tr>
-      <tr><td>5</td><td><strong>Jobs</strong></td><td><code>jobs.ts</code></td><td>Google Jobs via SERP</td><td>10/min</td><td><span class="chip">hiring</span></td></tr>
-      <tr><td>6</td><td><strong>Freelance</strong></td><td><code>freelance.ts</code></td><td>Upwork/Fiverr/Toptal RSS</td><td>10/min</td><td><span class="chip">pain</span></td></tr>
-      <tr><td>7</td><td><strong>Blogs</strong></td><td><code>blogs.ts</code></td><td>Medium/Dev.to/Hashnode RSS</td><td>10/min</td><td><span class="chip amber">partner</span> <span class="chip">compliance</span></td></tr>
-      <tr><td>8</td><td><strong>Community</strong></td><td><code>community.ts</code></td><td>IndieHackers/Quora/StackOverflow</td><td>10/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span> <span class="chip amber">outbound</span></td></tr>
-      <tr><td>9</td><td><strong>GitHub</strong></td><td><code>github.ts</code></td><td>GitHub Search API</td><td>60/min</td><td><span class="chip">tech_usage</span></td></tr>
-      <tr><td>10</td><td><strong>HN Hiring</strong></td><td><code>hn-hiring.ts</code></td><td>HN "Who is hiring" parser</td><td>60/min</td><td><span class="chip">hiring</span></td></tr>
-      <tr><td>11</td><td><strong>YC</strong></td><td><code>yc.ts</code></td><td>YC batch API</td><td>60/min</td><td><span class="chip blue">growth_activity</span></td></tr>
-      <tr><td>12</td><td><strong>Product Hunt</strong></td><td><code>producthunt.ts</code></td><td>PH GraphQL API</td><td>10/min</td><td><span class="chip blue">growth_activity</span></td></tr>
-      <tr><td>13</td><td><strong>Indeed</strong></td><td><code>indeed.ts</code></td><td>Indeed scraping</td><td>5/min</td><td><span class="chip">hiring</span></td></tr>
-      <tr><td>14</td><td><strong>Crunchbase</strong></td><td><code>crunchbase.ts</code></td><td>Crunchbase API</td><td>2/min</td><td><span class="chip">funding</span></td></tr>
-      <tr><td>15</td><td><strong>Wellfound</strong></td><td><code>wellfound.ts</code></td><td>Wellfound scraping</td><td>10/min</td><td><span class="chip">hiring</span> <span class="chip blue">growth</span></td></tr>
-      <tr><td>16</td><td><strong>TechCrunch</strong></td><td><code>techcrunch.ts</code></td><td>TC RSS + scraping</td><td>30/min</td><td><span class="chip">funding</span> <span class="chip">expansion</span></td></tr>
-      <tr><td>17</td><td><strong>Pushshift</strong></td><td><code>pushshift.ts</code></td><td>Pushshift.io API</td><td>120/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span></td></tr>
-      <tr><td>18</td><td><strong>StackShare</strong></td><td><code>stackshare.ts</code></td><td>StackShare API</td><td>5/min</td><td><span class="chip">tech_usage</span> <span class="chip">migration</span></td></tr>
-      <tr><td>19</td><td><strong>Web Research</strong></td><td><code>web-research.ts</code></td><td>LLM multi-query deep research</td><td>10/min</td><td><span class="chip">all</span></td></tr>
-      <tr><td>20</td><td><strong>Forge Enrichment</strong></td><td><code>forge-enrichment.ts</code></td><td>NVIDIA FORGE re-enrichment</td><td>—</td><td><span class="chip">enrichment</span></td></tr>
-      <tr><td>21</td><td><strong>LinkedIn</strong></td><td><code>linkedin.ts</code></td><td>Google site:linkedin.com search</td><td>10/min</td><td><span class="chip blue">growth_activity</span> <span class="chip amber">partner</span></td></tr>
-      <tr><td>22</td><td><strong>SearXNG</strong></td><td><code>searxng.ts</code></td><td>Self-hosted meta-search</td><td>30/min</td><td><span class="chip">all</span></td></tr>
-      <tr><td>23</td><td><strong>Meta Ads</strong> <span class="tag new">NEW</span></td><td><code>meta-ads.ts</code></td><td>Meta Ad Library via Python</td><td>20/min</td><td><span class="chip">hiring</span> <span class="chip">funding</span> <span class="chip blue">growth</span> <span class="chip amber">partner</span></td></tr>
-      <tr><td>24</td><td><strong>Maps</strong> <span class="tag new">NEW</span></td><td><code>maps.ts</code></td><td>OpenStreetMap Overpass via Python</td><td>30/min</td><td><span class="chip amber">partner</span> <span class="chip">expansion</span> <span class="chip">burnout</span></td></tr>
-      <tr><td>25</td><td><strong>DuckDuckGo</strong></td><td><code>scrapling_search.py</code></td><td>Scrapling DDG search (Python)</td><td>15/min</td><td><span class="chip">all</span></td></tr>
-    </table>
-  </div>
-</div>
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:0.75rem;">
+      Instead of each agent reinventing the wheel, they all run inside the <strong>harness</strong> — a runtime that provides everything an agent needs. The agent only writes its unique logic; the harness handles context, memory, prompting, retries, and logging.
+    </p>
 
-<!-- ===================== SUPABASE SCHEMA + RPCS ===================== -->
-<div class="sec-title">🗄️ Supabase — Full Database Schema &amp; 40+ RPCs</div>
-<div class="grid">
+    <div class="pipeline-flow" style="justify-content:flex-start;gap:0.15rem;padding:0.5rem 0;">
+      <div class="pipeline-step discovery" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">📦<span class="sub">Context</span></div>
+      <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+      <div class="pipeline-step enrich" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🧠<span class="sub">Memory</span></div>
+      <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+      <div class="pipeline-step research" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">📝<span class="sub">Prompt</span></div>
+      <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+      <div class="pipeline-step qualify" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🤖<span class="sub">LLM</span></div>
+      <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+      <div class="pipeline-step send" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🔁<span class="sub">Retry</span></div>
+      <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+      <div class="pipeline-step reply" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">📊<span class="sub">Log</span></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Module</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>contextManager.ts</strong></td>
+            <td>Fetches relevant context before each agent call: similar companies (vector search), past outcomes, source performance, enrichment history, intents. Also estimates token budget and truncates messages.</td>
+          </tr>
+          <tr>
+            <td><strong>memory.ts</strong></td>
+            <td>Short-term working memory for the current session. Injects up to 10 relevant facts into the agent's system prompt.</td>
+          </tr>
+          <tr>
+            <td><strong>promptBuilder.ts</strong></td>
+            <td>Builds the full prompt for each agent: system identity, context preamble, stage-specific instructions, and the user message. Includes strict JSON output instructions and anti-hallucination rules.</td>
+          </tr>
+          <tr>
+            <td><strong>errorHandling.ts</strong></td>
+            <td>Retry with exponential backoff (base 1s, factor 2, jitter, max 3 attempts). Fallback functions. Non-retryable error detection (400/401). Human-readable error suggestions.</td>
+          </tr>
+          <tr>
+            <td><strong>observability.ts</strong></td>
+            <td>Logs every agent turn with run ID, agent ID, tokens used, tools called, latencies, errors, and cost. Warns at >80% context utilization or >2 errors.</td>
+          </tr>
+          <tr>
+            <td><strong>toolRegistry.ts</strong></td>
+            <td>Registers 14 tools agents can use: scrape_website, search_web, search_hackernews, search_y_combinator, enrich_company_forge, scrape_extract_company, extract_content_seeds, search_ddg, search_searxng, search_meta_ads, search_maps, and more.</td>
+          </tr>
+          <tr>
+            <td><strong>adapterTools.ts</strong></td>
+            <td>9 adapter-specific tools: search_reddit, search_pushshift, search_indeed, search_jobs, search_news, search_wellfound, search_linkedin, search_meta_ads, search_maps.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--                 DISCOVERY                                -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="discovery">
+  <h2><span class="emoji">🔍</span> Discovery — Finding Companies With Buying Signals</h2>
+
+  <div class="card-grid">
+    <div class="card full">
+      <h3>Two Discovery Paths Run in Parallel</h3>
+      <p style="font-size:0.8rem;color:#475569;margin-bottom:0.75rem;">
+        Every 6 hours, the engine runs both source-driven discovery (5 legacy adapters) and signal-driven discovery (20 adapters) and deduplicates results.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag blue">Source-Driven</span> (5 legacy)</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        Scrapes Reddit, Hacker News, IndieHackers, RemoteOK, and Product Hunt for companies discussing relevant topics. Each post is scored for relevance and urgency against the brand profile.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag purple">Signal-Driven</span> (20 adapters)</h3>
+      <p style="font-size:0.8rem;color:#475569;">
+        For each brand intent, an LLM generates search queries targeting specific adapters. Runs in 4 phases: query generation → broad search → filter/validate → extract seeds.
+      </p>
+    </div>
+
+    <div class="card full">
+      <h3>The 4 Phases of Signal-Driven Discovery</h3>
+      <div class="pipeline-flow" style="justify-content:flex-start;gap:0.15rem;padding:0.5rem 0;">
+        <div class="pipeline-step" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🎯<span class="sub">Intent</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step discovery" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">📝<span class="sub">Query Gen</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step enrich" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🔀<span class="sub">Phase 1</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step research" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🔍<span class="sub">Phase 2</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step qualify" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🧠<span class="sub">Phase 3</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step outreach" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">🌱<span class="sub">Phase 4</span></div>
+        <span class="pipeline-arrow" style="font-size:0.7rem;">→</span>
+        <div class="pipeline-step send" style="min-width:40px;font-size:0.55rem;padding:0.3rem 0.35rem;">📞<span class="sub">Contacts</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Phase</th><th>What runs</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Pre</strong></td><td>Embeds brand context → vector search for similar intents → feeds RAG results into query gen</td><td>Smarter queries</td></tr>
+            <tr><td><strong>Query Gen</strong></td><td>LLM generates 10–15 search queries per intent, spread across relevant adapters (e.g., "search" for funding news, "reddit" for pain signals)</td><td><code>discovery_query_log</code></td></tr>
+            <tr><td><strong>Phase 1</strong></td><td>Executes queries in parallel batches (20/batch) across all selected adapters. Raw results stored.</td><td><code>raw</code></td></tr>
+            <tr><td><strong>Phase 2</strong></td><td>8 filter stages: aggregator check, job board filter, enterprise filter, media filter, pre-validation, keyword scoring (≥30), domain resolution, MX check</td><td><code>approved</code> / <code>rejected</code></td></tr>
+            <tr><td><strong>Phase 3</strong></td><td>Playwright scrape → batch LLM extraction (NVIDIA) → LLM scoring → FORGE + Bricks enrichment → composite score</td><td><code>approved</code> + enrichment flag</td></tr>
+            <tr><td><strong>Phase 4</strong></td><td>Content seed extraction from scraped pages → secondary leads → re-validation</td><td><code>seed_extract</code></td></tr>
+            <tr><td><strong>Contacts</strong></td><td>Decision maker discovery → email find → store → ingest as leads</td><td><code>leads</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card full">
+      <h3>All 25 Discovery Sources</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Source</th><th>What it finds</th><th>Rate Limit</th><th>Signal Types</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Google Search</strong></td><td>Signal-rich web pages</td><td>30/min</td><td><span class="chip">all</span></td></tr>
+            <tr><td>2</td><td><strong>Reddit</strong></td><td>Pain signals, tool searches, startup discussions</td><td>10/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span></td></tr>
+            <tr><td>3</td><td><strong>Hacker News</strong></td><td>Launches, Show HN, technical discussions</td><td>60/min</td><td><span class="chip amber">pain</span> <span class="chip blue">growth</span></td></tr>
+            <tr><td>4</td><td><strong>News</strong></td><td>Funding, expansion, partnership announcements</td><td>10/min</td><td><span class="chip blue">growth</span> <span class="chip">expansion</span></td></tr>
+            <tr><td>5</td><td><strong>Jobs</strong></td><td>Active hiring — companies with budget</td><td>10/min</td><td><span class="chip">hiring</span></td></tr>
+            <tr><td>6</td><td><strong>Freelance</strong></td><td>Companies posting projects (Upwork/Fiverr/Toptal)</td><td>10/min</td><td><span class="chip">pain</span></td></tr>
+            <tr><td>7</td><td><strong>Blogs</strong></td><td>Engineering blogs mentioning tech stack issues</td><td>10/min</td><td><span class="chip amber">partner</span></td></tr>
+            <tr><td>8</td><td><strong>Community</strong></td><td>IndieHackers, Quora, StackOverflow discussions</td><td>10/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span></td></tr>
+            <tr><td>9</td><td><strong>GitHub</strong></td><td>Active repos in relevant tech stacks</td><td>60/min</td><td><span class="chip">tech_usage</span></td></tr>
+            <tr><td>10</td><td><strong>HN Hiring</strong></td><td>"Who is hiring" threads — active hiring companies</td><td>60/min</td><td><span class="chip">hiring</span></td></tr>
+            <tr><td>11</td><td><strong>YC</strong></td><td>Y Combinator companies by industry/category</td><td>60/min</td><td><span class="chip blue">growth_activity</span></td></tr>
+            <tr><td>12</td><td><strong>Product Hunt</strong></td><td>New product launches with traction</td><td>10/min</td><td><span class="chip blue">growth_activity</span></td></tr>
+            <tr><td>13</td><td><strong>Indeed</strong></td><td>Active job postings at real companies</td><td>5/min</td><td><span class="chip">hiring</span></td></tr>
+            <tr><td>14</td><td><strong>Crunchbase</strong></td><td>Funded companies by keyword</td><td>2/min</td><td><span class="chip">funding</span></td></tr>
+            <tr><td>15</td><td><strong>Wellfound</strong></td><td>Startups hiring with structured company data</td><td>10/min</td><td><span class="chip">hiring</span></td></tr>
+            <tr><td>16</td><td><strong>TechCrunch</strong></td><td>Funding and acquisition news</td><td>30/min</td><td><span class="chip">funding</span></td></tr>
+            <tr><td>17</td><td><strong>Pushshift</strong></td><td>Archival Reddit data (startup/entrepreneur subs)</td><td>120/min</td><td><span class="chip amber">pain</span> <span class="chip amber">automation</span></td></tr>
+            <tr><td>18</td><td><strong>StackShare</strong></td><td>Companies using specific tech stacks</td><td>5/min</td><td><span class="chip">tech_usage</span></td></tr>
+            <tr><td>19</td><td><strong>Web Research</strong></td><td>LLM multi-query deep web research</td><td>10/min</td><td><span class="chip">all</span></td></tr>
+            <tr><td>20</td><td><strong>Forge Enrichment</strong></td><td>NVIDIA FORGE re-enrichment</td><td>—</td><td><span class="chip">enrichment</span></td></tr>
+            <tr><td>21</td><td><strong>LinkedIn</strong></td><td>LinkedIn company pages (via Google site search)</td><td>10/min</td><td><span class="chip blue">growth</span></td></tr>
+            <tr><td>22</td><td><strong>SearXNG</strong></td><td>Self-hosted meta-search engine</td><td>30/min</td><td><span class="chip">all</span></td></tr>
+            <tr><td>23</td><td><strong>Meta Ads</strong></td><td>Companies running Facebook/Instagram ads</td><td>20/min</td><td><span class="chip blue">growth</span></td></tr>
+            <tr><td>24</td><td><strong>Maps</strong></td><td>Local venues, community centres, event spaces</td><td>30/min</td><td><span class="chip">expansion</span></td></tr>
+            <tr><td>25</td><td><strong>DuckDuckGo</strong></td><td>DDG search via Python scraper</td><td>15/min</td><td><span class="chip">all</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--                 ENRICHMENT                              -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="enrichment">
+  <h2><span class="emoji">🧹</span> Enrichment — 9 Strategies to Build a Complete Company Profile</h2>
+
   <div class="card full">
-    <h2>🗄️ All tables (<code>supabase/outbound-engine</code>, project ref: <code>xtobbvffaxoiadserkbb</code>)</h2>
-    <table>
-      <tr><th>Table</th><th>Columns</th><th>Used by</th></tr>
-      <tr><td><code>brand_profiles</code></td><td>id, client_id, product, brand_name, positioning, core_offer, tone, audience, objection_guidelines, negotiation_style, smtp_*, imap_*, provider, transport_mode, reply_to_email, signature_block, daily/hourly_send_limit, llm_model_override, llm_temperature, is_active, is_paused, auto_paused, imap_enabled, send_enabled, bounce_count, sent_count, complaint_count, deliverability_score, discovery_enabled, outbound_enabled, manual_discovery_requested</td><td>all agents, state machine, send processor, IMAP</td></tr>
-      <tr><td><code>brand_intents</code></td><td>id, brand_id, intent, signals (JSONB[]), priority, is_active, search_queries (JSONB), exclusion_patterns (JSONB), conversion_rate, last_refined_at</td><td>discovery signal engine, query gen agent</td></tr>
-      <tr><td><code>discovered_companies</code></td><td>id, brand_id, client_id, name, domain, website, source_url, source_name, signal_type, enrichment_status, requires_enrichment, processed, dead_letter, enrichment_attempts, confidence, relevance_score, urgency_score, fit_reason, summary, raw_payload (JSONB), next_attempt_at, discovered_at, updated_at</td><td>discovery (all 4 phases), enrichment worker</td></tr>
-      <tr><td><code>discovered_contacts</code></td><td>id, brand_id, discovered_company_id, first_name, last_name, full_name, email, title, linkedin_url, risk, confidence, intent_score, requires_enrichment, raw_payload, processed, ingested, retry_count, dead_letter, enrichment_status, enrichment_attempts, enrichment_source, enrichment_reasoning, enrichment_error</td><td>discovery contacts phase, enrichment worker</td></tr>
-      <tr><td><code>companies</code></td><td>id, brand_id, client_id, name, domain, website, status (researching/qualified/draft_ready/contacted/replied/negotiating/closed_won/closed_lost/rejected), confidence_score, source, state_updated_at, next_attempt_at</td><td>state machine (all stages), send processor</td></tr>
-      <tr><td><code>leads</code></td><td>id, brand_id, client_id, first_name, last_name, full_name, email, title, domain, linkedin_url, confidence_score, status (new/contacted/replied/converted/unsubscribed), bounce_count, reply_count</td><td>outreach agent, send processor</td></tr>
-      <tr><td><code>lead_company_map</code></td><td>lead_id, company_id</td><td>outreach agent, send processor</td></tr>
-      <tr><td><code>research</code></td><td>id, company_id, brand_id, industry, size_estimate, pain_points, buying_signals, automation_maturity, sponsorship_potential, summary, raw_content</td><td>research agent, qualification agent, outreach agent</td></tr>
-      <tr><td><code>qualification</code></td><td>id, company_id, brand_id, fit_score, reasoning, confidence</td><td>qualification agent</td></tr>
-      <tr><td><code>outreach</code></td><td>id, company_id, brand_id, lead_id, subject, body, status (draft/sent)</td><td>outreach agent, send processor</td></tr>
-      <tr><td><code>sent_messages</code></td><td>id, brand_id, lead_id, company_id, message_key (SHA-256 UNIQUE), direction, status (pending/sent/failed), smtp_message_id, sent_at</td><td>send processor, idempotency</td></tr>
-      <tr><td><code>replies</code></td><td>id, message_id (UNIQUE), company_id, lead_id, raw_message, subject, intent, sentiment, objection_detected, meeting_requested, confidence, summary, analyzed_at</td><td>IMAP monitor, reply analysis agent</td></tr>
-      <tr><td><code>negotiation_drafts</code></td><td>id, company_id, brand_id, content</td><td>negotiation agent</td></tr>
-      <tr><td><code>suppression_list</code></td><td>id, brand_id, email, domain, reason (unsubscribe/hard_bounce/complaint)</td><td>reply analysis agent, send processor</td></tr>
-      <tr><td><code>signal_source_performance</code></td><td>id, source_id, brand_id, sends, replies, bounces, last_updated</td><td>context assembler, source precision tracking</td></tr>
-      <tr><td><code>discovery_query_log</code></td><td>id, brand_id, intent_id, intent_text, adapter, query, raw_count, approved_count, lead_count, run_id</td><td>discovery query gen</td></tr>
-      <tr><td><code>client_settings</code></td><td>id, client_id, smtp_*, imap_*, email_provider, llm_provider, llm_model, llm_temperature, llm_base_url, llm_api_key</td><td>LLM client config, email config</td></tr>
-      <tr><td><code>client_members</code></td><td>id, client_id, email, name, role (owner/admin/member/viewer), is_active</td><td>outreach agent (sender resolution)</td></tr>
-      <tr><td><code>system_flags</code></td><td>key, value</td><td>health check, feature flags</td></tr>
-      <tr><td><code>discovery_metrics</code></td><td>id, source_id, companies_discovered, contacts_discovered, duration_ms, success, error</td><td>discovery metrics recording</td></tr>
-      <tr><td><code>inbound_events</code></td><td>event_id, event_type, brand_id, created_at</td><td>IMAP dedup, webhook events</td></tr>
-    </table>
-  </div>
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:0.75rem;">
+      For each discovered company, the enrichment worker builds a custom plan using up to 9 strategies. It runs them in priority order and stops when the confidence score reaches 75% (or 50% for cold starts).
+    </p>
 
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Strategy</th><th>What it does</th><th>Data found</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><strong>API Enrichment</strong></td><td>Generic API enrichment</td><td>Company details</td></tr>
+          <tr><td>2</td><td><strong>Apollo</strong></td><td>Apollo.io contact lookup</td><td>Contact names, titles, emails</td></tr>
+          <tr><td>3</td><td><strong>Hunter</strong></td><td>Hunter.io email finder</td><td>Email addresses</td></tr>
+          <tr><td>4</td><td><strong>Prospeo</strong></td><td>Prospeo contact search</td><td>Contact details</td></tr>
+          <tr><td>5</td><td><strong>Bricks</strong></td><td>Bricks email discovery (Python subprocess)</td><td>Email addresses</td></tr>
+          <tr><td>6</td><td><strong>Website Scrape</strong></td><td>Crawl4AI + NVIDIA LLM extraction + social scrape</td><td>Name, industry, tech stack, employees, key people, emails, social links</td></tr>
+          <tr><td>7</td><td><strong>Contact Discovery</strong></td><td>Finds decision makers from multiple sources</td><td>Names, titles, LinkedIn URLs</td></tr>
+          <tr><td>8</td><td><strong>Email Pattern</strong></td><td>Guesses email patterns from known formats</td><td>Email addresses</td></tr>
+          <tr><td>9</td><td><strong>SMTP Verification</strong></td><td>Verifies email deliverability</td><td>Valid/Invalid status</td></tr>
+          <tr><td>10</td><td><strong>Company Research</strong></td><td>Deep company research</td><td>Full company profile</td></tr>
+          <tr><td>11</td><td><strong>LLM Research</strong></td><td>LLM-powered research on company/contact</td><td>Enriched profile with confidence score</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              LLM CLIENT                                 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="llm">
+  <h2><span class="emoji">🤖</span> LLM — Unified AI Client for 5 Providers</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><span class="tag blue">Ollama</span> Local</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Default provider. Runs locally on the server. Models: llama3:8b, llama3:70b, mistral, codellama, phi3.<br>
+        <code>OLLAMA_URL=http://localhost:11434</code>
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag green">Groq</span> Cloud</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Fast inference API. First-call 10s delay for rate window. Models: llama-3.3-70b-versatile, mixtral-8x7b-32768.<br>
+        1 req per 70s window, 5,000 token limit.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag purple">OpenAI</span> Cloud</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        OpenAI-compatible (works with any OpenAI-like API). Models: gpt-4o, gpt-4-turbo, gpt-3.5-turbo.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag amber">Anthropic</span> Cloud</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Claude models. Messages API with 4096 max tokens. Models: claude-3-5-sonnet, claude-3-opus, claude-3-haiku.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag sky">Cloudflare</span> Edge</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Workers AI. Models: @cf/meta/llama-3.1-8b-instruct and others.
+      </p>
+    </div>
+    <div class="card full">
+      <h3>Key Features</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.5rem;font-size:0.8rem;">
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">⏱ Rate Limiter</strong>
+          <p style="color:#475569;margin-top:0.15rem;">1 req / 70s window, max 5,000 tokens. Auto-waits.</p>
+        </div>
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">🚦 Concurrency Queue</strong>
+          <p style="color:#475569;margin-top:0.15rem;">Max 2 LLM calls in-flight at once. FIFO ordering.</p>
+        </div>
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">🔁 Retry Logic</strong>
+          <p style="color:#475569;margin-top:0.15rem;">3 retries with exponential backoff. 61s wait on 429 errors.</p>
+        </div>
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">🔧 JSON Repair</strong>
+          <p style="color:#475569;margin-top:0.15rem;">6 fallback strategies to fix malformed JSON output.</p>
+        </div>
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">⚙️ Per-Client Config</strong>
+          <p style="color:#475569;margin-top:0.15rem;">Each client can override provider, model, temperature. 5-min cache.</p>
+        </div>
+        <div style="background:#f8fafc;border-radius:0.5rem;padding:0.5rem;border:1px solid #e2e8f0;">
+          <strong style="color:#0f172a;">⏰ 300s Timeout</strong>
+          <p style="color:#475569;margin-top:0.15rem;">5 minutes max per LLM call. 300,000ms.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              EMAIL SYSTEM                               -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="email">
+  <h2><span class="emoji">📧</span> Email — Sending & Receiving</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><span class="tag blue">Resend</span> Provider</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Uses the Resend API for sending. Each brand has its own API key and sending domain. Supports reply-to headers. Automatically increments domain metrics after each send.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag green">SMTP</span> Provider</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Nodemailer with pooled transport per brand (3 connections, 100 max messages, 30-min TTL). Credentials fetched via RPC. Deterministic Message-ID injection for threading.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag amber">IMAP</span> Inbox Monitor</h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Continuous push-based monitoring per brand. Classifies inbound emails: bounce, reply, out-of-office, complaint, unsubscribe. Deduplicates by message_id. Triggers reply analysis agent.
+      </p>
+    </div>
+    <div class="card full">
+      <h3>10 Safety Checks Before Every Send</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.35rem;font-size:0.78rem;">
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🔌 Circuit breaker (per brand, 3 failures → 7min cooldown)</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🏥 Domain health (bounce rate, complaint rate)</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">📊 Daily/hourly quota check</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🆔 Idempotency (SHA-256 message key)</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🚫 Suppression list check</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">📝 Thread validation</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🎯 Lead confidence ≥ 0.5</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">🔞 Brand not paused</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">✅ Outreach draft exists</div>
+        <div style="background:#f8fafc;border-radius:0.4rem;padding:0.4rem;border:1px solid #e2e8f0;">⚡ Feature flag (send_enabled)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              RELIABILITY                                -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="reliability">
+  <h2><span class="emoji">⚙️</span> Reliability & Safety Systems</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><span class="tag blue">Circuit Breaker</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Per-brand circuit breaker stored in <code>circuit_breaker_state</code> table. 3 failures → opens for 7 minutes → half-open → closed on success. Prevents cascading failures when an SMTP server is down.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag green">Domain Health</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Graduated thresholds: bounce rate starts at 2% (first 10 sends), scales to 5% (after 20). Complaint rate: 0.1% → 0.3%. Auto-pauses brand when exceeded.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag amber">Retry Policy</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Max 3 retries per entity. Exponential backoff (60s, 120s, 240s → max 15min). Moves to dead letter table when exhausted. Also max 3 enrichment attempts.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag red">Anti-Spam</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Auto-suppress on unsubscribe requests. Adds to <code>suppression_list</code> with reason. Marks company as <code>closed_lost</code>. Blocks all future sends to that email/domain.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag purple">Feature Flags</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Three flags from <code>system_flags</code> table: <code>automation_enabled</code>, <code>send_enabled</code>, <code>imap_enabled</code>. 10s cache. Fail-closed for safety.
+      </p>
+    </div>
+    <div class="card">
+      <h3><span class="tag sky">Enrichment Safety</span></h3>
+      <p style="font-size:0.8rem;color:#475569;line-height:1.6;">
+        Guards against enriching: job boards, enterprise domains, media/social domains, companies with enterprise descriptions. Max attempts enforced.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              DATABASE + RPCS                            -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="schema">
+  <h2><span class="emoji">🗄️</span> Database Schema — 25+ Tables</h2>
+  <p style="color:#475569;font-size:0.85rem;margin-bottom:1rem;">
+    The engine uses a Supabase PostgreSQL database (project <code>xtobbvffaxoiadserkbb</code>, Mumbai region). Full schema dump available at <code>supabase-schema.sql</code> (7,034 lines).
+  </p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><span class="tag blue">Brands & Intents</span></h3>
+      <div style="font-size:0.78rem;color:#475569;line-height:1.7;">
+        <code>brand_profiles</code> — 40+ columns: product, positioning, core_offer, tone, audience, SMTP config, IMAP config, provider, limits, flags, reputation metrics.<br>
+        <code>brand_intents</code> — Intent text, signal types, priority, conversion rate, search queries.
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="tag purple">Discovery</span></h3>
+      <div style="font-size:0.78rem;color:#475569;line-height:1.7;">
+        <code>discovered_companies</code> — With scoring columns: relevance_score, urgency_score, pain_score, budget_score, tech_fit_score, automation_score, composite_score, confidence_level.<br>
+        <code>discovered_contacts</code> — Name, email, title, LinkedIn, enrichment status.
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="tag green">Pipeline</span></h3>
+      <div style="font-size:0.78rem;color:#475569;line-height:1.7;">
+        <code>companies</code> — Status tracks pipeline stage.<br>
+        <code>leads</code> — Contacts with confidence, bounce/reply counts.<br>
+        <code>lead_company_map</code> — Many-to-many.<br>
+        <code>research</code>, <code>qualification</code>, <code>outreach</code>, <code>sent_messages</code>, <code>replies</code>, <code>negotiation_drafts</code>.
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="tag amber">Operations</span></h3>
+      <div style="font-size:0.78rem;color:#475569;line-height:1.7;">
+        <code>circuit_breaker_state</code> — Brand-level breaker state.<br>
+        <code>suppression_list</code> — Email/domain blocklist.<br>
+        <code>signal_source_performance</code> — Source quality tracking.<br>
+        <code>system_flags</code> — Feature toggles.<br>
+        <code>client_daily_send</code>, <code>client_hourly_send</code> — Quota tracking.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rpc">
+  <h2><span class="emoji">🔧</span> 40+ Database Functions (RPCs)</h2>
   <div class="card full">
-    <h2>🔧 All RPCs (40+ total) — Serverless Database Functions</h2>
-    <table>
-      <tr><th>Category</th><th>RPC Name</th><th>Purpose</th><th>Called by</th></tr>
-      <tr><td rowspan="5"><strong>State Machine</strong></td><td><code>rpc_claim_companies</code></td><td>Atomic claim by brand + status, returns up to N</td><td><span class="chip">stateMachine.ts</span></td></tr>
-      <tr><td><code>rpc_claim_outreach_draft</code></td><td>Atomic claim of outreach draft by company_id</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td><code>rpc_update_company_status</code></td><td>Atomic CAS update with expected_status guard</td><td><span class="chip">stateMachine.ts</span></td></tr>
-      <tr><td><code>rpc_update_lead_status</code></td><td>Update lead status</td><td><span class="chip">stateMachine.ts</span></td></tr>
-      <tr><td><code>detect_stuck_leads</code></td><td>Detects + auto-corrects leads stuck in processing >10min</td><td><span class="chip">stateMachine.ts</span></td></tr>
-      <tr><td rowspan="7"><strong>Discovery</strong></td><td><code>rpc_claim_brand_intents</code></td><td>Claim active intents for a brand</td><td><span class="chip">signal engine</span></td></tr>
-      <tr><td><code>rpc_get_active_opportunities</code></td><td>Get unprocessed opportunities</td><td><span class="chip">signal engine</span></td></tr>
-      <tr><td><code>rpc_ingest_opportunity</code></td><td>Create new opportunity row</td><td><span class="chip">signal engine</span></td></tr>
-      <tr><td><code>rpc_qualify_opportunity</code></td><td>Update opportunity qualification status</td><td><span class="chip">signal engine</span></td></tr>
-      <tr><td><code>rpc_claim_discovery_sources</code></td><td>Atomic claim for source-driven discovery</td><td><span class="chip">source adapters</span></td></tr>
-      <tr><td><code>rpc_release_discovery_source</code></td><td>Release + record results</td><td><span class="chip">source adapters</span></td></tr>
-      <tr><td><code>match_discovery_embeddings</code></td><td>pgvector similarity search (threshold 0.6, top 5)</td><td><span class="chip">contextAssembler.ts</span></td></tr>
-      <tr><td rowspan="5"><strong>Enrichment</strong></td><td><code>claim_companies_for_enrichment</code></td><td>Claim companies needing enrichment (bypass RPC — direct SQL fallback)</td><td><span class="chip">enrichment/claim.ts</span></td></tr>
-      <tr><td><code>claim_contacts_for_enrichment</code></td><td>Claim contacts needing enrichment</td><td><span class="chip">enrichment/claim.ts</span></td></tr>
-      <tr><td><code>update_company_enrichment</code></td><td>Persist company enrichment result</td><td><span class="chip">enrichment/update.ts</span></td></tr>
-      <tr><td><code>update_contact_enrichment</code></td><td>Persist contact enrichment result</td><td><span class="chip">enrichment/update.ts</span></td></tr>
-      <tr><td><code>rpc_ingest_lead</code></td><td>Create lead from discovered contact (with dedup)</td><td><span class="chip">enrichment/update.ts</span>, <span class="chip">discovery contacts</span></td></tr>
-      <tr><td rowspan="5"><strong>Send</strong></td><td><code>consume_send_quota</code></td><td>Token-bucket quota check + consume</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td><code>check_client_send_quota</code></td><td>Check daily/hourly remaining quota</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td><code>register_bounce</code></td><td>Record bounce per brand + domain</td><td><span class="chip">sendProcessor.ts</span>, <span class="chip">imap.ts</span></td></tr>
-      <tr><td><code>rpc_mark_lead_contacted</code></td><td>Record successful send</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td><code>rpc_is_blacklisted</code></td><td>Check email/domain against suppression</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td rowspan="4"><strong>Reply</strong></td><td><code>rpc_claim_inbound_message</code></td><td>Atomic claim by message_id + brand_id</td><td><span class="chip">imap.ts</span></td></tr>
-      <tr><td><code>rpc_insert_reply</code></td><td>Insert parsed reply</td><td><span class="chip">imap.ts</span></td></tr>
-      <tr><td><code>rpc_score_lead</code></td><td>Recompute lead score after enrichment</td><td><span class="chip">enrichment/update.ts</span></td></tr>
-      <tr><td><code>rpc_update_signal_performance_for_company</code></td><td>Update source performance after close</td><td><span class="chip">closeCompany</span></td></tr>
-      <tr><td rowspan="5"><strong>Admin</strong></td><td><code>rpc_register_failure</code></td><td>Record failure with entity type + error</td><td><span class="chip">stateMachine.ts</span>, <span class="chip">sendProcessor.ts</span></td></tr>
-      <tr><td><code>rpc_close_company</code></td><td>Record closed_won deal</td><td><span class="chip">close function</span></td></tr>
-      <tr><td><code>rpc_recalibrate_lead_confidence</code></td><td>Update lead confidence score</td><td><span class="chip">feedback agent</span></td></tr>
-      <tr><td><code>rpc_update_brand_deliverability</code></td><td>Update brand deliverability + auto-pause</td><td><span class="chip">reputation system</span></td></tr>
-      <tr><td><code>rpc_consume_api_quota</code></td><td>Distributed API quota consumption</td><td><span class="chip">rate-limiter</span></td></tr>
-      <tr><td rowspan="2"><strong>IMAP</strong></td><td><code>rpc_get_imap_brands</code></td><td>Get brands with IMAP enabled</td><td><span class="chip">imap.ts</span></td></tr>
-      <tr><td><code>schedule_retry</code></td><td>Schedule a retry for failed send</td><td><span class="chip">sendProcessor.ts</span></td></tr>
-    </table>
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:0.75rem;">
+      These are PostgreSQL functions called from the application code. They handle atomic operations, concurrency control, and complex queries.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Group</th><th>RPC</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="5"><strong>State Machine</strong></td><td><code>rpc_claim_companies</code></td><td>Atomic claim by brand + status</td></tr>
+          <tr><td><code>rpc_claim_outreach_draft</code></td><td>Claim draft for sending</td></tr>
+          <tr><td><code>rpc_update_company_status</code></td><td>CAS update with expected_status guard</td></tr>
+          <tr><td><code>rpc_update_lead_status</code></td><td>Update lead status</td></tr>
+          <tr><td><code>detect_stuck_leads</code></td><td>Auto-correct stuck processing (&gt;10min)</td></tr>
+          <tr><td rowspan="7"><strong>Discovery</strong></td><td><code>rpc_claim_brand_intents</code></td><td>Claim active intents</td></tr>
+          <tr><td><code>rpc_get_active_opportunities</code></td><td>Get unprocessed opportunities</td></tr>
+          <tr><td><code>rpc_ingest_opportunity</code></td><td>Create new opportunity</td></tr>
+          <tr><td><code>rpc_qualify_opportunity</code></td><td>Update qualification status</td></tr>
+          <tr><td><code>rpc_claim_discovery_sources</code></td><td>Claim sources for legacy discovery</td></tr>
+          <tr><td><code>rpc_release_discovery_source</code></td><td>Release + record results</td></tr>
+          <tr><td><code>match_discovery_embeddings</code></td><td>pgvector similarity search (threshold 0.6)</td></tr>
+          <tr><td rowspan="5"><strong>Enrichment</strong></td><td><code>claim_companies_for_enrichment</code></td><td>Claim companies needing enrichment</td></tr>
+          <tr><td><code>claim_contacts_for_enrichment</code></td><td>Claim contacts needing enrichment</td></tr>
+          <tr><td><code>update_company_enrichment</code></td><td>Save enrichment result</td></tr>
+          <tr><td><code>update_contact_enrichment</code></td><td>Save contact enrichment result</td></tr>
+          <tr><td><code>rpc_ingest_lead</code></td><td>Create lead with dedup</td></tr>
+          <tr><td rowspan="5"><strong>Send</strong></td><td><code>consume_send_quota</code></td><td>Token-bucket quota check + consume</td></tr>
+          <tr><td><code>check_client_send_quota</code></td><td>Check daily/hourly remaining quota</td></tr>
+          <tr><td><code>register_bounce</code></td><td>Record bounce</td></tr>
+          <tr><td><code>rpc_mark_lead_contacted</code></td><td>Record successful send</td></tr>
+          <tr><td><code>rpc_is_blacklisted</code></td><td>Check suppression list</td></tr>
+          <tr><td rowspan="4"><strong>Reply</strong></td><td><code>rpc_claim_inbound_message</code></td><td>Atomic claim by message_id</td></tr>
+          <tr><td><code>rpc_insert_reply</code></td><td>Insert parsed reply</td></tr>
+          <tr><td><code>rpc_score_lead</code></td><td>Recompute lead score</td></tr>
+          <tr><td><code>rpc_update_signal_performance</code></td><td>Update source performance</td></tr>
+          <tr><td rowspan="5"><strong>Admin</strong></td><td><code>rpc_register_failure</code></td><td>Record failure</td></tr>
+          <tr><td><code>rpc_close_company</code></td><td>Record closed won</td></tr>
+          <tr><td><code>rpc_recalibrate_lead_confidence</code></td><td>Update lead confidence</td></tr>
+          <tr><td><code>rpc_update_brand_deliverability</code></td><td>Update deliverability + auto-pause</td></tr>
+          <tr><td><code>rpc_consume_api_quota</code></td><td>Distributed API quota consumption</td></tr>
+          <tr><td><strong>IMAP</strong></td><td><code>rpc_get_imap_brands</code></td><td>Get IMAP-enabled brands</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- ===================== RELIABILITY CONFIG ===================== -->
-<div class="sec-title">⚙️ Reliability Configuration</div>
-<div class="grid">
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              CRON SCHEDULE                              -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="cron">
+  <h2><span class="emoji">⏰</span> Cron Schedule — What Runs When</h2>
   <div class="card full">
-    <table>
-      <tr><th>Config</th><th>File</th><th>Values</th></tr>
-      <tr><td><strong>Retry Config</strong></td><td><code>src/config/reliability.ts</code></td><td>MAX_RETRY: 3, MAX_ENRICH_ATTEMPTS: 3, RETRY_BACKOFF_BASE_MS: 60_000, MAX_BACKOFF_MS: 15min, DEAD_LETTER reasons</td></tr>
-      <tr><td><strong>Circuit Breaker</strong></td><td><code>src/config/reliability.ts</code></td><td>FAILURE_RATE_THRESHOLD: 0.4, MIN_SAMPLES: 5, COOLDOWN_MS: 5min</td></tr>
-      <tr><td><strong>Domain Reputation</strong></td><td><code>src/config/reliability.ts</code></td><td>BOUNCE_RATE_WARNING: 3%, BOUNCE_RATE_CRITICAL: 5%, HOURLY_SEND_WARNING: 80%, DAILY_SEND_WARNING: 90%</td></tr>
-      <tr><td><strong>Enrichment</strong></td><td><code>src/enrichment/worker.ts</code></td><td>TARGET_CONFIDENCE: 0.75 (cold start: 0.50), MAX_ATTEMPTS: 3, BATCH_SIZE: 3</td></tr>
-      <tr><td><strong>State Machine</strong></td><td><code>src/orchestrator/stateMachine.ts</code></td><td>BATCH_LIMIT: 10, STUCK_CHECK_INTERVAL: 5 min</td></tr>
-      <tr><td><strong>Send Queue</strong></td><td><code>src/queue/sendProcessor.ts</code></td><td>BATCH_LIMIT: 5, LEAD_CONFIDENCE_THRESHOLD: 0.5</td></tr>
-      <tr><td><strong>Discovery</strong></td><td><code>src/discovery/signals/engine.ts</code></td><td>INTENT_TIMEOUT: 10 min, BRAND_CONCURRENCY: 3, CONTACT_BATCH: 5, PHASE3_EXTRACT_BATCH: 3</td></tr>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Process</th><th>Schedule</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>State Machine</strong></td><td>Every 1 min</td><td>All active brands. Runs research → qualification → outreach pipeline. Stuck detection every 5th tick.</td></tr>
+          <tr><td><strong>Enrichment Worker</strong></td><td>Every 1 min</td><td>Per brand. Claims + enriches companies and contacts. Batch size: 3 companies or contacts.</td></tr>
+          <tr><td><strong>Send Queue</strong></td><td>Every 2 min (60s delay)</td><td>5 per batch. 10 safety checks, then sends via Resend or SMTP.</td></tr>
+          <tr><td><strong>Signal Discovery</strong></td><td>On boot + HH:00</td><td>All brands, 3 concurrent, 4 phases per intent. ~1hr total.</td></tr>
+          <tr><td><strong>Signal Discovery (2nd)</strong></td><td>HH:30 (staggered)</td><td>Offset to avoid resource contention.</td></tr>
+          <tr><td><strong>IMAP Monitor</strong></td><td>Continuous (push)</td><td>Per-brand IMAP IDLE connections. Exponential backoff on disconnect.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- ===================== CRON SCHEDULE ===================== -->
-<div class="sec-title">⏰ Complete Cron Schedule</div>
-<div class="grid">
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              PYTHON SCRIPTS                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="python">
+  <h2><span class="emoji">🐍</span> Python Subprocesses — 12 Scripts</h2>
   <div class="card full">
-    <table>
-      <tr><th>Process</th><th>Schedule</th><th>File</th><th>Details</th></tr>
-      <tr><td>State machine tick</td><td>Every 1 min</td><td><code>stateMachine.ts</code></td><td>All active brands, 5 pipeline stages, stuck detector every 5 ticks</td></tr>
-      <tr><td>Enrichment worker</td><td>Every 1 min</td><td><code>enrichment/worker.ts</code></td><td>Per brand. Claims + enriches companies + contacts. Batch 3.</td></tr>
-      <tr><td>Send queue</td><td>Every 2 min (60s delay)</td><td><code>queue/sendProcessor.ts</code></td><td>5 per batch. Safety checks then Resend/SMTP.</td></tr>
-      <tr><td>Signal discovery</td><td>On boot + HH:00</td><td><code>discovery/signals/engine.ts</code></td><td>All brands, 3 concurrency, 4 phases per intent</td></tr>
-      <tr><td>Signal discovery (2nd)</td><td>HH:30 (offset)</td><td><code>discovery/signals/engine.ts</code></td><td>Staggered to avoid resource contention</td></tr>
-      <tr><td>IMAP monitor</td><td>Continuous IDLE</td><td><code>email/imap.ts</code></td><td>Per-brand, push-based, exponential backoff</td></tr>
-    </table>
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:0.75rem;">
+      The engine runs Python scripts as subprocesses (180s timeout) for web scraping, search, and enrichment tasks. They communicate via JSON over stdin/stdout.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Script</th><th>Lines</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>scrape_extract.py</code></td><td>309</td><td><strong>Main web enrichment:</strong> Crawl4AI scrape → NVIDIA LLM extraction → grounding verification → social scrape (Instagram, LinkedIn, FB, Twitter) → Bricks email find. 180s timeout.</td></tr>
+          <tr><td><code>search.py</code></td><td>268</td><td><strong>DuckDuckGo search:</strong> Rate-limited (3s delay) with SearXNG fallback. Filters 200+ non-company domains. Query sanitization.</td></tr>
+          <tr><td><code>search_maps.py</code></td><td>270</td><td><strong>OpenStreetMap search:</strong> Finds venues, community centres, event spaces via Overpass API.</td></tr>
+          <tr><td><code>search_hn.py</code></td><td>224</td><td><strong>HackerNews search:</strong> Algolia API for stories and comments.</td></tr>
+          <tr><td><code>search_ads.py</code></td><td>189</td><td><strong>Meta Ad Library:</strong> Finds companies running active Facebook/Instagram ad campaigns.</td></tr>
+          <tr><td><code>lib.py</code></td><td>182</td><td><strong>Shared library:</strong> <code>is_likely_company()</code> (domain blacklist), <code>verify_grounding()</code>, <code>compute_confidence_tier()</code>.</td></tr>
+          <tr><td><code>bricks/bricks.py</code></td><td>171</td><td><strong>Bricks email finder:</strong> Python dependency for discovering email addresses.</td></tr>
+          <tr><td><code>seed_extract.py</code></td><td>146</td><td><strong>Content seed extraction:</strong> Extracts leads and queries from scraped pages.</td></tr>
+          <tr><td><code>search_yc.py</code></td><td>133</td><td><strong>Y Combinator search:</strong> YC company directory lookup.</td></tr>
+          <tr><td><code>forge.py</code></td><td>62</td><td><strong>FORGE enrichment:</strong> Wraps the <code>forge enrich</code> CLI tool for company enrichment.</td></tr>
+          <tr><td><code>scrapling_search.py</code></td><td>59</td><td><strong>Scrapling DDG:</strong> Alternative DuckDuckGo search via Scrapling library.</td></tr>
+          <tr><td><code>searxng_search.py</code></td><td>47</td><td><strong>SearXNG search:</strong> Self-hosted meta-search engine wrapper.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- ===================== FIXES ===================== -->
-<div class="card full">
-  <h2>🔧 4 fixes deployed</h2>
-  <div style="font-size:0.8rem;">
-    <div class="step" style="border:none;padding:0.3rem 0;">
-      <span class="step-num green" style="width:20px;height:20px;font-size:0.6rem;">1</span>
-      <div class="step-body" style="font-size:0.75rem;">
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              SCORING SYSTEM                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="scoring">
+  <h2><span class="emoji">📊</span> Scoring — How Companies Are Prioritized</h2>
+  <div class="card full">
+    <p style="color:#475569;font-size:0.85rem;margin-bottom:0.75rem;">
+      Every discovered company gets a multi-dimensional score (0–100). Only companies scoring ≥ 65 proceed to contact discovery; ≥ 80 are high priority.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;">
+      <div style="background:#f8fafc;border-radius:0.5rem;padding:0.75rem;border:1px solid #e2e8f0;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:700;color:#2563eb;">30%</div>
+        <div style="font-size:0.75rem;color:#475569;">Pain Score</div>
+        <div style="font-size:0.65rem;color:#64748b;">Signal specificity, intensity, recurrence</div>
+      </div>
+      <div style="background:#f8fafc;border-radius:0.5rem;padding:0.75rem;border:1px solid #e2e8f0;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:700;color:#7c3aed;">25%</div>
+        <div style="font-size:0.75rem;color:#475569;">Urgency Score</div>
+        <div style="font-size:0.65rem;color:#64748b;">Time-bound language, deadlines, competitive pressure</div>
+      </div>
+      <div style="background:#f8fafc;border-radius:0.5rem;padding:0.75rem;border:1px solid #e2e8f0;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:700;color:#059669;">20%</div>
+        <div style="font-size:0.75rem;color:#475569;">Budget Score</div>
+        <div style="font-size:0.65rem;color:#64748b;">Funding mentions, hiring patterns, company size</div>
+      </div>
+      <div style="background:#f8fafc;border-radius:0.5rem;padding:0.75rem;border:1px solid #e2e8f0;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:700;color:#d97706;">15%</div>
+        <div style="font-size:0.75rem;color:#475569;">Technical Fit</div>
+        <div style="font-size:0.65rem;color:#64748b;">Tech stack, integration complexity, legacy systems</div>
+      </div>
+      <div style="background:#f8fafc;border-radius:0.5rem;padding:0.75rem;border:1px solid #e2e8f0;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:700;color:#0891b2;">10%</div>
+        <div style="font-size:0.75rem;color:#475569;">Automation Fit</div>
+        <div style="font-size:0.65rem;color:#64748b;">Repetitive processes, manual workflows, scalability needs</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--              DEPLOYED FIXES                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="emoji">🔧</span> Deployed Fixes</h2>
+  <div class="card full">
+    <div class="step-item">
+      <span class="step-num green" style="width:1.4rem;height:1.4rem;font-size:0.65rem;">1</span>
+      <div class="step-body">
         <strong>OpenAI max_retries=0</strong>
-        <p><code>scrape_extract.py:60</code> — Internal retries (default 2) × our 3 = 90s per attempt. Now exactly 30s.</p>
+        <p>Internal retries (default 2) × our 3 = 90s per attempt. Now exactly 30s. <code>scrape_extract.py:60</code></p>
       </div>
     </div>
-    <div class="step" style="border:none;padding:0.3rem 0;">
-      <span class="step-num green" style="width:20px;height:20px;font-size:0.6rem;">2</span>
-      <div class="step-body" style="font-size:0.75rem;">
+    <div class="step-item">
+      <span class="step-num green" style="width:1.4rem;height:1.4rem;font-size:0.65rem;">2</span>
+      <div class="step-body">
         <strong>LLM timeout 30s → 45s</strong>
-        <p><code>scrape_extract.py:60</code> — More headroom for NVIDIA API cold starts.</p>
+        <p>More headroom for NVIDIA API cold starts. <code>scrape_extract.py:60</code></p>
       </div>
     </div>
-    <div class="step" style="border:none;padding:0.3rem 0;">
-      <span class="step-num green" style="width:20px;height:20px;font-size:0.6rem;">3</span>
-      <div class="step-body" style="font-size:0.75rem;">
+    <div class="step-item">
+      <span class="step-num green" style="width:1.4rem;height:1.4rem;font-size:0.65rem;">3</span>
+      <div class="step-body">
         <strong>Exec timeout 120s → 180s</strong>
-        <p><code>toolRegistry.ts:18</code> — 3 attempts × 45s + crawl + sleeps = ~155s. Old 120s killed mid-retry.</p>
+        <p>3 attempts × 45s + crawl + sleeps = ~155s. Old 120s killed mid-retry. <code>toolRegistry.ts:18</code></p>
       </div>
     </div>
-    <div class="step" style="border:none;padding:0.3rem 0;">
-      <span class="step-num green" style="width:20px;height:20px;font-size:0.6rem;">4</span>
-      <div class="step-body" style="font-size:0.75rem;">
+    <div class="step-item">
+      <span class="step-num green" style="width:1.4rem;height:1.4rem;font-size:0.65rem;">4</span>
+      <div class="step-body">
         <strong>mergeCompanyData always-keep</strong>
-        <p><code>workerTools.ts:31</code> — uniqueDomains stripped www., upsert silently failed. Now keeps regardless.</p>
+        <p>uniqueDomains stripped www., upsert silently failed. Now keeps regardless. <code>workerTools.ts:31</code></p>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<div class="footer">
-  Outbound Engine · v2.0.0 · Ubuntu 129.154.254.115 · PM2 pid 467516 · Node 20.20.2 · Supabase xtobbvffaxoiadserkbb (Mumbai) · Ollama/Groq/OpenAI · Resend · SMTP · Python subprocess · June 2026
-</div>
+</div><!-- /container -->
 
-</div>
+<footer class="footer">
+  Outbound Engine v2.0.0 · Ubuntu 129.154.254.115 · PM2 · Node 20 · Supabase xtobbvffaxoiadserkbb (Mumbai) · Ollama / Groq / OpenAI / Anthropic / Cloudflare · Resend · SMTP · Python subprocesses · June 2026
+</footer>
 
 <script>
-function toggleDetail(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.toggle('open');
-}
+document.querySelectorAll('.dt').forEach(el => {
+  el.addEventListener('click', () => {
+    const target = document.getElementById(el.dataset.target);
+    if (target) { target.classList.toggle('open'); el.classList.toggle('open'); }
+  });
+});
 </script>
+
 </body>
 </html>
