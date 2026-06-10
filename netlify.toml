@@ -4,6 +4,16 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/architecture"
+  to = "/system-architecture.html"
+  status = 200
+
+[[redirects]]
+  from = "/system-architecture"
+  to = "/system-architecture.html"
+  status = 200
+
+[[redirects]]
   from = "/system-architecture.html"
   to = "/system-architecture.html"
   status = 200
