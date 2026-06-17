@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     if ((path === "/overview" || path === "/overview/") && req.method === "GET") {
       const { data: brandProfiles } = await supabase
         .from("brand_profiles")
-        .select("*")
+        .select("id, is_active, discovery_enabled, outbound_enabled, brand_name, product, discovery_daily_limit, daily_send_limit, hourly_send_limit, is_paused, deliverability_score, last_discovery_date")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
 
       const { data: systemFlags } = await supabase
         .from("system_flags")
-        .select("*")
+        .select("automation_enabled, send_enabled, imap_enabled, discovery_enabled, discovery_circuit_breaker, enrichment_circuit_breaker, send_circuit_breaker, reply_circuit_breaker")
         .eq("client_id", clientId)
         .maybeSingle();
       const flags = systemFlags || {};
@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
       // ── Activity Feed ──
       const { data: activities } = await supabase
         .from("activity_logs")
-        .select("*")
+        .select("id, client_id, brand_id, activity_type, description, entity_type, entity_id, metadata, created_at")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -286,13 +286,14 @@ Deno.serve(async (req) => {
 
       const { data: blacklisted } = await supabase
         .from("blacklist")
-        .select("id", { count: "exact" });
+        .select("id", { count: "exact" })
+        .eq("client_id", clientId);
       const blacklistCount = blacklisted?.length || 0;
 
       // ── Sending Domains ──
       const { data: sendDomains } = await supabase
         .from("sending_domains")
-        .select("*")
+        .select("domain, daily_limit, sent_today, is_active, bounce_count, total_sent, disabled_reason, verified, dns_verified")
         .in("brand_id", brandIds);
       const sdArr = sendDomains || [];
       const sendingDomainHealth = sdArr.map((sd) => ({
@@ -326,7 +327,7 @@ Deno.serve(async (req) => {
       // ── Campaign Analytics ──
       const { data: campaignAnalytics } = await supabase
         .from("campaign_analytics")
-        .select("*")
+        .select("campaign_name, sent_count, delivered_count, opened_count, replied_count, bounced_count, date, brand_id")
         .in("brand_id", brandIds)
         .gte("date", sevenDaysAgo.split("T")[0]);
 
@@ -343,7 +344,7 @@ Deno.serve(async (req) => {
       // ── Discovery Metrics ──
       const { data: discMetrics } = await supabase
         .from("discovery_metrics")
-        .select("*")
+        .select("id, executed_at, success, companies_discovered, contacts_discovered, brand_id")
         .gte("executed_at", sevenDaysAgo)
         .order("executed_at", { ascending: false });
 
@@ -369,7 +370,7 @@ Deno.serve(async (req) => {
       // ── Circuit Breaker States ──
       const { data: cbStates } = await supabase
         .from("circuit_breaker_state")
-        .select("*")
+        .select("entity_type, state, failure_count, last_failure_reason, reset_at")
         .eq("client_id", clientId);
 
       const cbArr = cbStates || [];
@@ -593,7 +594,7 @@ Deno.serve(async (req) => {
 
       const { data: brand } = await supabase
         .from("brand_profiles")
-        .select("*")
+        .select("id, brand_name, product, discovery_enabled, outbound_enabled, is_paused")
         .eq("id", brandId)
         .eq("client_id", clientId)
         .single();
@@ -630,7 +631,7 @@ Deno.serve(async (req) => {
         .from("brand_profiles")
         .update(updates)
         .eq("id", brandId)
-        .select()
+        .select("id, brand_name, product, discovery_enabled, outbound_enabled, is_paused, execution_state, updated_at")
         .single();
 
       if (error) {

@@ -33,7 +33,7 @@ Deno.serve(async (req)=>{
     const { supabase, member, clientId } = auth;
     if (path === "/flags" || path === "/flags/") {
       if (req.method === "GET") {
-        const { data } = await supabase.from("system_flags").select("*").eq("client_id", clientId);
+        const { data } = await supabase.from("system_flags").select("client_id, key, value, automation_enabled, send_enabled, imap_enabled, discovery_enabled, discovery_circuit_breaker, enrichment_circuit_breaker, send_circuit_breaker, reply_circuit_breaker").eq("client_id", clientId).maybeSingle();
         return new Response(JSON.stringify(data), {
           status: 200,
           headers: {

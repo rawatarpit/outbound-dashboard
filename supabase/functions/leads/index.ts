@@ -30,7 +30,7 @@ Deno.serve(async (req)=>{
         const offset = (page - 1) * limit;
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        let query = supabase.from("leads").select("*", {
+        let query = supabase.from("leads").select("id, brand_id, client_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at, contacted_at, last_outcome_at, reply_count, bounce_count", {
           count: "exact"
         }).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
@@ -87,7 +87,7 @@ Deno.serve(async (req)=>{
           ...body,
           client_id: clientId,
           brand_id: brandId
-        }).select().single();
+        }).select("id, brand_id, client_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
@@ -116,7 +116,7 @@ Deno.serve(async (req)=>{
           client_id: clientId,
           source: "import"
         }));
-      const { data, error } = await supabase.from("leads").insert(inserts).select();
+      const { data, error } = await supabase.from("leads").insert(inserts).select("id, brand_id, client_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at");
       if (error) {
         return new Response(JSON.stringify({
           error: error.message
@@ -145,7 +145,7 @@ Deno.serve(async (req)=>{
       if (req.method === "GET") {
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        const { data, error } = await supabase.from("leads").select("*").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
+        const { data, error } = await supabase.from("leads").select("id, brand_id, client_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at, contacted_at, last_outcome_at, reply_count, bounce_count, notes, custom_fields").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ]).single();
         if (error) {
@@ -173,7 +173,7 @@ Deno.serve(async (req)=>{
         const brandIdList = brandIds?.map((b)=>b.id) || [];
         const { data, error } = await supabase.from("leads").update(body).eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
-        ]).select().single();
+        ]).select("id, brand_id, client_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at, contacted_at").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message

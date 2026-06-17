@@ -82,7 +82,7 @@ Deno.serve(async (req)=>{
       slug: `${clientSlug}-${Date.now()}`,
       owner_email: email,
       owner_name: name || email.split("@")[0]
-    }).select().single();
+    }).select("id").single();
     if (clientError) {
       console.log("Client error:", clientError.message);
       return new Response(JSON.stringify({

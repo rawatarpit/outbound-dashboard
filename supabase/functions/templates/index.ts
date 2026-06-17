@@ -21,7 +21,7 @@ Deno.serve(async (req)=>{
     const path = url.pathname.replace("/templates", "");
     if (path === "/" || path === "") {
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("email_templates").select("*").eq("client_id", clientId).order("created_at", {
+        const { data, error } = await supabase.from("email_templates").select("id, client_id, name, subject, category, is_active, created_at, updated_at").eq("client_id", clientId).order("created_at", {
           ascending: false
         });
         if (error) return new Response(JSON.stringify({
@@ -46,7 +46,7 @@ Deno.serve(async (req)=>{
         const { data, error } = await supabase.from("email_templates").insert({
           ...body,
           client_id: clientId
-        }).select().single();
+        }).select("id, client_id, name, subject, category, is_active, created_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -69,7 +69,7 @@ Deno.serve(async (req)=>{
     if (idMatch) {
       const id = idMatch[1];
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("email_templates").select("*").eq("id", id).eq("client_id", clientId).single();
+        const { data, error } = await supabase.from("email_templates").select("id, client_id, name, subject, body, category, variables, is_active, created_at, updated_at").eq("id", id).eq("client_id", clientId).single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -89,7 +89,7 @@ Deno.serve(async (req)=>{
       }
       if (req.method === "PATCH") {
         const body = await req.json();
-        const { data, error } = await supabase.from("email_templates").update(body).eq("id", id).eq("client_id", clientId).select().single();
+        const { data, error } = await supabase.from("email_templates").update(body).eq("id", id).eq("client_id", clientId).select("id, client_id, name, subject, category, is_active, updated_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {

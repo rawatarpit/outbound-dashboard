@@ -24,7 +24,7 @@ Deno.serve(async (req)=>{
     // GET /workers/status - Get worker status
     if (path === "/status" || path === "/status/") {
       if (req.method === "GET") {
-        const { data: brandProfiles } = await supabase.from("brand_profiles").select("id, brand_name, product, discovery_enabled, outbound_enabled").eq("client_id", clientId);
+        const { data: brandProfiles } = await supabase.from("brand_profiles").select("id, brand_name, product, discovery_enabled, outbound_enabled, last_discovery_date").eq("client_id", clientId);
         const workers = (brandProfiles || []).map((brand)=>({
             brand_id: brand.id,
             brand_name: brand.brand_name || brand.product,

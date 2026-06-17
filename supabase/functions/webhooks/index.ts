@@ -21,7 +21,7 @@ Deno.serve(async (req)=>{
     const path = url.pathname.replace("/webhooks", "");
     if (path === "/" || path === "") {
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("client_webhooks").select("*").eq("client_id", clientId);
+        const { data, error } = await supabase.from("client_webhooks").select("id, client_id, name, url, events, is_active, created_at, last_triggered_at").eq("client_id", clientId);
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -44,7 +44,7 @@ Deno.serve(async (req)=>{
         const { data, error } = await supabase.from("client_webhooks").insert({
           ...body,
           client_id: clientId
-        }).select().single();
+        }).select("id, client_id, name, url, secret, events, is_active, created_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -67,7 +67,7 @@ Deno.serve(async (req)=>{
     if (idMatch) {
       const id = idMatch[1];
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("client_webhooks").select("*").eq("id", id).single();
+        const { data, error } = await supabase.from("client_webhooks").select("id, client_id, name, url, secret, events, is_active, created_at, updated_at, last_triggered_at").eq("id", id).single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -87,7 +87,7 @@ Deno.serve(async (req)=>{
       }
       if (req.method === "PATCH") {
         const body = await req.json();
-        const { data, error } = await supabase.from("client_webhooks").update(body).eq("id", id).select().single();
+        const { data, error } = await supabase.from("client_webhooks").update(body).eq("id", id).select("id, client_id, name, url, events, is_active, updated_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -129,7 +129,7 @@ Deno.serve(async (req)=>{
     }
     if (path.match(/^\/([^/]+)\/test$/) && req.method === "POST") {
       const id = path.match(/^\/([^/]+)\/test$/)[1];
-      const { data: webhook, error: webhookError } = await supabase.from("client_webhooks").select("*").eq("id", id).eq("client_id", clientId).single();
+      const { data: webhook, error: webhookError } = await supabase.from("client_webhooks").select("id, client_id, name, url, secret, events, is_active").eq("id", id).eq("client_id", clientId).single();
       if (webhookError || !webhook) {
         return new Response(JSON.stringify({
           error: "Webhook not found"

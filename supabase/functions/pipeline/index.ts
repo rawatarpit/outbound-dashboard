@@ -69,7 +69,7 @@ Deno.serve(async (req)=>{
           const limit = parseInt(url.searchParams.get("limit") || "50");
           const offset = (page - 1) * limit;
           const status = url.searchParams.get("status");
-          let query = supabase.from("companies").select("*", { count: "exact" }).in("brand_id", brandIds).range(offset, offset + limit - 1).order("created_at", { ascending: false });
+          let query = supabase.from("companies").select("id, brand_id, name, domain, website, status, industry, estimated_value, deal_value, source, created_at, updated_at, owner_name, owner_title, owner_linkedin", { count: "exact" }).in("brand_id", brandIds).range(offset, offset + limit - 1).order("created_at", { ascending: false });
           if (status) query = query.eq("status", status);
           const { data: companies, error, count } = await query;
           if (error) {
@@ -87,7 +87,7 @@ Deno.serve(async (req)=>{
       if (path.match(/^\/companies\/([^/]+)/)) {
         const companyId = path.match(/^\/companies\/([^/]+)/)![1];
         if (req.method === "GET") {
-          const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
+          const { data, error } = await supabase.from("companies").select("id, brand_id, name, domain, website, status, industry, estimated_value, deal_value, source, created_at, updated_at, owner_name, owner_title, owner_linkedin, company_size, revenue_range, location, notes, pain_points, buying_signals").eq("id", companyId).single();
           if (error || !data) {
             return new Response(JSON.stringify({ error: "Company not found" }), {
               status: 404,
@@ -124,7 +124,7 @@ Deno.serve(async (req)=>{
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "50");
         const offset = (page - 1) * limit;
-        let query = supabase.from("companies").select("*", {
+        let query = supabase.from("companies").select("id, brand_id, name, domain, website, status, industry, estimated_value, deal_value, source, created_at, updated_at, owner_name, owner_title, owner_linkedin", {
           count: "exact"
         }).eq("brand_id", brandId).range(offset, offset + limit - 1).order("created_at", {
           ascending: false
@@ -164,7 +164,7 @@ Deno.serve(async (req)=>{
       const companyPath = remainingPath.replace(/^\/[^/]+/, "");
       if (companyPath === "" || companyPath === "/") {
         if (req.method === "GET") {
-          const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).eq("brand_id", brandId).single();
+          const { data, error } = await supabase.from("companies").select("id, brand_id, name, domain, website, status, industry, estimated_value, deal_value, source, created_at, updated_at, owner_name, owner_title, owner_linkedin, company_size, revenue_range, location, notes, pain_points, buying_signals").eq("id", companyId).eq("brand_id", brandId).single();
           if (error) {
             return new Response(JSON.stringify({
               error: "Company not found"
@@ -226,7 +226,7 @@ Deno.serve(async (req)=>{
           const { data, error } = await supabase.from("companies").update({
             ...body,
             updated_at: new Date().toISOString()
-          }).eq("id", companyId).eq("brand_id", brandId).select().single();
+          }).eq("id", companyId).eq("brand_id", brandId).select("id, brand_id, name, domain, status, industry, estimated_value, deal_value, created_at, updated_at").single();
           if (error) {
             return new Response(JSON.stringify({
               error: error.message
@@ -252,7 +252,7 @@ Deno.serve(async (req)=>{
       }
       if (companyPath === "/outreach" || companyPath === "/outreach/") {
         if (req.method === "GET") {
-          const { data, error } = await supabase.from("outreach").select("*").eq("company_id", companyId).eq("brand_id", brandId).order("created_at", {
+          const { data, error } = await supabase.from("outreach").select("id, brand_id, company_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at, opened_at, clicked_at, replied_at, bounced_at").eq("company_id", companyId).eq("brand_id", brandId).order("created_at", {
             ascending: false
           });
           if (error) {

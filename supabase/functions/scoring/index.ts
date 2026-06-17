@@ -37,7 +37,7 @@ Deno.serve(async (req)=>{
           scoring_config: scoring_config || {},
           is_active: false,
           brand_id: brand?.id || null
-        }).select().single();
+        }).select("id, product, version_name, scoring_config, is_active, brand_id, created_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -95,7 +95,7 @@ Deno.serve(async (req)=>{
     const activeMatch = path.match(/^\/active\/(.+)$/);
     if (activeMatch && req.method === "GET") {
       const product = activeMatch[1].toLowerCase();
-      const { data, error } = await supabase.from("scoring_versions").select("*").eq("product", product).eq("is_active", true).maybeSingle();
+      const { data, error } = await supabase.from("scoring_versions").select("id, product, version_name, scoring_config, is_active, brand_id, created_at").eq("product", product).eq("is_active", true).maybeSingle();
       if (!data) return new Response(JSON.stringify({
         error: "No active version"
       }), {
@@ -115,7 +115,7 @@ Deno.serve(async (req)=>{
     }
     if (path.match(/^\/[^/]+$/) && req.method === "GET") {
       const product = path.slice(1).toLowerCase();
-      const { data } = await supabase.from("scoring_versions").select("*").eq("product", product).order("created_at", {
+      const { data } = await supabase.from("scoring_versions").select("id, product, version_name, scoring_config, is_active, brand_id, created_at").eq("product", product).order("created_at", {
         ascending: false
       });
       return new Response(JSON.stringify(data), {

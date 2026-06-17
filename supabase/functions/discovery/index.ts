@@ -39,7 +39,7 @@ Deno.serve(async (req)=>{
       const remainingPath = path.replace(/^\/[^/]+/, "");
       if (remainingPath === "" || remainingPath === "/") {
         if (req.method === "GET") {
-          const { data, error } = await supabase.from("brand_discovery_sources").select("*").eq("brand_id", brandId).order("created_at", {
+          const { data, error } = await supabase.from("brand_discovery_sources").select("id, brand_id, client_id, name, source_type, config, is_active, created_at, updated_at, last_run_at").eq("brand_id", brandId).order("created_at", {
             ascending: false
           });
           if (error) {
@@ -69,7 +69,7 @@ Deno.serve(async (req)=>{
             ...body,
             brand_id: brandId,
             client_id: clientId
-          }).select().single();
+          }).select("id, brand_id, client_id, name, source_type, config, is_active, created_at").single();
           if (error) {
             return new Response(JSON.stringify({
               error: error.message
@@ -97,7 +97,7 @@ Deno.serve(async (req)=>{
       if (sourceIdMatch) {
         const sourceId = sourceIdMatch[1];
         if (req.method === "GET") {
-          const { data, error } = await supabase.from("brand_discovery_sources").select("*").eq("id", sourceId).eq("brand_id", brandId).single();
+          const { data, error } = await supabase.from("brand_discovery_sources").select("id, brand_id, client_id, name, source_type, config, is_active, created_at, updated_at, last_run_at").eq("id", sourceId).eq("brand_id", brandId).single();
           if (error) {
             return new Response(JSON.stringify({
               error: "Source not found"
@@ -119,7 +119,7 @@ Deno.serve(async (req)=>{
         }
         if (req.method === "PATCH" || req.method === "PUT") {
           const body = await req.json();
-          const { data, error } = await supabase.from("brand_discovery_sources").update(body).eq("id", sourceId).eq("brand_id", brandId).select().single();
+          const { data, error } = await supabase.from("brand_discovery_sources").update(body).eq("id", sourceId).eq("brand_id", brandId).select("id, brand_id, client_id, name, source_type, config, is_active, created_at, updated_at").single();
           if (error) {
             return new Response(JSON.stringify({
               error: error.message
@@ -205,7 +205,7 @@ Deno.serve(async (req)=>{
         });
       }
       if (remainingPath === "/companies" && req.method === "GET") {
-        const { data, error } = await supabase.from("discovered_companies").select("*").eq("brand_id", brandId).order("created_at", {
+        const { data, error } = await supabase.from("discovered_companies").select("id, brand_id, name, domain, website, enrichment_status, source, composite_score, confidence, relevance_score, intent_score, risk, signal_type, rejection_reason, created_at, enrichment_attempts").eq("brand_id", brandId).order("created_at", {
           ascending: false
         }).limit(100);
         if (error) {
@@ -230,7 +230,7 @@ Deno.serve(async (req)=>{
         });
       }
       if (remainingPath === "/contacts" && req.method === "GET") {
-        const { data, error } = await supabase.from("discovered_contacts").select("*").eq("brand_id", brandId).order("created_at", {
+        const { data, error } = await supabase.from("discovered_contacts").select("id, brand_id, company_id, full_name, email, phone, job_title, linkedin_url, source, enrichment_status, created_at").eq("brand_id", brandId).order("created_at", {
           ascending: false
         }).limit(100);
         if (error) {

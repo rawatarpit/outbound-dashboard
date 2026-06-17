@@ -62,8 +62,8 @@ Deno.serve(async (req)=>{
     const url = new URL(req.url);
     const path = url.pathname.replace("/settings", "");
     if ((path === "/" || path === "") && req.method === "GET") {
-      const { data: settings } = await supabase.from("client_settings").select("*").eq("client_id", member.client_id).maybeSingle();
-      return new Response(JSON.stringify(settings || {
+        const { data: settings } = await supabase.from("client_settings").select("client_id, llm_provider, llm_model, llm_api_key, smtp_host, smtp_port, smtp_secure, smtp_email, smtp_password, smtp_from_name, smtp_from_email, imap_host, imap_port, imap_secure, imap_email, imap_password, email_provider, provider_api_key, sending_domain, imap_enabled, created_at, updated_at").eq("client_id", member.client_id).maybeSingle();
+        return new Response(JSON.stringify(settings || {
         llm_provider: "ollama",
         llm_model: "llama3:8b"
       }), {
@@ -80,7 +80,7 @@ Deno.serve(async (req)=>{
         client_id: member.client_id,
         ...body,
         updated_at: new Date().toISOString()
-      }).select().single();
+      }).select("client_id, llm_provider, llm_model, smtp_host, smtp_port, smtp_secure, smtp_email, smtp_from_name, smtp_from_email, imap_host, imap_port, imap_secure, imap_email, email_provider, provider_api_key, sending_domain, imap_enabled, created_at, updated_at").single();
       if (error) {
         return new Response(JSON.stringify({
           error: error.message
@@ -140,7 +140,7 @@ Deno.serve(async (req)=>{
     }
     if (path === "/llm" || path === "/llm/") {
       if (req.method === "GET") {
-        const { data: settings } = await supabase.from("client_settings").select("*").eq("client_id", member.client_id).maybeSingle();
+      const { data: settings } = await supabase.from("client_settings").select("client_id, llm_provider, llm_model, llm_api_key, created_at, updated_at").eq("client_id", member.client_id).maybeSingle();
         return new Response(JSON.stringify(settings || {
           llm_provider: "ollama",
           llm_model: "llama3:8b"
@@ -157,7 +157,7 @@ Deno.serve(async (req)=>{
         const { data, error } = await supabase.from("client_settings").upsert({
           client_id: member.client_id,
           ...body
-        }).select().single();
+        }).select("client_id, llm_provider, llm_model, created_at, updated_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -231,7 +231,7 @@ Deno.serve(async (req)=>{
           client_id: member.client_id,
           ...filteredBody,
           updated_at: new Date().toISOString()
-        }).select().single();
+        }).select("client_id, smtp_host, smtp_port, smtp_secure, smtp_email, smtp_from_name, smtp_from_email, imap_host, imap_port, imap_secure, imap_email, email_provider, provider_api_key, sending_domain, imap_enabled, updated_at").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message

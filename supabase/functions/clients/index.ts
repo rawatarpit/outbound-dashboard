@@ -29,7 +29,7 @@ Deno.serve(async (req)=>{
     const path = url.pathname.replace("/clients", "");
     if (path === "/" || path === "") {
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("clients").select("*").eq("id", authContext.clientId).single();
+        const { data, error } = await supabase.from("clients").select("id, name, slug, owner_email, owner_name, created_at, updated_at, settings, onboarding_completed, stripe_customer_id, plan_type").eq("id", authContext.clientId).single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
@@ -68,7 +68,7 @@ Deno.serve(async (req)=>{
           slug: `${clientSlug}-${Date.now()}`,
           owner_email: authContext.email,
           owner_name: body.owner_name || authContext.email.split("@")[0]
-        }).select().single();
+        }).select("id, name, slug, owner_email, owner_name, created_at, updated_at, settings").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
@@ -109,7 +109,7 @@ Deno.serve(async (req)=>{
             }
           });
         }
-        const { data, error } = await supabase.from("clients").select("*").eq("id", id).single();
+        const { data, error } = await supabase.from("clients").select("id, name, slug, owner_email, owner_name, created_at, updated_at, settings, onboarding_completed, stripe_customer_id, plan_type").eq("id", id).single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
@@ -142,7 +142,7 @@ Deno.serve(async (req)=>{
           });
         }
         const body = await req.json();
-        const { data, error } = await supabase.from("clients").update(body).eq("id", id).select().single();
+        const { data, error } = await supabase.from("clients").update(body).eq("id", id).select("id, name, slug, owner_email, owner_name, created_at, updated_at, settings").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message

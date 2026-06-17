@@ -91,7 +91,7 @@ Deno.serve(async (req)=>{
         slug: `${clientSlug}-${Date.now()}`,
         owner_email: email,
         owner_name: name || email.split("@")[0]
-      }).select().single();
+      }).select("id").single();
       if (clientError) {
         return new Response(JSON.stringify({
           error: "Failed to create client: " + clientError.message

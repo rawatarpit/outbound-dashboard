@@ -40,7 +40,7 @@ Deno.serve(async (req)=>{
         }
         // Get outreach with company data via join
         const { data, error } = await supabase.from("outreach").select(`
-          *,
+          id, brand_id, company_id, client_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at, opened_at, clicked_at, replied_at, bounced_at, tracking_id, campaign_name,
           companies:company_id (id, name, domain)
         `).in("brand_id", brandIdList).order("created_at", {
           ascending: false
@@ -76,7 +76,7 @@ Deno.serve(async (req)=>{
           ...body,
           brand_id: body.brand_id || brandIdList[0],
           client_id: clientId
-        }).select().single();
+        }).select("id, brand_id, company_id, client_id, status, subject, created_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -101,7 +101,7 @@ Deno.serve(async (req)=>{
       if (req.method === "GET") {
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        const { data, error } = await supabase.from("outreach").select("*").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
+        const { data, error } = await supabase.from("outreach").select("id, brand_id, company_id, client_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at, opened_at, clicked_at, replied_at, bounced_at, tracking_id, campaign_name").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ]).single();
         if (error) return new Response(JSON.stringify({
@@ -127,7 +127,7 @@ Deno.serve(async (req)=>{
         const brandIdList = brandIds?.map((b)=>b.id) || [];
         const { data, error } = await supabase.from("outreach").update(body).eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
-        ]).select().single();
+        ]).select("id, brand_id, company_id, client_id, status, subject, created_at, updated_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {

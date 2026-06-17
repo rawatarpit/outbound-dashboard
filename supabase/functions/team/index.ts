@@ -29,7 +29,7 @@ Deno.serve(async (req)=>{
     const path = url.pathname.replace("/team", "");
     if (path === "/" || path === "") {
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("client_members").select("*").eq("client_id", clientId);
+        const { data, error } = await supabase.from("client_members").select("id, client_id, email, name, role, is_active, last_login_at, created_at, updated_at, user_id").eq("client_id", clientId);
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {
@@ -54,7 +54,7 @@ Deno.serve(async (req)=>{
         client_id: clientId,
         email,
         role: role || "member"
-      }).select().single();
+      }).select("id, client_id, email, name, role, is_active, created_at").single();
       if (error) return new Response(JSON.stringify({
         error: error.message
       }), {
@@ -80,7 +80,7 @@ Deno.serve(async (req)=>{
       const id = idMatch[1];
       if (req.method === "PATCH") {
         const body = await req.json();
-        const { data, error } = await supabase.from("client_members").update(body).eq("id", id).select().single();
+        const { data, error } = await supabase.from("client_members").update(body).eq("id", id).select("id, client_id, email, name, role, is_active, updated_at").single();
         if (error) return new Response(JSON.stringify({
           error: error.message
         }), {

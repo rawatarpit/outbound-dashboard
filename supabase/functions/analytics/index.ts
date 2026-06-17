@@ -135,7 +135,7 @@ Deno.serve(async (req)=>{
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
         const status = url.searchParams.get("status");
-        let query = supabase.from("leads").select("*").in("brand_id", brandIdList.length > 0 ? brandIdList : [
+        let query = supabase.from("leads").select("id, brand_id, status, full_name, email, phone, domain, company_name, lead_score, deal_value, source, created_at, contacted_at, reply_count, bounce_count").in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ]).order("created_at", {
           ascending: false
@@ -164,7 +164,7 @@ Deno.serve(async (req)=>{
       if (req.method === "GET") {
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        const { data, error } = await supabase.from("outreach").select("*").in("brand_id", brandIdList.length > 0 ? brandIdList : [
+        const { data, error } = await supabase.from("outreach").select("id, brand_id, company_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at").in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ]).order("created_at", {
           ascending: false

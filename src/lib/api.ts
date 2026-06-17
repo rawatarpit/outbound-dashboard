@@ -363,6 +363,7 @@ export const messagesAPI = {
     if (options.clientId) params['client_id'] = `eq.${options.clientId}`
     if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
     if (options.leadId) params['lead_id'] = `eq.${options.leadId}`
+    params['select'] = 'id,brand_id,lead_id,status,subject,to_email,from_email,created_at,sent_at,opened_at,bounced_at'
     return fetchAPI('sent_messages', { params })
   }
 }
@@ -576,6 +577,7 @@ export const analyticsAPI = {
     const params: Record<string, string> = {}
     if (clientId) params['client_id'] = `eq.${clientId}`
     if (brandId) params['brand_id'] = `eq.${brandId}`
+    params['select'] = 'id,brand_id,lead_id,status,subject,to_email,from_email,created_at,sent_at,opened_at,bounced_at'
     return fetchAPI('sent_messages', { params })
   }
 }
@@ -587,6 +589,7 @@ export const activityAPI = {
   list: async (clientId?: string, limit = 10): Promise<{ data: ActivityLog[], error: any }> => {
     const params: Record<string, string> = { 'order': 'created_at.desc', 'limit': limit.toString() }
     if (clientId) params['client_id'] = `eq.${clientId}`
+    params['select'] = 'id,client_id,brand_id,activity_type,description,company_id,lead_id,user_id,created_at'
     return fetchAPI('activity_logs', { params })
   }
 }
@@ -752,6 +755,7 @@ export const importBatchesAPI = {
 export const brandIntentsAPI = {
   list: async (brandId: string): Promise<{ data: BrandIntent[], error: any }> => {
     const params: Record<string, string> = { 'brand_id': `eq.${brandId}`, 'order': 'priority.asc' }
+    params['select'] = 'id,brand_id,intent,priority,is_active,created_at'
     return fetchAPI('brand_intents', { params })
   },
 
@@ -798,6 +802,7 @@ export const discoveredCompaniesAPI = {
     if (options.search) params['name'] = `ilike.*${options.search}*`
     params['limit'] = String(options.perPage || 50)
     params['offset'] = String(((options.page || 1) - 1) * (options.perPage || 50))
+    params['select'] = 'id,brand_id,name,domain,website,enrichment_status,source_name,source_id,signal_type,relevance_score,confidence,intent_score,risk,discovered_at'
     const result = await fetchAPI('discovered_companies', { params, count: true })
     return {
       data: result.data as DiscoveredCompany[],
@@ -808,6 +813,7 @@ export const discoveredCompaniesAPI = {
 
   get: async (id: string): Promise<{ data: DiscoveredCompany | null, error: any }> => {
     const params: Record<string, string> = { 'id': `eq.${id}` }
+    params['select'] = 'id,brand_id,name,domain,website,enrichment_status,source_name,source_id,signal_type,relevance_score,confidence,intent_score,risk,discovered_at,summary,raw_payload,updated_at'
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: null, error }
     return { data: data[0] || null, error: null }
@@ -823,6 +829,7 @@ export const discoveredCompaniesAPI = {
 
   getSourceNames: async (_clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'source_name': 'not.is.null' }
+    params['select'] = 'source_name'
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
     const names = [...new Set(data.map((d: any) => d.source_name).filter(Boolean))] as string[]
@@ -831,6 +838,7 @@ export const discoveredCompaniesAPI = {
 
   getSignalTypes: async (_clientId?: string): Promise<{ data: string[], error: any }> => {
     const params: Record<string, string> = { 'signal_type': 'not.is.null' }
+    params['select'] = 'signal_type'
     const { data, error } = await fetchAPI('discovered_companies', { params })
     if (error) return { data: [], error }
     const types = [...new Set(data.map((d: any) => d.signal_type).filter(Boolean))] as string[]
