@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await authAPI.me()
       if (error) {
-        console.error('Error fetching client/member:', error)
+        console.error('Error fetching client/member:', error?.error || error?.message || JSON.stringify(error))
         return
       }
       if (data) {
