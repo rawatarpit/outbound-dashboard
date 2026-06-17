@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Client, ClientMember } from '@/lib/supabase'
-import { clientAPI } from '@/lib/api'
+import { authAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface AuthUser {
@@ -33,29 +33,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<ClientMember | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchClientAndMember = async (userId: string, clientId: string, storedToken: string) => {
+  const fetchClientAndMember = async () => {
     try {
-      const memberHeaders = {
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${storedToken}`,
-        'Content-Type': 'application/json',
+      const { data, error } = await authAPI.me()
+      if (error) {
+        console.error('Error fetching client/member:', error)
+        return
       }
-
-      const [memberRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/client_members?user_id=eq.${userId}&client_id=eq.${clientId}&limit=1`, { headers: memberHeaders }),
-      ])
-
-      const memberData = await memberRes.json()
-      if (memberData?.[0]) {
-        setMember(memberData[0])
-      }
-
-      const { data: clientData } = await clientAPI.get(clientId)
-      if (clientData) {
-        setClient(clientData)
+      if (data) {
+        setClient(data.client)
+        setMember(data.member)
       }
     } catch (error) {
-      console.error('Error fetching client:', error)
+      console.error('Error fetching client/member:', error)
     }
   }
 
@@ -68,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedUser = JSON.parse(storedUser)
         setToken(storedToken)
         setUser(parsedUser)
-        fetchClientAndMember(parsedUser.id, parsedUser.clientId, storedToken)
+        fetchClientAndMember()
       } catch {
         clearSession()
       }
@@ -112,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser)
     
     if (newUser.clientId) {
-      await fetchClientAndMember(newUser.id, newUser.clientId, newToken)
+      await fetchClientAndMember()
     }
     
     toast.success('Signed in successfully')
@@ -148,8 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshClient = async () => {
-    if (token && user?.id && user?.clientId) {
-      await fetchClientAndMember(user.id, user.clientId, token)
+    if (token) {
+      await fetchClientAndMember()
     }
   }
 

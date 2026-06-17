@@ -621,6 +621,15 @@ export const clientAPI = {
 }
 
 // ─────────────────────────────────────────────
+// Auth / Me (client + member)
+// ─────────────────────────────────────────────
+export const authAPI = {
+  me: async (): Promise<{ data: { client: Client; member: ClientMember } | null; error: any }> => {
+    return callEdgeFunction('me')
+  }
+}
+
+// ─────────────────────────────────────────────
 // Dashboard
 // ─────────────────────────────────────────────
 export const dashboardAPI = {
