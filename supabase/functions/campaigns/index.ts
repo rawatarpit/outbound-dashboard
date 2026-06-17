@@ -40,7 +40,7 @@ Deno.serve(async (req)=>{
         }
         // Get outreach with company data via join
         const { data, error } = await supabase.from("outreach").select(`
-          id, brand_id, company_id, client_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at, opened_at, clicked_at, replied_at, bounced_at, tracking_id, campaign_name,
+          id, brand_id, company_id, client_id, status, subject, body, sent_at, created_at, updated_at,
           companies:company_id (id, name, domain)
         `).in("brand_id", brandIdList).order("created_at", {
           ascending: false
@@ -101,7 +101,7 @@ Deno.serve(async (req)=>{
       if (req.method === "GET") {
         const { data: brandIds } = await supabase.from("brand_profiles").select("id").eq("client_id", clientId);
         const brandIdList = brandIds?.map((b)=>b.id) || [];
-        const { data, error } = await supabase.from("outreach").select("id, brand_id, company_id, client_id, status, subject, content, scheduled_at, sent_at, created_at, updated_at, opened_at, clicked_at, replied_at, bounced_at, tracking_id, campaign_name").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
+        const { data, error } = await supabase.from("outreach").select("id, brand_id, company_id, client_id, status, subject, body, sent_at, created_at, updated_at").eq("id", id).in("brand_id", brandIdList.length > 0 ? brandIdList : [
           "00000000-0000-0000-0000-000000000000"
         ]).single();
         if (error) return new Response(JSON.stringify({

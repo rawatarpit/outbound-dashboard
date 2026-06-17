@@ -745,7 +745,7 @@ export const campaignsAPI = {
 // ─────────────────────────────────────────────
 export const sidebarAPI = {
   counts: async (): Promise<{ data: { leads: number; pipeline: number; outreach: number } | null; error: any }> => {
-    return callEdgeFunction('sidebar/counts')
+    return callEdgeFunction('sidebar-counts')
   }
 }
 

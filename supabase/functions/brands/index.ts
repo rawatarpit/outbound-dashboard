@@ -23,7 +23,7 @@ Deno.serve(async (req)=>{
     const path = url.pathname.replace("/brands", "");
     if (path === "/" || path === "") {
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("brand_profiles").select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, status, transport_mode, provider, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score").eq("client_id", clientId).order("created_at", {
+        const { data, error } = await supabase.from("brand_profiles").select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, transport_mode, provider, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score").eq("client_id", clientId).order("created_at", {
           ascending: false
         });
         if (error) {
@@ -77,7 +77,7 @@ Deno.serve(async (req)=>{
           discovery_enabled: body.discovery_enabled ?? false,
           outbound_enabled: body.outbound_enabled ?? false,
           manual_discovery_requested: false
-        }).select("id, client_id, brand_name, product, target_audience, pain_points, industry, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, status, transport_mode, provider, provider_api_key, smtp_email, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score, content_gen_settings, execution_state").single();
+        }).select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, transport_mode, provider, provider_api_key, smtp_email, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
@@ -105,7 +105,7 @@ Deno.serve(async (req)=>{
     if (idMatch) {
       const id = idMatch[1];
       if (req.method === "GET") {
-        const { data, error } = await supabase.from("brand_profiles").select("id, client_id, brand_name, product, target_audience, pain_points, industry, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, status, transport_mode, provider, provider_api_key, smtp_email, smtp_host, smtp_port, smtp_password, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score, content_gen_settings, execution_state").eq("id", id).eq("client_id", clientId).single();
+        const { data, error } = await supabase.from("brand_profiles").select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, transport_mode, provider, provider_api_key, smtp_email, smtp_host, smtp_port, smtp_password, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score").eq("id", id).eq("client_id", clientId).single();
         if (error) {
           return new Response(JSON.stringify({
             error: "Brand not found"
@@ -128,20 +128,17 @@ Deno.serve(async (req)=>{
       if (req.method === "PATCH" || req.method === "PUT") {
         const body = await req.json();
         if (body.discovery_enabled !== undefined || body.outbound_enabled !== undefined) {
-          let { data: flags } = await supabase.from("system_flags").select("automation_enabled").eq("client_id", clientId).maybeSingle();
-          if (!flags) {
-            await supabase.from("system_flags").insert({
-              client_id: clientId,
-              automation_enabled: true,
-              send_enabled: true,
-              imap_enabled: false,
-              discovery_enabled: true
-            });
-            flags = {
-              automation_enabled: true
-            };
+          let { data: flag } = await supabase.from("system_flags").select("value").eq("key", "automation_enabled").eq("client_id", clientId).maybeSingle();
+          if (!flag) {
+            await supabase.from("system_flags").insert([
+              { client_id: clientId, key: "automation_enabled", value: "true" },
+              { client_id: clientId, key: "send_enabled", value: "true" },
+              { client_id: clientId, key: "imap_enabled", value: "false" },
+              { client_id: clientId, key: "discovery_enabled", value: "true" }
+            ]);
+            flag = { value: "true" };
           }
-          if (!flags?.automation_enabled && (body.discovery_enabled || body.outbound_enabled)) {
+          if (flag?.value === "false" && (body.discovery_enabled || body.outbound_enabled)) {
             return new Response(JSON.stringify({
               error: "Automation is disabled. Enable it in Settings > System Flags first."
             }), {
@@ -156,7 +153,7 @@ Deno.serve(async (req)=>{
         const { data, error } = await supabase.from("brand_profiles").update({
           ...body,
           updated_at: new Date().toISOString()
-        }).eq("id", id).eq("client_id", clientId).select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, status, transport_mode, provider, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score, execution_state").single();
+        }).eq("id", id).eq("client_id", clientId).select("id, client_id, brand_name, product, created_at, updated_at, is_active, is_paused, discovery_enabled, outbound_enabled, transport_mode, provider, sending_domain, daily_send_limit, hourly_send_limit, discovery_daily_limit, deliverability_score").single();
         if (error) {
           return new Response(JSON.stringify({
             error: error.message
