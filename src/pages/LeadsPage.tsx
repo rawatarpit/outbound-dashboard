@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { type Lead, type BrandProfile, LEAD_STATUSES } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
@@ -9,7 +9,7 @@ import Drawer from '@/components/Drawer'
 import LeadImportForm from '@/components/forms/LeadImportForm'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import { Users, Search, Upload, ChevronLeft, ChevronRight, Mail, ExternalLink, MoreHorizontal, Target, TrendingUp, Filter } from 'lucide-react'
+import { Users, Search, Upload, ChevronLeft, ChevronRight, Mail, ExternalLink, MoreHorizontal, Target, TrendingUp, Filter, MessageSquareText } from 'lucide-react'
 import { AnimatedCounter } from '@/components/DashboardComponents'
 import toast from 'react-hot-toast'
 import { formatRelativeTime, formatNumber, cn } from '@/lib/utils'
@@ -58,6 +58,7 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchBrands()
@@ -154,10 +155,16 @@ export default function LeadsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Manage and track your leads through the pipeline</p>
         </div>
-        <Button onClick={() => setIsImportModalOpen(true)}>
-          <Upload className="h-4 w-4 mr-2" />
-          Import Leads
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate('/chat')}>
+            <MessageSquareText className="h-4 w-4 mr-2" />
+            Ask Chat to find leads
+          </Button>
+          <Button onClick={() => setIsImportModalOpen(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Import Leads
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

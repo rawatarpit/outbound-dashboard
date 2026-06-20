@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 import { AnimatedCounter, StatCard, SectionHeader } from '@/components/DashboardComponents'
-import { Plus, ExternalLink, Building2, MoreHorizontal, Search, CheckCircle, Target, BarChart3, GitBranch, TrendingUp, Activity, Loader2 } from 'lucide-react'
+import { Plus, ExternalLink, Building2, MoreHorizontal, Search, CheckCircle, Target, BarChart3, GitBranch, TrendingUp, Activity, Loader2, Mail, Globe, Linkedin } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, cn, formatNumber } from '@/lib/utils'
 import { companiesAPI, brandsAPI } from '@/lib/api'
@@ -52,6 +52,7 @@ export default function PipelinePage() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
+  const [selectedCompany, setSelectedCompany] = useState<CompanyWithBrand | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -220,7 +221,11 @@ export default function PipelinePage() {
               </div>
               <div className="bg-muted rounded-b-lg border border-border p-2 space-y-2 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
-                  <Card key={company.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                  <Card
+                    key={company.id}
+                    onClick={() => setSelectedCompany(company)}
+                    className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  >
                       <CardContent className="p-3">
                       <div className="flex items-start gap-2">
                         <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f112' }}>
@@ -388,6 +393,98 @@ export default function PipelinePage() {
           }}
           onCancel={() => setIsModalOpen(false)}
         />
+      </Drawer>
+
+      {/* Lead Detail Panel */}
+      <Drawer
+        isOpen={!!selectedCompany}
+        onClose={() => setSelectedCompany(null)}
+        title="Lead Detail"
+        size="md"
+      >
+        {selectedCompany && (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">{selectedCompany.name}</h3>
+              {selectedCompany.industry && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedCompany.industry}
+                  {selectedCompany.domain && ` · ${selectedCompany.domain}`}
+                </p>
+              )}
+            </div>
+
+            {selectedCompany.lead_score != null && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm text-muted-foreground">Fit Score</span>
+                  <span className="text-sm font-semibold">{selectedCompany.lead_score}/100</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      selectedCompany.lead_score >= 80 ? 'bg-green-500' : selectedCompany.lead_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                    } transition-all`}
+                    style={{ width: `${selectedCompany.lead_score}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">Stage</p>
+                <p className="font-medium text-foreground capitalize">{selectedCompany.status.replace(/_/g, ' ')}</p>
+              </div>
+              {selectedCompany.brand && (
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1">Brand</p>
+                  <p className="font-medium text-foreground">{selectedCompany.brand.brand_name}</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Research</h4>
+              <div className="space-y-1.5 text-sm text-muted-foreground">
+                <p>Pain points: {selectedCompany.industry || 'Unknown'}</p>
+                <p>Tech: React, Python, AWS</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-border">
+              {selectedCompany.domain && (
+                <a
+                  href={`https://${selectedCompany.domain}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-accent text-foreground hover:bg-accent/80 transition-colors"
+                >
+                  <Globe className="h-3 w-3" />
+                  Website
+                </a>
+              )}
+              <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-foreground text-background hover:opacity-90 transition-opacity">
+                <Mail className="h-3 w-3" />
+                Draft Email
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm(`Delete ${selectedCompany.name}?`)) {
+                    companiesAPI.delete(selectedCompany.id).then(() => {
+                      toast.success('Company deleted')
+                      setSelectedCompany(null)
+                      fetchCompanies()
+                    })
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
       </Drawer>
     </div>
   )

@@ -759,6 +759,68 @@ export const importBatchesAPI = {
 }
 
 // ─────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────
+export const chatAPI = {
+  send: async (message: string, sessionId?: string | null): Promise<{ data: any; error: any }> => {
+    const token = getStoredToken()
+    if (!token) return { data: null, error: { message: 'No token' } }
+
+    try {
+      const response = await fetch(`${FUNCTIONS_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          session_id: sessionId || null,
+        }),
+      })
+
+      if (!response.ok) {
+        return { data: null, error: { message: `Chat API returned ${response.status}` } }
+      }
+
+      return { data: response.body, error: null }
+    } catch (err: any) {
+      return { data: null, error: { message: err.message || 'Network error' } }
+    }
+  },
+}
+
+// ─────────────────────────────────────────────
+// Inbox / Messages
+// ─────────────────────────────────────────────
+export const inboxAPI = {
+  list: async (options: { brandId?: string; clientId?: string; status?: string; search?: string; page?: number; perPage?: number } = {}): Promise<{ data: any[]; total: number; error: any }> => {
+    const params: Record<string, string> = { 'order': 'created_at.desc' }
+    if (options.clientId) params['client_id'] = `eq.${options.clientId}`
+    if (options.brandId) params['brand_id'] = `eq.${options.brandId}`
+    params['select'] = 'id,brand_id,lead_id,from_email,from_name,subject,body,status,is_read,is_starred,created_at'
+    const limit = options.perPage || 50
+    params['limit'] = String(limit)
+    if (options.page) params['offset'] = String((options.page - 1) * limit)
+    const result = await fetchAPI('inbound_messages', { params, count: true })
+    return {
+      data: Array.isArray(result.data) ? result.data : [],
+      total: parseInt(result.count || '0'),
+      error: result.error,
+    }
+  },
+
+  update: async (id: string, data: any): Promise<{ data: any; error: any }> => {
+    return updateAPI('inbound_messages', id, data)
+  },
+
+  delete: async (id: string): Promise<{ error: any }> => {
+    return deleteAPI('inbound_messages', id)
+  },
+}
+
+// ─────────────────────────────────────────────
 // Brand Intents
 // ─────────────────────────────────────────────
 export const brandIntentsAPI = {

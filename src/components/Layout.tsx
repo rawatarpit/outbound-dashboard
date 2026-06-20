@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
-import Sidebar from './Sidebar'
-import Header from './Header'
+import TopNav from './TopNav'
+import MobileNav from './MobileNav'
 
 interface LayoutProps {
   children: ReactNode
@@ -8,14 +8,12 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="flex h-screen w-full bg-background">
-      <Sidebar />
-      <div className="relative flex flex-col flex-1 overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-8">
-          {children}
-        </main>
-      </div>
+    <div className="flex h-screen w-full flex-col bg-background">
+      <TopNav />
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        {children}
+      </main>
+      <MobileNav />
     </div>
   )
 }

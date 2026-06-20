@@ -45,6 +45,13 @@ export default function CampaignsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'templates'>('campaigns')
+
+  const dummyTemplates = [
+    { id: '1', name: 'Cold Outreach - Tech', subject: 'Helping {company} with {pain_point}', body: 'Hi {first_name},\n\nI noticed {company} is looking to...', brand: 'Brand A', status: 'active' as const },
+    { id: '2', name: 'Follow-up - Week 1', subject: 'Quick follow-up', body: 'Hi {first_name},\n\nJust checking in...', brand: 'Brand B', status: 'draft' as const },
+    { id: '3', name: 'Re-engagement', subject: 'Still interested?', body: 'Hi {first_name},\n\nIt\'s been a while...', brand: 'Brand A', status: 'draft' as const },
+  ]
 
   useEffect(() => {
     fetchBrands()
@@ -131,11 +138,58 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Campaigns</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Track all sent emails and their delivery status</p>
+          <p className="text-muted-foreground mt-1">
+            {activeTab === 'campaigns' ? 'Track all sent emails and their delivery status' : 'Manage email templates for your outbound campaigns'}
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="flex items-center gap-1 border-b border-border">
+        <button
+          onClick={() => setActiveTab('campaigns')}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            activeTab === 'campaigns'
+              ? 'border-foreground text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Outreach Queue
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            activeTab === 'templates'
+              ? 'border-foreground text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Templates
+        </button>
+      </div>
+
+      {activeTab === 'templates' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {dummyTemplates.map(tpl => (
+            <Card key={tpl.id} className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground truncate">{tpl.name}</h3>
+                    <p className="text-sm text-muted-foreground truncate mt-0.5">{tpl.brand}</p>
+                  </div>
+                  <Badge variant={tpl.status === 'active' ? 'success' : 'secondary'}>{tpl.status === 'active' ? 'Active' : 'Draft'}</Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p className="truncate"><span className="text-foreground/60">Subject:</span> {tpl.subject}</p>
+                  <p className="mt-1 line-clamp-2 whitespace-pre-line">{tpl.body}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#3b82f612' }}>
@@ -380,7 +434,9 @@ export default function CampaignsPage() {
             </Table>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </>
+      )}
     </div>
   )
 }
