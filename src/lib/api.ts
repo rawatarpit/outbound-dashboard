@@ -56,7 +56,8 @@ async function callEdgeFunction<T = any>(
     const data = await response.json()
 
     if (!response.ok) {
-      if (data?.message?.includes('JWT expired')) {
+      const errMsg = data?.error || data?.message || ''
+      if (errMsg.includes('JWT') || errMsg.includes('token')) {
         localStorage.removeItem('outbound_token')
         localStorage.removeItem('outbound_user')
         window.location.href = '/login'
