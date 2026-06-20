@@ -17,10 +17,11 @@ export default function SettingsLayout() {
   return (
     <div className="flex h-full">
       <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-border bg-card p-3">
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
-          Settings
-        </h2>
-        <nav className="space-y-0.5">
+        <div className="px-3 mb-4">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Settings</h2>
+          <p className="text-[11px] text-muted-foreground/50 mt-0.5">Manage your workspace</p>
+        </div>
+        <nav className="space-y-0.5 flex-1">
           {settingsNav.map((item) => {
             const Icon = item.icon
             const isActive = item.end
@@ -35,11 +36,11 @@ export default function SettingsLayout() {
                 className={cn(
                   'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-accent text-foreground'
+                    ? 'bg-accent text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={cn('h-4 w-4', isActive ? 'text-foreground' : 'text-muted-foreground')} />
                 {item.name}
               </NavLink>
             )
@@ -47,8 +48,10 @@ export default function SettingsLayout() {
         </nav>
       </aside>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <Outlet />
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8">
+          <Outlet />
+        </div>
       </div>
 
       {/* Mobile nav */}

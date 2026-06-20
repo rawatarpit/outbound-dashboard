@@ -126,13 +126,13 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Pipeline</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Manage companies through the sales pipeline</p>
+          <p className="text-muted-foreground mt-0.5 text-sm">Manage companies through the sales pipeline</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={brandFilter} onValueChange={setBrandFilter}>
@@ -210,38 +210,41 @@ export default function PipelinePage() {
       </div>
 
       {viewMode === 'kanban' ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-5 overflow-x-auto pb-4">
           {PIPELINE_STAGES.map((stage) => (
             <div key={stage.id} className="flex-shrink-0 w-72">
-              <div className={cn('rounded-t-lg px-3 py-2', stage.color, 'text-white')}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">{stage.label}</h3>
-                  <span className="text-sm opacity-80">{companiesByStage[stage.id]?.length || 0}</span>
+              <div className="flex items-center justify-between px-3 py-2.5 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={cn('w-2.5 h-2.5 rounded-full', stage.color)} />
+                  <h3 className="font-semibold text-sm text-foreground">{stage.label}</h3>
                 </div>
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {companiesByStage[stage.id]?.length || 0}
+                </span>
               </div>
-              <div className="bg-muted rounded-b-lg border border-border p-2 space-y-2 min-h-[500px]">
+              <div className="bg-muted/30 rounded-xl border border-border/50 p-2.5 space-y-2.5 min-h-[500px]">
                 {companiesByStage[stage.id]?.map((company) => (
                   <Card
                     key={company.id}
                     onClick={() => setSelectedCompany(company)}
-                    className="rounded-2xl border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="rounded-xl border-border/50 bg-card shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
                   >
-                      <CardContent className="p-3">
-                      <div className="flex items-start gap-2">
-                        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f112' }}>
-                          <Building2 className="h-4 w-4" style={{ color: '#6366f1' }} />
+                    <CardContent className="p-3.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br from-indigo-500/10 to-indigo-500/20">
+                          <Building2 className="h-4 w-4 text-indigo-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{company.name}</p>
+                          <p className="font-medium text-sm text-foreground truncate">{company.name}</p>
                           {company.domain && (
-                            <p className="text-xs text-muted-foreground truncate">{company.domain}</p>
+                            <p className="text-xs text-muted-foreground/70 truncate">{company.domain}</p>
                           )}
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded hover:bg-accent">
-                            <MoreHorizontal className="h-4 w-4 text-muted-foreground/50" />
+                          <DropdownMenuTrigger className="p-1 rounded-lg hover:bg-accent transition-colors -mr-1 -mt-1">
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground/40" />
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem asChild>
                               <Link to={`/pipeline/${company.id}`}>
                                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -254,30 +257,46 @@ export default function PipelinePage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <div className="mt-2 flex items-center gap-2">
-                        {company.lead_score != null && (
-                          <Badge variant="secondary" className="text-xs">
-                            Score: {company.lead_score}
-                          </Badge>
+                      {company.lead_score != null && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs mb-1.5">
+                            <span className="text-muted-foreground/70">Fit Score</span>
+                            <span className={cn(
+                              'font-semibold',
+                              company.lead_score >= 80 ? 'text-green-600' : company.lead_score >= 60 ? 'text-yellow-600' : 'text-red-500'
+                            )}>{company.lead_score}/100</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={cn(
+                                'h-full rounded-full transition-all',
+                                company.lead_score >= 80 ? 'bg-green-500' : company.lead_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                              )}
+                              style={{ width: `${company.lead_score}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-border/30">
+                        {company.industry && (
+                          <span className="text-[11px] font-medium text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded-md">{company.industry}</span>
                         )}
-                        {company.deal_value != null && (
-                          <Badge variant="outline" className="text-xs">
-                            {formatCurrency(company.deal_value)}
-                          </Badge>
+                        {company.deal_value != null && company.deal_value > 0 && (
+                          <span className="text-[11px] font-semibold text-emerald-600">{formatCurrency(company.deal_value)}</span>
+                        )}
+                        {company.created_at && (
+                          <span className="text-[11px] text-muted-foreground/50 ml-auto">{new Date(company.created_at).toLocaleDateString()}</span>
                         )}
                       </div>
-                      {company.brand && (
-                        <p className="mt-2 text-xs text-muted-foreground/50">{company.brand.brand_name}</p>
-                      )}
                     </CardContent>
                   </Card>
                 ))}
-                {companiesByStage[stage.id]?.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <div className="h-8 w-8 rounded-lg flex items-center justify-center mb-1.5" style={{ backgroundColor: '#a3a3a312' }}>
-                      <Building2 className="h-4 w-4" style={{ color: '#a3a3a3' }} />
+                {(!companiesByStage[stage.id] || companiesByStage[stage.id].length === 0) && (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted/50 mb-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground/20" />
                     </div>
-                    <p className="text-xs text-center text-muted-foreground/60">No companies</p>
+                    <p className="text-xs text-muted-foreground/40">No companies</p>
                   </div>
                 )}
               </div>

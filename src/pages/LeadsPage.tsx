@@ -147,13 +147,13 @@ export default function LeadsPage() {
   }, [leads])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Leads</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Manage and track your leads through the pipeline</p>
+          <p className="text-muted-foreground mt-0.5 text-sm">Manage and track your leads through the pipeline</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate('/chat')}>
