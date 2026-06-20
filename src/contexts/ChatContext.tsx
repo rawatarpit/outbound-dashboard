@@ -128,7 +128,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       abortRef.current = controller
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
+        `https://webhooks.relayforge.in/api/chat`,
         {
           method: "POST",
           headers: {

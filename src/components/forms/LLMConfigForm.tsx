@@ -17,7 +17,7 @@ export default function LLMConfigForm({ onSuccess, onCancel }: LLMConfigFormProp
   const [isFetching, setIsFetching] = useState(true)
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [formData, setFormData] = useState({
-    llm_provider: 'ollama',
+    llm_provider: 'openai',
     llm_model: '',
     llm_temperature: '0.7',
     llm_base_url: '',
@@ -41,7 +41,7 @@ export default function LLMConfigForm({ onSuccess, onCancel }: LLMConfigFormProp
       if (error) throw error
       if (data) {
         setFormData({
-          llm_provider: data.llm_provider || 'ollama',
+          llm_provider: data.llm_provider || 'openai',
           llm_model: data.llm_model || '',
           llm_temperature: data.llm_temperature?.toString() || '0.7',
           llm_base_url: data.llm_base_url || '',
