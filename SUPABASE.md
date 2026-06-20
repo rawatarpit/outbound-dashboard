@@ -4,14 +4,14 @@
 
 | Detail | Value |
 |--------|-------|
-| **URL** | `https://hxmwrjoorlaeshbtasxh.supabase.co` |
-| **Reference** | `hxmwrjoorlaeshbtasxh` |
+| **URL** | `https://xtobbvffaxoiadserkbb.supabase.co` |
+| **Reference** | `xtobbvffaxoiadserkbb` |
 | **Region** | auto |
 
 ## Connection
 
 ```
-SUPABASE_URL=https://hxmwrjoorlaeshbtasxh.supabase.co
+SUPABASE_URL=https://xtobbvffaxoiadserkbb.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 ```
 
@@ -19,7 +19,7 @@ The service_role key is in `.env`. It bypasses all RLS — use only in the Expre
 
 ## What Was Migrated
 
-The Supabase project was replicated from the original project to `hxmwrjoorlaeshbtasxh` with:
+The Supabase project was replicated from the original project to `xtobbvffaxoiadserkbb` with:
 
 - **67 tables** — full schema (clients, brand_profiles, client_members, client_settings, leads, campaigns, devices, system_flags, etc.)
 - **240 RPCs** — all PostgreSQL functions (pipeline queries, send quota, etc.)
@@ -39,7 +39,7 @@ Both clients have `client_settings` configured with LLM provider set to `openai`
 
 ## Edge Functions
 
-22 functions deployed at `https://hxmwrjoorlaeshbtasxh.supabase.co/functions/v1/`.
+22 functions deployed at `https://xtobbvffaxoiadserkbb.supabase.co/functions/v1/`.
 
 | Function | Purpose |
 |----------|---------|
@@ -89,7 +89,7 @@ psql "$SUPABASE_URL" -f supabase/seed.sql
 ### Deploying Edge Functions
 
 ```bash
-supabase functions deploy --project-ref hxmwrjoorlaeshbtasxh
+supabase functions deploy --project-ref xtobbvffaxoiadserkbb
 ```
 
 ## System Flags Bug
